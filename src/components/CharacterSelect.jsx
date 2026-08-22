@@ -10,22 +10,22 @@ function CharacterSelect({ onCharacterSelect }) {
 
   const handleRaceSelect = (race) => {
     setSelectedRace(race);
+    setCurrentStep('class');
   };
 
   const handleClassSelect = (cls) => {
     setSelectedClass(cls);
+    setCurrentStep('god');
   };
 
   const handleGodSelect = (god) => {
     setSelectedGod(god);
-  };
-
-  const handleContinue = () => {
-    if (currentStep === 'race' && selectedRace) {
-      setCurrentStep('class');
-    } else if (currentStep === 'class' && selectedClass) {
-      setCurrentStep('god');
-    }
+    // Start the game immediately
+    onCharacterSelect({
+      race: selectedRace,
+      class: selectedClass,
+      god: god
+    });
   };
 
   const handleBack = () => {
@@ -35,22 +35,6 @@ function CharacterSelect({ onCharacterSelect }) {
       setCurrentStep('class');
     }
   };
-
-  const handleStart = () => {
-    if (selectedRace && selectedClass && selectedGod) {
-      onCharacterSelect({
-        race: selectedRace,
-        class: selectedClass,
-        god: selectedGod
-      });
-    }
-  };
-
-  const canContinue = 
-    (currentStep === 'race' && selectedRace) ||
-    (currentStep === 'class' && selectedClass);
-
-  const canStart = selectedRace && selectedClass && selectedGod && currentStep === 'god';
 
   return (
     <div className="character-select">
@@ -167,18 +151,6 @@ function CharacterSelect({ onCharacterSelect }) {
         {currentStep !== 'race' && (
           <button className="nav-button back-button" onClick={handleBack}>
             ← Back
-          </button>
-        )}
-        
-        {canContinue && currentStep !== 'god' && (
-          <button className="nav-button continue-button" onClick={handleContinue}>
-            Continue →
-          </button>
-        )}
-
-        {canStart && (
-          <button className="start-button" onClick={handleStart}>
-            Start Game
           </button>
         )}
       </div>
