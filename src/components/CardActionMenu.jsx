@@ -31,17 +31,17 @@ function CardActionMenu({ card, isMarket, canAfford, onPlay, onDiscard, onTrash,
           ) : (
             <>
               <button
-                className="action-button discard-button"
-                onClick={onDiscard}
-              >
-                🗂️ Discard (+1 💎)
-              </button>
-              <button
                 className="action-button play-button"
                 onClick={onPlay}
                 disabled={!canAfford}
               >
                 ▶️ Play Card ({cost} 💎)
+              </button>
+              <button
+                className="action-button discard-button"
+                onClick={onDiscard}
+              >
+                🗂️ Discard (+1 💎)
               </button>
               <button
                 className="action-button trash-button"
