@@ -93,6 +93,31 @@
   transform: scale(1.05);
 }
 
+.card-button.discard {
+  background: rgba(52, 152, 219, 0.8);
+  color: white;
+}
+
+.card-button.discard:hover {
+  background: rgba(52, 152, 219, 1);
+  transform: scale(1.05);
+}
+
+.card-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.card-button:disabled:hover {
+  transform: none;
+}
+
+.card.unaffordable {
+  opacity: 0.6;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 @media (max-width: 768px) {
   .card {
     width: 160px;

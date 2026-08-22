@@ -1,11 +1,11 @@
 import React from 'react';
 import './Card.css';
 
-function Card({ card, onClick, onTrash, isMarket = false }) {
+function Card({ card, onClick, onDiscard, onTrash, isMarket = false, canAfford = true }) {
   const cost = card.symbols.length;
 
   return (
-    <div className={`card ${isMarket ? 'market-card' : ''}`}>
+    <div className={`card ${isMarket ? 'market-card' : ''} ${!canAfford ? 'unaffordable' : ''}`}>
       <div className="card-header">
         <div className="card-name">{card.name}</div>
         <div className="card-cost">Cost: {cost}</div>
@@ -18,9 +18,18 @@ function Card({ card, onClick, onTrash, isMarket = false }) {
       </div>
       
       <div className="card-actions">
+        {!isMarket && onDiscard && (
+          <button 
+            className="card-button discard"
+            onClick={onDiscard}
+          >
+            Discard (+1 💎)
+          </button>
+        )}
         <button 
           className="card-button primary"
           onClick={onClick}
+          disabled={!canAfford}
         >
           {isMarket ? 'Buy' : 'Play'}
         </button>
@@ -28,6 +37,7 @@ function Card({ card, onClick, onTrash, isMarket = false }) {
           <button 
             className="card-button secondary"
             onClick={onTrash}
+            disabled={!canAfford}
           >
             Trash
           </button>

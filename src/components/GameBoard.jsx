@@ -19,6 +19,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [deck, setDeck] = useState([]);
   const [hand, setHand] = useState([]);
   const [discard, setDiscard] = useState([]);
+  const [resources, setResources] = useState(0);
   
   const [market, setMarket] = useState([]);
   const [marketDeck, setMarketDeck] = useState([]);
@@ -68,6 +69,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossAction(action);
     drawCards(5);
     setPlayerBlock(0);
+    setResources(0);
     setGameState('playerTurn');
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
@@ -108,19 +110,26 @@ function GameBoard({ playerCharacter, onRestart }) {
     return newArray;
   };
 
+  const discardForResource = (card) => {
+    const newHand = hand.filter(c => c.id !== card.id);
+    const newDiscard = [...discard, card];
+    
+    setHand(newHand);
+    setDiscard(newDiscard);
+    setResources(prev => prev + 1);
+    addLog(`Discarded ${card.name} (+1 resource, total: ${resources + 1})`);
+  };
+
   const playCard = (card) => {
     const cost = card.symbols.length;
-    if (hand.length < cost) {
-      addLog('Not enough cards to pay the cost!');
+    if (resources < cost) {
+      addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
     }
 
-    const cardsToPay = hand.slice(0, cost);
-    const newHand = hand.filter(c => !cardsToPay.includes(c));
-    const newDiscard = [...discard, ...cardsToPay];
-
+    const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
-    setDiscard(newDiscard);
+    setResources(prev => prev - cost);
 
     let damage = 0;
     let block = 0;
@@ -145,44 +154,38 @@ function GameBoard({ playerCharacter, onRestart }) {
       addLog(`Gained ${block} block (Total: ${playerBlock + block})`);
     }
 
-    addLog(`Played ${card.name}`);
+    addLog(`Played ${card.name} (${cost} resources spent, ${resources - cost} remaining)`);
   };
 
   const purchaseCard = (card) => {
     const cost = card.symbols.length;
-    if (hand.length < cost) {
-      addLog('Not enough cards to pay the cost!');
+    if (resources < cost) {
+      addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
     }
 
-    const cardsToPay = hand.slice(0, cost);
-    const newHand = hand.filter(c => !cardsToPay.includes(c));
-    const newDiscard = [...discard, ...cardsToPay, { ...card, id: `${card.id}_purchased_${Date.now()}` }];
-
-    setHand(newHand);
+    setResources(prev => prev - cost);
+    const newDiscard = [...discard, { ...card, id: `${card.id}_purchased_${Date.now()}` }];
     setDiscard(newDiscard);
 
     const newMarket = market.filter(c => c.id !== card.id);
     refreshMarket(newMarket);
 
-    addLog(`Purchased ${card.name}`);
+    addLog(`Purchased ${card.name} (${cost} resources spent, ${resources - cost} remaining)`);
   };
 
   const trashCard = (card) => {
     const cost = card.symbols.length;
-    if (hand.length < cost) {
-      addLog('Not enough cards to pay the cost!');
+    if (resources < cost) {
+      addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
     }
 
-    const cardsToPay = hand.slice(0, cost + 1);
-    const newHand = hand.filter(c => !cardsToPay.includes(c));
-    const newDiscard = [...discard, ...cardsToPay.slice(0, -1)];
-
+    const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
-    setDiscard(newDiscard);
+    setResources(prev => prev - cost);
 
-    addLog(`Trashed ${card.name}`);
+    addLog(`Trashed ${card.name} permanently (${cost} resources spent)`);
   };
 
   const refreshMarket = (currentMarket) => {
@@ -318,6 +321,7 @@ function GameBoard({ playerCharacter, onRestart }) {
             </div>
             <div className="player-stats">
               <div>🛡️ Block: {playerBlock}</div>
+              <div>💎 Resources: {resources}</div>
               <div>🎴 Deck: {deck.length}</div>
               <div>🗑️ Discard: {discard.length}</div>
             </div>
@@ -376,14 +380,16 @@ function GameBoard({ playerCharacter, onRestart }) {
           {gameState === 'playerTurn' && (
             <>
               <div className="hand-section">
-                <h3>Your Hand ({hand.length} cards)</h3>
+                <h3>Your Hand ({hand.length} cards) - Resources: {resources} 💎</h3>
                 <div className="card-row">
                   {hand.map(card => (
                     <Card
                       key={card.id}
                       card={card}
                       onClick={() => playCard(card)}
+                      onDiscard={() => discardForResource(card)}
                       onTrash={() => trashCard(card)}
+                      canAfford={resources >= card.symbols.length}
                     />
                   ))}
                 </div>
@@ -402,6 +408,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                       card={card}
                       onClick={() => purchaseCard(card)}
                       isMarket={true}
+                      canAfford={resources >= card.symbols.length}
                     />
                   ))}
                 </div>
