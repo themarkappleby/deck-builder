@@ -3,6 +3,7 @@ import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
 import Card from './Card';
 import CardActionMenu from './CardActionMenu';
 import './GameBoard.css';
+import './GameBoardNew.css';
 
 function GameBoard({ playerCharacter, onRestart }) {
   const [gameState, setGameState] = useState('setup');
@@ -34,6 +35,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedCardIsMarket, setSelectedCardIsMarket] = useState(false);
+  const [showMarket, setShowMarket] = useState(false);
   
   const logContentRef = useRef(null);
 
@@ -360,13 +362,140 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   return (
     <div className="game-board">
-      <div className="game-header">
-        <button className="restart-button" onClick={onRestart}>New Game</button>
-        <h1>Boss Battle - Round {roundNumber}</h1>
+      {/* Top HUD - Boss HP */}
+      <div className="top-hud">
+        <div className="boss-hp-container">
+          <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+          <div className="hp-bar boss-hp-bar">
+            <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
+            <span className="hp-text">{bossHP} / {bossMaxHP}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="game-layout">
-        <div className="left-panel">
+      {/* Center Area - Boss Display */}
+      <div className="center-area">
+        {gameState === 'ready' && (
+          <div className="center-content">
+            <button className="big-button" onClick={startRound}>Start Round {roundNumber}</button>
+          </div>
+        )}
+
+        {gameState === 'playerTurn' && (
+          <div className="center-content">
+            <div className="boss-display">
+              <div className="boss-placeholder">🐉</div>
+              {bossAction && (
+                <div className="boss-intent">
+                  {bossAction.description}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {gameState === 'levelUp' && (
+          <div className="center-content level-up-overlay">
+            <h2>Level Up! Choose 2 cards:</h2>
+            <div className="level-up-options">
+              <button onClick={() => levelUpCharacter('race')}>
+                Level Up Race {raceLevel < 2 ? `(${raceLevel} → ${raceLevel + 1})` : '(Max)'}
+              </button>
+              <button onClick={() => levelUpCharacter('class')}>
+                Level Up Class {classLevel < 2 ? `(${classLevel} → ${classLevel + 1})` : '(Max)'}
+              </button>
+              <button onClick={() => levelUpCharacter('god')}>
+                Level Up God {godLevel < 2 ? `(${godLevel} → ${godLevel + 1})` : '(Max)'}
+              </button>
+            </div>
+            <button className="big-button" onClick={startNextBoss}>Continue to Next Boss</button>
+          </div>
+        )}
+
+        {gameState === 'victory' && (
+          <div className="center-content game-over-overlay">
+            <h1>🎉 Victory! 🎉</h1>
+            <p>You defeated all the bosses!</p>
+            <button className="big-button" onClick={onRestart}>Play Again</button>
+          </div>
+        )}
+
+        {gameState === 'defeat' && (
+          <div className="center-content game-over-overlay">
+            <h1>💀 Defeat 💀</h1>
+            <p>You were defeated by {currentBoss?.name}</p>
+            <button className="big-button" onClick={onRestart}>Try Again</button>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom HUD - Player Stats & HP */}
+      <div className="bottom-hud">
+        <div className="player-stats-bar">
+          <div className="stat-item">💎 {resources}</div>
+          <div className="stat-item">🛡️ {playerBlock}</div>
+          <div className="stat-item">🎴 {deck.length}</div>
+          <div className="stat-item">🗑️ {discard.length}</div>
+        </div>
+        <div className="hp-bar player-hp-bar">
+          <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
+          <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
+        </div>
+      </div>
+
+      {/* Hand - Fixed at bottom */}
+      {gameState === 'playerTurn' && (
+        <div className="hand-container">
+          <div className="hand-row">
+            {hand.map(card => (
+              <Card
+                key={card.id}
+                card={card}
+                onClick={() => {
+                  setSelectedCard(card);
+                  setSelectedCardIsMarket(false);
+                }}
+                canAfford={resources >= card.symbols.length}
+              />
+            ))}
+          </div>
+          <div className="hand-actions">
+            <button className="action-btn" onClick={() => setShowMarket(!showMarket)}>
+              {showMarket ? '❌ Close Market' : '🛒 Open Market'}
+            </button>
+            <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
+          </div>
+        </div>
+      )}
+
+      {/* Market Overlay */}
+      {showMarket && gameState === 'playerTurn' && (
+        <div className="market-overlay">
+          <div className="market-content">
+            <h3>Market</h3>
+            <div className="market-grid">
+              {market.map(card => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  onClick={() => {
+                    setSelectedCard(card);
+                    setSelectedCardIsMarket(true);
+                  }}
+                  isMarket={true}
+                  canAfford={resources >= card.symbols.length}
+                />
+              ))}
+            </div>
+            <button className="close-market-btn" onClick={() => setShowMarket(false)}>Close Market</button>
+          </div>
+        </div>
+      )}
+
+      {/* Settings button */}
+      <button className="settings-btn" onClick={onRestart}>⚙️</button>
+
+      {/* Card Action Menu */}
           <div className="boss-section">
             <h2>{currentBoss?.name} (Boss {bossNumber})</h2>
             <div className="hp-bar">
@@ -435,105 +564,6 @@ function GameBoard({ playerCharacter, onRestart }) {
               )}
             </div>
           </div>
-        </div>
-
-        <div className="center-panel">
-          {gameState === 'ready' && (
-            <div className="action-area">
-              <button className="big-button" onClick={startRound}>Start Round {roundNumber}</button>
-            </div>
-          )}
-
-          {gameState === 'playerTurn' && (
-            <>
-              <div className="hand-section">
-                <h3>Your Hand ({hand.length} cards) - Resources: {resources} 💎</h3>
-                <div className="card-row">
-                  {hand.map(card => (
-                    <Card
-                      key={card.id}
-                      card={card}
-                      onClick={() => {
-                        setSelectedCard(card);
-                        setSelectedCardIsMarket(false);
-                      }}
-                      canAfford={resources >= card.symbols.length}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="action-area">
-                <button className="end-turn-button" onClick={endTurn}>End Turn</button>
-              </div>
-
-              <div className="market-section">
-                <h3>Market</h3>
-                <div className="card-row">
-                  {market.map(card => (
-                    <Card
-                      key={card.id}
-                      card={card}
-                      onClick={() => {
-                        setSelectedCard(card);
-                        setSelectedCardIsMarket(true);
-                      }}
-                      isMarket={true}
-                      canAfford={resources >= card.symbols.length}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {gameState === 'levelUp' && (
-            <div className="level-up-section">
-              <h2>Level Up! Choose 2 cards to upgrade:</h2>
-              <div className="level-up-options">
-                <button onClick={() => levelUpCharacter('race')}>
-                  Level Up Race {raceLevel < 2 ? `(${raceLevel} → 2)` : '(Max)'}
-                </button>
-                <button onClick={() => levelUpCharacter('class')}>
-                  Level Up Class {classLevel < 2 ? `(${classLevel} → ${classLevel + 1})` : '(Max)'}
-                </button>
-                <button onClick={() => levelUpCharacter('god')}>
-                  Level Up God {godLevel < 2 ? `(${godLevel} → ${godLevel + 1})` : '(Max)'}
-                </button>
-              </div>
-              <button className="big-button" onClick={startNextBoss}>Continue to Next Boss</button>
-            </div>
-          )}
-
-          {gameState === 'victory' && (
-            <div className="game-over">
-              <h1>🎉 Victory! 🎉</h1>
-              <p>You defeated all the bosses!</p>
-              <button className="big-button" onClick={onRestart}>Play Again</button>
-            </div>
-          )}
-
-          {gameState === 'defeat' && (
-            <div className="game-over">
-              <h1>💀 Defeat 💀</h1>
-              <p>You were defeated by {currentBoss?.name}</p>
-              <button className="big-button" onClick={onRestart}>Try Again</button>
-            </div>
-          )}
-        </div>
-
-        <div className="right-panel">
-          <div className="log-section">
-            <h3>Game Log</h3>
-            <div className="log-content" ref={logContentRef}>
-              {log.map((entry, index) => (
-                <div key={index} className="log-entry">{entry}</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {selectedCard && (
         <CardActionMenu
           card={selectedCard}
