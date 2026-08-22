@@ -64,6 +64,18 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarketDeck(marketDeckShuffled.slice(5));
     setMarket(initialMarket);
     
+    // Apply Dwarf HP bonus
+    let startingHP = 10;
+    if (playerCharacter.race.id === 'dwarf') {
+      if (raceLevel >= 2) {
+        startingHP = 14;
+      } else if (raceLevel >= 1) {
+        startingHP = 12;
+      }
+    }
+    setPlayerHP(startingHP);
+    setPlayerMaxHP(startingHP);
+    
     const boss = bosses[0];
     const bossLevel = bossNumber === 1 ? 'level1' : bossNumber === 2 ? 'level2' : 'level3';
     const bossData = boss[bossLevel];
@@ -79,7 +91,18 @@ function GameBoard({ playerCharacter, onRestart }) {
   const startRound = () => {
     const action = rollBossAction();
     setBossAction(action);
-    drawCards(5);
+    
+    // Determine how many cards to draw based on race
+    let cardsToDraw = 5;
+    if (playerCharacter.race.id === 'elf') {
+      if (raceLevel >= 2) {
+        cardsToDraw = 7;
+      } else if (raceLevel >= 1) {
+        cardsToDraw = 6;
+      }
+    }
+    
+    drawCards(cardsToDraw);
     setPlayerBlock(0);
     setGameState('playerTurn');
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
@@ -148,8 +171,28 @@ function GameBoard({ playerCharacter, onRestart }) {
     card.symbols.forEach(symbol => {
       if (symbol === SYMBOLS.ATTACK) {
         damage += 1;
+        // Apply Warrior class bonus
+        if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A') {
+          if (classLevel >= 2) {
+            damage += 2;
+          } else if (classLevel >= 1) {
+            damage += 1;
+          }
+        }
       } else if (symbol === SYMBOLS.BLOCK) {
         block += 1;
+        // Apply Priest class bonus
+        if (playerCharacter.class.id === 'priest' && playerCharacter.class.side === 'A') {
+          if (classLevel >= 2) {
+            block += 2;
+          } else if (classLevel >= 1) {
+            block += 1;
+          }
+        }
+        // Apply Dwarf race bonus
+        if (playerCharacter.race.id === 'dwarf' && raceLevel >= 2) {
+          block += 1;
+        }
       } else if (symbol === SYMBOLS.PURPLE && raceLevel >= 1) {
         const effect = playerCharacter.race.level1.symbolEffect;
         addLog(`🟣 effect: ${effect}`);
@@ -272,14 +315,27 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   const levelUpCharacter = (cardType) => {
     if (cardType === 'race' && raceLevel < 2) {
-      setRaceLevel(2);
-      addLog('Race leveled up to 2!');
+      const newLevel = raceLevel + 1;
+      setRaceLevel(newLevel);
+      addLog(`Race leveled up to ${newLevel}!`);
+      
+      // Apply Dwarf HP bonus when leveling up
+      if (playerCharacter.race.id === 'dwarf') {
+        if (newLevel === 2) {
+          const newMaxHP = 14;
+          setPlayerMaxHP(newMaxHP);
+          setPlayerHP(prev => prev + 2); // Heal 2 HP when max increases
+          addLog('Max HP increased to 14!');
+        }
+      }
     } else if (cardType === 'class' && classLevel < 2) {
-      setClassLevel(2);
-      addLog('Class leveled up to 2!');
+      const newLevel = classLevel + 1;
+      setClassLevel(newLevel);
+      addLog(`Class leveled up to ${newLevel}!`);
     } else if (cardType === 'god' && godLevel < 2) {
-      setGodLevel(2);
-      addLog('God leveled up to 2!');
+      const newLevel = godLevel + 1;
+      setGodLevel(newLevel);
+      addLog(`God leveled up to ${newLevel}!`);
     }
   };
 
