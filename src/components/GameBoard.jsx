@@ -77,7 +77,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossAction(action);
     drawCards(5);
     setPlayerBlock(0);
-    setResources(0);
     setGameState('playerTurn');
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
