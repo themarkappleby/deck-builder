@@ -1,0 +1,298 @@
+.game-board {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.game-header h1 {
+  color: #ffd700;
+  font-size: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.restart-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.restart-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 20px;
+}
+
+.left-panel, .right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.boss-section, .player-section, .log-section {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.boss-section h2, .player-section h2, .log-section h3 {
+  margin-bottom: 15px;
+  color: #87ceeb;
+}
+
+.hp-bar {
+  position: relative;
+  width: 100%;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.hp-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+  transition: width 0.5s ease;
+}
+
+.player-hp .hp-fill {
+  background: linear-gradient(90deg, #27ae60 0%, #229954 100%);
+}
+
+.hp-text {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  line-height: 30px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.boss-intent {
+  background: rgba(231, 76, 60, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #e74c3c;
+}
+
+.player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.character-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.character-card {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.character-card strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffd700;
+}
+
+.level-display {
+  margin-top: 5px;
+  padding: 5px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.level-display.active {
+  opacity: 1;
+  border-left: 3px solid #87ceeb;
+}
+
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hand-section, .market-section {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.hand-section h3, .market-section h3 {
+  margin-bottom: 15px;
+  color: #87ceeb;
+}
+
+.card-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.action-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.big-button, .end-turn-button {
+  padding: 20px 50px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.big-button:hover, .end-turn-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.end-turn-button {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.level-up-section {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #ffd700;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+}
+
+.level-up-section h2 {
+  color: #ffd700;
+  margin-bottom: 20px;
+}
+
+.level-up-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.level-up-options button {
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  background: rgba(135, 206, 235, 0.3);
+  color: white;
+  border: 2px solid #87ceeb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.level-up-options button:hover {
+  background: rgba(135, 206, 235, 0.5);
+  transform: translateX(5px);
+}
+
+.game-over {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 50px;
+  text-align: center;
+}
+
+.game-over h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  color: #ffd700;
+}
+
+.game-over p {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+}
+
+.log-section {
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-content {
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.log-entry {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.log-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 1200px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .left-panel, .right-panel {
+    flex-direction: row;
+  }
+}
