@@ -11,25 +11,24 @@
 }
 
 .game-header h1 {
-  color: #ffd700;
+  color: #ddd;
   font-size: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .restart-button {
   padding: 10px 20px;
   font-size: 1rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: #2a2a2a;
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 8px;
+  border: 2px solid #444;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .restart-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: #333;
+  border-color: #555;
 }
 
 .game-layout {
@@ -45,15 +44,15 @@
 }
 
 .boss-section, .player-section, .log-section {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
   padding: 20px;
 }
 
 .boss-section h2, .player-section h2, .log-section h3 {
   margin-bottom: 15px;
-  color: #87ceeb;
+  color: #aaa;
 }
 
 .hp-bar {
@@ -71,12 +70,12 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+  background: #c0392b;
   transition: width 0.5s ease;
 }
 
 .player-hp .hp-fill {
-  background: linear-gradient(90deg, #27ae60 0%, #229954 100%);
+  background: #27ae60;
 }
 
 .hp-text {
@@ -90,10 +89,10 @@
 }
 
 .boss-intent {
-  background: rgba(231, 76, 60, 0.3);
+  background: #2a1a1a;
   padding: 10px;
-  border-radius: 8px;
-  border: 2px solid #e74c3c;
+  border-radius: 4px;
+  border: 1px solid #5a3a3a;
 }
 
 .player-stats {
@@ -111,30 +110,31 @@
 }
 
 .character-card {
-  background: rgba(0, 0, 0, 0.3);
+  background: #2a2a2a;
   padding: 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  border: 1px solid #444;
 }
 
 .character-card strong {
   display: block;
   margin-bottom: 5px;
-  color: #ffd700;
+  color: #aaa;
 }
 
 .level-display {
   margin-top: 5px;
   padding: 5px;
-  background: rgba(0, 0, 0, 0.2);
+  background: #1a1a1a;
   border-radius: 4px;
   font-size: 0.85rem;
   opacity: 0.5;
+  border-left: 2px solid #333;
 }
 
 .level-display.active {
   opacity: 1;
-  border-left: 3px solid #87ceeb;
+  border-left: 2px solid #666;
 }
 
 .center-panel {
@@ -144,15 +144,15 @@
 }
 
 .hand-section, .market-section {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
   padding: 20px;
 }
 
 .hand-section h3, .market-section h3 {
   margin-bottom: 15px;
-  color: #87ceeb;
+  color: #aaa;
 }
 
 .card-row {
@@ -173,33 +173,35 @@
   font-size: 1.5rem;
   font-weight: bold;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 12px;
+  background: #2a2a4a;
+  border: 2px solid #444;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
 }
 
 .big-button:hover, .end-turn-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  background: #333355;
 }
 
 .end-turn-button {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #4a2a3a;
+}
+
+.end-turn-button:hover {
+  background: #553344;
 }
 
 .level-up-section {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid #ffd700;
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 2px solid #555;
+  border-radius: 8px;
   padding: 30px;
   text-align: center;
 }
 
 .level-up-section h2 {
-  color: #ffd700;
+  color: #aaa;
   margin-bottom: 20px;
 }
 
@@ -213,23 +215,22 @@
 .level-up-options button {
   padding: 15px 30px;
   font-size: 1.2rem;
-  background: rgba(135, 206, 235, 0.3);
+  background: #2a2a3a;
   color: white;
-  border: 2px solid #87ceeb;
-  border-radius: 8px;
+  border: 2px solid #444;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .level-up-options button:hover {
-  background: rgba(135, 206, 235, 0.5);
-  transform: translateX(5px);
+  background: #333344;
 }
 
 .game-over {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
   padding: 50px;
   text-align: center;
 }
@@ -237,7 +238,7 @@
 .game-over h1 {
   font-size: 3rem;
   margin-bottom: 20px;
-  color: #ffd700;
+  color: #ddd;
 }
 
 .game-over p {

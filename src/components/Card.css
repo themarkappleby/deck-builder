@@ -1,29 +1,33 @@
 .card {
   width: 120px;
   height: 160px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 3px solid rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
+  background: #2a2a2a;
+  border: 2px solid #555;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: #888;
+  background: #333;
 }
 
 .card:active {
-  transform: translateY(-2px);
+  background: #222;
 }
 
 .market-card {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #3a2a2a;
+  border-color: #664444;
+}
+
+.market-card:hover {
+  background: #442a2a;
+  border-color: #885555;
 }
 
 .card-symbols-only {
@@ -40,8 +44,8 @@
 }
 
 .card.unaffordable {
-  opacity: 0.5;
-  border-color: rgba(255, 255, 255, 0.2);
+  opacity: 0.4;
+  border-color: #333;
 }
 
 @media (max-width: 768px) {
