@@ -37,6 +37,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [selectedCardIsMarket, setSelectedCardIsMarket] = useState(false);
   const [showMarket, setShowMarket] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showPlayerStats, setShowPlayerStats] = useState(false);
   
   const logContentRef = useRef(null);
 
@@ -490,12 +491,102 @@ function GameBoard({ playerCharacter, onRestart }) {
         </div>
       )}
 
+      {/* Player Stats Overlay */}
+      {showPlayerStats && (
+        <div className="player-stats-overlay">
+          <div className="player-stats-content">
+            <h3>Your Character</h3>
+            
+            <div className="character-info">
+              <div className="character-section">
+                <h4>{playerCharacter.race.name} (Side {playerCharacter.race.side}) - Level {raceLevel}</h4>
+                <div className="ability-box">
+                  <strong>Level 1:</strong>
+                  <p>{playerCharacter.race.level1.effect}</p>
+                  <p>🟣 = {playerCharacter.race.level1.symbolEffect}</p>
+                </div>
+                {raceLevel >= 2 && (
+                  <div className="ability-box active">
+                    <strong>Level 2:</strong>
+                    <p>{playerCharacter.race.level2.effect}</p>
+                    {playerCharacter.race.level2.additionalEffect && (
+                      <p>{playerCharacter.race.level2.additionalEffect}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="character-section">
+                <h4>{playerCharacter.class.name} (Side {playerCharacter.class.side}) - Level {classLevel}</h4>
+                {classLevel >= 1 && (
+                  <div className="ability-box active">
+                    <strong>Level 1:</strong>
+                    <p>{playerCharacter.class.level1.effect}</p>
+                  </div>
+                )}
+                {classLevel >= 2 && (
+                  <div className="ability-box active">
+                    <strong>Level 2:</strong>
+                    <p>{playerCharacter.class.level2.effect}</p>
+                    {playerCharacter.class.level2.additionalEffect && (
+                      <p>{playerCharacter.class.level2.additionalEffect}</p>
+                    )}
+                  </div>
+                )}
+                {classLevel === 0 && (
+                  <div className="ability-box">
+                    <strong>Level 1:</strong>
+                    <p>{playerCharacter.class.level1.effect}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="character-section">
+                <h4>{playerCharacter.god.name} (Side {playerCharacter.god.side}) - Level {godLevel}</h4>
+                {godLevel >= 1 && (
+                  <div className="ability-box active">
+                    <strong>Level 1:</strong>
+                    <p>{playerCharacter.god.level1.effect}</p>
+                  </div>
+                )}
+                {godLevel >= 2 && (
+                  <div className="ability-box active">
+                    <strong>Level 2:</strong>
+                    <p>{playerCharacter.god.level2.effect}</p>
+                    {playerCharacter.god.level2.additionalEffect && (
+                      <p>{playerCharacter.god.level2.additionalEffect}</p>
+                    )}
+                  </div>
+                )}
+                {godLevel === 0 && (
+                  <div className="ability-box">
+                    <strong>Level 1:</strong>
+                    <p>{playerCharacter.god.level1.effect}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button className="close-stats-btn" onClick={() => setShowPlayerStats(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
       {/* Menu button */}
       <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
       
       {/* Menu popover */}
       {showMenu && (
         <div className="menu-popover">
+          <button 
+            className="menu-item" 
+            onClick={() => {
+              setShowPlayerStats(true);
+              setShowMenu(false);
+            }}
+          >
+            📊 View Stats
+          </button>
           <button 
             className="menu-item" 
             onClick={() => {
