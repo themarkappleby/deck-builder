@@ -294,5 +294,106 @@
   
   .left-panel, .right-panel {
     flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .boss-section, .player-section, .log-section {
+    flex: 1;
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-board {
+    padding: 10px;
+  }
+
+  .game-header {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .game-header h1 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .restart-button {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .left-panel, .right-panel {
+    flex-direction: column;
+  }
+
+  .boss-section, .player-section, .log-section {
+    padding: 15px;
+  }
+
+  .character-card {
+    padding: 12px;
+  }
+
+  .character-card strong {
+    font-size: 1rem;
+  }
+
+  .level-display small {
+    font-size: 0.8rem;
+  }
+
+  .hand-section, .market-section {
+    padding: 15px;
+  }
+
+  .card-row {
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .log-section {
+    max-height: 200px;
+  }
+
+  .log-content {
+    font-size: 0.85rem;
+  }
+
+  .big-button, .end-turn-button {
+    width: 100%;
+    padding: 18px 30px;
+    font-size: 1.3rem;
+  }
+
+  .level-up-section {
+    padding: 20px 15px;
+  }
+
+  .level-up-section h2 {
+    font-size: 1.3rem;
+  }
+
+  .level-up-options button {
+    font-size: 1rem;
+    padding: 12px 20px;
+  }
+
+  .game-over {
+    padding: 30px 15px;
+  }
+
+  .game-over h1 {
+    font-size: 2rem;
+  }
+
+  .game-over p {
+    font-size: 1.2rem;
   }
 }
