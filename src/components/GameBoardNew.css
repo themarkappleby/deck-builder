@@ -69,7 +69,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px;
-  padding-bottom: 180px;
+  padding-bottom: 240px;
   overflow: hidden;
 }
 
@@ -104,7 +104,7 @@
 /* Bottom HUD - Player Stats & HP */
 .bottom-hud {
   position: fixed;
-  bottom: 120px;
+  bottom: 180px;
   left: 0;
   right: 0;
   padding: 6px 12px 8px;
@@ -139,7 +139,7 @@
 /* Hand Container - Fixed at bottom with cards partially hidden */
 .hand-container {
   position: fixed;
-  bottom: -55px;
+  bottom: 5px;
   left: 0;
   right: 0;
   background: transparent;
@@ -152,7 +152,7 @@
   display: flex;
   justify-content: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 60px;
   overflow-x: auto;
   padding: 5px 0;
   pointer-events: all;
@@ -172,23 +172,29 @@
 }
 
 .hand-actions {
+  position: fixed;
+  bottom: 8px;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   gap: 8px;
   padding: 0 8px;
   pointer-events: all;
+  z-index: 101;
 }
 
 .action-btn {
-  padding: 10px 20px;
-  font-size: 0.9rem;
+  padding: 12px 30px;
+  font-size: 1rem;
   font-weight: bold;
   background: #2a2a2a;
   color: white;
   border: 2px solid #444;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .action-btn:hover {
@@ -199,6 +205,7 @@
 .action-btn.end-turn {
   background: #2a3a4a;
   border-color: #4a5a6a;
+  min-width: 150px;
 }
 
 .action-btn.end-turn:hover {
