@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
 import Card from './Card';
-import CardActionMenu from './CardActionMenu';
 import './GameBoard.css';
 import './GameBoardNew.css';
+import './CardActionMenu.css';
 
 function GameBoard({ playerCharacter, onRestart }) {
   const [gameState, setGameState] = useState('setup');
@@ -38,6 +38,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [showMarket, setShowMarket] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
+  const [draggingCard, setDraggingCard] = useState(null);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', or null
   
   const logContentRef = useRef(null);
 
@@ -369,6 +372,53 @@ function GameBoard({ playerCharacter, onRestart }) {
     setLog(prev => [...prev, `${message}`]);
   };
 
+  const handleCardDragStart = (card, e) => {
+    if (selectedCardIsMarket) return; // Don't allow dragging market cards
+    setDraggingCard(card);
+    const touch = e.touches ? e.touches[0] : e;
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleCardDragMove = (e) => {
+    if (!draggingCard) return;
+    e.preventDefault();
+    const touch = e.touches ? e.touches[0] : e;
+    const x = touch.clientX;
+    const y = touch.clientY;
+    setDragPosition({ x, y });
+
+    // Detect drop zones
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    if (x < viewportWidth * 0.25) {
+      setDropZone('discard');
+    } else if (x > viewportWidth * 0.75) {
+      setDropZone('play');
+    } else if (y > viewportHeight * 0.75) {
+      setDropZone('trash');
+    } else {
+      setDropZone(null);
+    }
+  };
+
+  const handleCardDragEnd = () => {
+    if (!draggingCard) return;
+    
+    const card = draggingCard;
+    
+    if (dropZone === 'play') {
+      playCard(card);
+    } else if (dropZone === 'discard') {
+      discardForResource(card);
+    } else if (dropZone === 'trash') {
+      trashCard(card);
+    }
+    
+    setDraggingCard(null);
+    setDropZone(null);
+  };
+
   return (
     <div className="game-board">
       {/* Top HUD - Boss HP */}
@@ -448,24 +498,48 @@ function GameBoard({ playerCharacter, onRestart }) {
 
       {/* Hand - Fixed at bottom */}
       {gameState === 'playerTurn' && (
-        <div className="hand-container">
+        <div 
+          className="hand-container"
+          onMouseMove={handleCardDragMove}
+          onMouseUp={handleCardDragEnd}
+          onTouchMove={handleCardDragMove}
+          onTouchEnd={handleCardDragEnd}
+        >
           <div className="hand-row">
             {hand.map(card => (
-              <Card
+              <div
                 key={card.id}
-                card={card}
-                onClick={() => {
-                  setSelectedCard(card);
-                  setSelectedCardIsMarket(false);
-                }}
-                canAfford={resources >= card.symbols.length}
-              />
+                className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < card.symbols.length ? 'unaffordable' : ''}`}
+                onMouseDown={(e) => handleCardDragStart(card, e)}
+                onTouchStart={(e) => handleCardDragStart(card, e)}
+              >
+                <div className="card-symbols-only">
+                  {card.symbols.map((symbol, index) => (
+                    <span key={index} className="symbol-large">{symbol}</span>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
           <div className="hand-actions">
             <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
           </div>
         </div>
+      )}
+
+      {/* Drop Zones - Show when dragging */}
+      {draggingCard && (
+        <>
+          <div className={`drop-zone drop-zone-left ${dropZone === 'discard' ? 'active' : ''}`}>
+            <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
+          </div>
+          <div className={`drop-zone drop-zone-right ${dropZone === 'play' ? 'active' : ''}`}>
+            <div className="drop-zone-label">PLAY<br/>{draggingCard.symbols.length} 💎</div>
+          </div>
+          <div className={`drop-zone drop-zone-bottom ${dropZone === 'trash' ? 'active' : ''}`}>
+            <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
+          </div>
+        </>
       )}
 
       {/* Market Overlay */}
@@ -592,30 +666,36 @@ function GameBoard({ playerCharacter, onRestart }) {
         <div className="menu-backdrop" onClick={() => setShowMenu(false)}></div>
       )}
 
-      {/* Card Action Menu */}
-      {selectedCard && (
-        <CardActionMenu
-          card={selectedCard}
-          isMarket={selectedCardIsMarket}
-          canAfford={resources >= selectedCard.symbols.length}
-          onPlay={() => {
-            playCard(selectedCard);
-            setSelectedCard(null);
-          }}
-          onDiscard={() => {
-            discardForResource(selectedCard);
-            setSelectedCard(null);
-          }}
-          onTrash={() => {
-            trashCard(selectedCard);
-            setSelectedCard(null);
-          }}
-          onBuy={() => {
-            purchaseCard(selectedCard);
-            setSelectedCard(null);
-          }}
-          onClose={() => setSelectedCard(null)}
-        />
+      {/* Market Card Purchase Menu */}
+      {selectedCard && selectedCardIsMarket && (
+        <>
+          <div className="action-menu-overlay" onClick={() => setSelectedCard(null)} />
+          <div className="action-menu">
+            <div className="action-menu-header">
+              <div className="action-menu-card-preview">
+                {selectedCard.symbols.map((symbol, index) => (
+                  <span key={index} className="preview-symbol">{symbol}</span>
+                ))}
+              </div>
+              <div className="action-menu-cost">Cost: {selectedCard.symbols.length} 💎</div>
+            </div>
+            <div className="action-menu-buttons">
+              <button
+                className="action-button buy-button"
+                onClick={() => {
+                  purchaseCard(selectedCard);
+                  setSelectedCard(null);
+                }}
+                disabled={resources < selectedCard.symbols.length}
+              >
+                💰 Buy Card ({selectedCard.symbols.length} 💎)
+              </button>
+              <button className="action-button cancel-button" onClick={() => setSelectedCard(null)}>
+                ✖️ Cancel
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
