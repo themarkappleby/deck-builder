@@ -146,6 +146,7 @@
   padding: 0 8px 0;
   z-index: 100;
   pointer-events: none;
+  touch-action: none;
 }
 
 .hand-row {
@@ -626,7 +627,48 @@
 }
 
 /* Dragging card state */
+.hand-row .card {
+  width: 80px;
+  height: 110px;
+  background: #2a2a2a;
+  border: 2px solid #555;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.hand-row .card:active {
+  cursor: grabbing;
+}
+
+.hand-row .card.unaffordable {
+  opacity: 0.4;
+  border-color: #333;
+}
+
+.card-symbols-only {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+}
+
+.symbol-large {
+  font-size: 1.8rem;
+}
+
 .card.dragging {
   opacity: 0.5;
   transform: scale(0.9);
+  cursor: grabbing;
 }
