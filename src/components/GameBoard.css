@@ -246,7 +246,8 @@
 }
 
 .log-section {
-  height: 600px;
+  min-height: 500px;
+  max-height: 600px;
   display: flex;
   flex-direction: column;
 }
@@ -254,10 +255,12 @@
 .log-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   background: rgba(0, 0, 0, 0.3);
   padding: 10px;
   border-radius: 8px;
   font-size: 0.9rem;
+  min-height: 450px;
 }
 
 .log-entry {
@@ -359,11 +362,13 @@
   }
 
   .log-section {
-    max-height: 200px;
+    min-height: 400px;
+    max-height: 500px;
   }
 
   .log-content {
     font-size: 0.85rem;
+    min-height: 350px;
   }
 
   .big-button, .end-turn-button {

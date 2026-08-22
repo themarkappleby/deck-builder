@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
 import Card from './Card';
 import './GameBoard.css';
@@ -30,10 +30,18 @@ function GameBoard({ playerCharacter, onRestart }) {
   
   const [log, setLog] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
+  
+  const logContentRef = useRef(null);
 
   useEffect(() => {
     initializeGame();
   }, []);
+
+  useEffect(() => {
+    if (logContentRef.current) {
+      logContentRef.current.scrollTop = logContentRef.current.scrollHeight;
+    }
+  }, [log]);
 
   const initializeGame = () => {
     const startingDeck = getStartingDeck().map((card, index) => ({
@@ -454,7 +462,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         <div className="right-panel">
           <div className="log-section">
             <h3>Game Log</h3>
-            <div className="log-content">
+            <div className="log-content" ref={logContentRef}>
               {log.map((entry, index) => (
                 <div key={index} className="log-entry">{entry}</div>
               ))}
