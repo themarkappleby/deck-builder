@@ -50,6 +50,12 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
   }, [log]);
 
+  useEffect(() => {
+    if (gameState === 'ready') {
+      startRound();
+    }
+  }, [gameState]);
+
   const initializeGame = () => {
     const startingDeck = getStartingDeck().map((card, index) => ({
       ...card,
@@ -376,12 +382,6 @@ function GameBoard({ playerCharacter, onRestart }) {
 
       {/* Center Area - Boss Display */}
       <div className="center-area">
-        {gameState === 'ready' && (
-          <div className="center-content">
-            <button className="big-button" onClick={startRound}>Start Round {roundNumber}</button>
-          </div>
-        )}
-
         {gameState === 'playerTurn' && (
           <div className="center-content">
             <div className="boss-display">
