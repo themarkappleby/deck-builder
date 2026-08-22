@@ -36,6 +36,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedCardIsMarket, setSelectedCardIsMarket] = useState(false);
   const [showMarket, setShowMarket] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   
   const logContentRef = useRef(null);
 
@@ -460,9 +461,6 @@ function GameBoard({ playerCharacter, onRestart }) {
             ))}
           </div>
           <div className="hand-actions">
-            <button className="action-btn" onClick={() => setShowMarket(!showMarket)}>
-              {showMarket ? '❌ Close Market' : '🛒 Open Market'}
-            </button>
             <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
           </div>
         </div>
@@ -492,8 +490,37 @@ function GameBoard({ playerCharacter, onRestart }) {
         </div>
       )}
 
-      {/* Settings button */}
-      <button className="settings-btn" onClick={onRestart}>⚙️</button>
+      {/* Menu button */}
+      <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
+      
+      {/* Menu popover */}
+      {showMenu && (
+        <div className="menu-popover">
+          <button 
+            className="menu-item" 
+            onClick={() => {
+              setShowMarket(true);
+              setShowMenu(false);
+            }}
+          >
+            🛒 Market
+          </button>
+          <button 
+            className="menu-item" 
+            onClick={() => {
+              setShowMenu(false);
+              onRestart();
+            }}
+          >
+            🔄 New Game
+          </button>
+        </div>
+      )}
+      
+      {/* Backdrop to close menu */}
+      {showMenu && (
+        <div className="menu-backdrop" onClick={() => setShowMenu(false)}></div>
+      )}
 
       {/* Card Action Menu */}
       {selectedCard && (
