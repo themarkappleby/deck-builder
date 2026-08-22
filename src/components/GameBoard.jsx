@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
 import Card from './Card';
+import CardActionMenu from './CardActionMenu';
 import './GameBoard.css';
 
 function GameBoard({ playerCharacter, onRestart }) {
@@ -30,6 +31,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   
   const [log, setLog] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
+  
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCardIsMarket, setSelectedCardIsMarket] = useState(false);
   
   const logContentRef = useRef(null);
 
@@ -393,9 +397,10 @@ function GameBoard({ playerCharacter, onRestart }) {
                     <Card
                       key={card.id}
                       card={card}
-                      onClick={() => playCard(card)}
-                      onDiscard={() => discardForResource(card)}
-                      onTrash={() => trashCard(card)}
+                      onClick={() => {
+                        setSelectedCard(card);
+                        setSelectedCardIsMarket(false);
+                      }}
                       canAfford={resources >= card.symbols.length}
                     />
                   ))}
@@ -413,7 +418,10 @@ function GameBoard({ playerCharacter, onRestart }) {
                     <Card
                       key={card.id}
                       card={card}
-                      onClick={() => purchaseCard(card)}
+                      onClick={() => {
+                        setSelectedCard(card);
+                        setSelectedCardIsMarket(true);
+                      }}
                       isMarket={true}
                       canAfford={resources >= card.symbols.length}
                     />
@@ -469,6 +477,31 @@ function GameBoard({ playerCharacter, onRestart }) {
           </div>
         </div>
       </div>
+
+      {selectedCard && (
+        <CardActionMenu
+          card={selectedCard}
+          isMarket={selectedCardIsMarket}
+          canAfford={resources >= selectedCard.symbols.length}
+          onPlay={() => {
+            playCard(selectedCard);
+            setSelectedCard(null);
+          }}
+          onDiscard={() => {
+            discardForResource(selectedCard);
+            setSelectedCard(null);
+          }}
+          onTrash={() => {
+            trashCard(selectedCard);
+            setSelectedCard(null);
+          }}
+          onBuy={() => {
+            purchaseCard(selectedCard);
+            setSelectedCard(null);
+          }}
+          onClose={() => setSelectedCard(null)}
+        />
+      )}
     </div>
   );
 }
