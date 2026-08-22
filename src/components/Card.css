@@ -1,0 +1,94 @@
+.card {
+  width: 150px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+.market-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.card-name {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #fff;
+  text-align: center;
+}
+
+.card-cost {
+  font-size: 0.85rem;
+  color: #ffd700;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.card-symbols {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  min-height: 40px;
+}
+
+.symbol {
+  font-size: 1.5rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.card-button {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-button.primary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+}
+
+.card-button.primary:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+}
+
+.card-button.secondary {
+  background: rgba(231, 76, 60, 0.8);
+  color: white;
+}
+
+.card-button.secondary:hover {
+  background: rgba(231, 76, 60, 1);
+  transform: scale(1.05);
+}
