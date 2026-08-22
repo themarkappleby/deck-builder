@@ -1,26 +1,26 @@
 /* Top HUD - Boss HP */
 .top-hud {
-  padding: 15px 20px;
+  padding: 8px 12px;
   background: #1a1a1a;
   border-bottom: 2px solid #333;
   z-index: 10;
 }
 
 .boss-hp-container {
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 .boss-name {
   text-align: center;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
   color: #ddd;
   font-weight: bold;
 }
 
 .boss-hp-bar {
-  height: 30px;
+  height: 20px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
   overflow: hidden;
@@ -47,11 +47,19 @@
   position: absolute;
   width: 100%;
   text-align: center;
-  line-height: 30px;
   font-weight: bold;
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   z-index: 1;
+  font-size: 0.85rem;
+}
+
+.boss-hp-bar .hp-text {
+  line-height: 20px;
+}
+
+.player-hp-bar .hp-text {
+  line-height: 18px;
 }
 
 /* Center Area - Boss Display */
@@ -60,41 +68,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  overflow: auto;
+  padding: 10px;
+  overflow: hidden;
 }
 
 .center-content {
   text-align: center;
   width: 100%;
-  max-width: 800px;
+  max-width: 100%;
 }
 
 .boss-display {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
 }
 
 .boss-placeholder {
-  font-size: 8rem;
+  font-size: 4rem;
   line-height: 1;
 }
 
 .boss-intent {
   background: #2a1a1a;
   border: 2px solid #5a3a3a;
-  border-radius: 8px;
-  padding: 15px 30px;
-  font-size: 1.2rem;
-  max-width: 400px;
+  border-radius: 4px;
+  padding: 8px 15px;
+  font-size: 0.85rem;
+  max-width: 90%;
   color: #ddd;
 }
 
 /* Bottom HUD - Player Stats & HP */
 .bottom-hud {
-  padding: 10px 20px;
+  padding: 6px 12px 8px;
   background: #1a1a1a;
   border-top: 2px solid #333;
   z-index: 10;
@@ -103,46 +111,46 @@
 .player-stats-bar {
   display: flex;
   justify-content: center;
-  gap: 30px;
-  margin-bottom: 10px;
+  gap: 15px;
+  margin-bottom: 6px;
 }
 
 .stat-item {
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   font-weight: bold;
   color: #ddd;
 }
 
 .player-hp-bar {
-  height: 25px;
+  height: 18px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
   overflow: hidden;
   position: relative;
-  max-width: 400px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
-/* Hand Container - Fixed at bottom */
+/* Hand Container - Fixed at bottom with cards partially hidden */
 .hand-container {
   position: fixed;
-  bottom: 0;
+  bottom: -55px;
   left: 0;
   right: 0;
-  background: rgba(10, 10, 10, 0.95);
-  border-top: 2px solid #333;
-  padding: 10px;
+  background: transparent;
+  padding: 0 8px 0;
   z-index: 100;
-  backdrop-filter: blur(5px);
+  pointer-events: none;
 }
 
 .hand-row {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 8px;
   overflow-x: auto;
-  padding: 5px;
+  padding: 5px 0;
+  pointer-events: all;
 }
 
 .hand-row::-webkit-scrollbar {
@@ -161,12 +169,14 @@
 .hand-actions {
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 8px;
+  padding: 0 8px;
+  pointer-events: all;
 }
 
 .action-btn {
-  padding: 12px 30px;
-  font-size: 1.1rem;
+  padding: 10px 20px;
+  font-size: 0.9rem;
   font-weight: bold;
   background: #2a2a2a;
   color: white;
@@ -251,18 +261,21 @@
 /* Settings Button */
 .settings-btn {
   position: fixed;
-  top: 15px;
-  right: 15px;
-  width: 45px;
-  height: 45px;
-  font-size: 1.5rem;
+  top: 8px;
+  right: 8px;
+  width: 35px;
+  height: 35px;
+  font-size: 1.2rem;
   background: #2a2a2a;
   color: white;
   border: 2px solid #444;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .settings-btn:hover {
@@ -275,26 +288,32 @@
   background: rgba(10, 10, 10, 0.95);
   border: 2px solid #444;
   border-radius: 8px;
-  padding: 40px;
-  max-width: 600px;
+  padding: 20px;
+  max-width: 90%;
 }
 
 .level-up-overlay h2,
 .game-over-overlay h1 {
   color: #ddd;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.game-over-overlay p {
+  font-size: 1rem;
+  margin-bottom: 20px;
 }
 
 .level-up-options {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .level-up-options button {
-  padding: 15px 30px;
-  font-size: 1.2rem;
+  padding: 12px 20px;
+  font-size: 0.95rem;
   background: #2a2a3a;
   color: white;
   border: 2px solid #444;
@@ -308,13 +327,13 @@
 }
 
 .big-button {
-  padding: 20px 50px;
-  font-size: 1.5rem;
+  padding: 15px 35px;
+  font-size: 1.1rem;
   font-weight: bold;
   color: white;
   background: #2a2a4a;
   border: 2px solid #444;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -323,54 +342,41 @@
   background: #333355;
 }
 
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-  .boss-placeholder {
-    font-size: 5rem;
-  }
-
-  .boss-intent {
-    font-size: 1rem;
-    padding: 12px 20px;
-  }
-
-  .player-stats-bar {
-    gap: 15px;
-  }
-
-  .stat-item {
-    font-size: 0.95rem;
-  }
-
-  .hand-row {
-    gap: 8px;
-    padding-bottom: 10px;
-  }
-
-  .action-btn {
-    padding: 10px 20px;
-    font-size: 1rem;
-  }
-
-  .market-content {
-    padding: 20px;
-  }
-
-  .market-content h3 {
-    font-size: 1.5rem;
-  }
+/* Market */
+.market-content {
+  background: #1a1a1a;
+  border: 2px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 95%;
+  width: 100%;
 }
 
-@media (max-width: 480px) {
-  .boss-placeholder {
-    font-size: 4rem;
-  }
+.market-content h3 {
+  text-align: center;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  color: #ddd;
+}
 
-  .player-stats-bar {
-    gap: 10px;
-  }
+.market-grid {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
 
-  .stat-item {
-    font-size: 0.85rem;
-  }
+.close-market-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  background: #2a2a2a;
+  color: white;
+  border: 2px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
