@@ -69,6 +69,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px;
+  padding-bottom: 120px;
   overflow: hidden;
 }
 
@@ -102,10 +103,14 @@
 
 /* Bottom HUD - Player Stats & HP */
 .bottom-hud {
+  position: fixed;
+  bottom: 80px;
+  left: 0;
+  right: 0;
   padding: 6px 12px 8px;
   background: #1a1a1a;
   border-top: 2px solid #333;
-  z-index: 10;
+  z-index: 110;
 }
 
 .player-stats-bar {
