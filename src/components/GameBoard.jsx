@@ -173,6 +173,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
     const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
+    setDiscard(prev => [...prev, card]);
     setResources(prev => prev - cost);
 
     let damage = 0;
