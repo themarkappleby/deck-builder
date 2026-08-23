@@ -310,16 +310,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const refreshMarket = (currentMarket) => {
-    if (currentMarket.length < 5 && marketDeck.length > 0) {
-      const newCards = marketDeck.slice(0, 2).map((card, index) => ({
-        ...card,
-        id: `${card.id}_market_${Date.now()}_${index}`
-      }));
-      setMarket([...newCards, ...currentMarket.slice(0, -1)]);
-      setMarketDeck(marketDeck.slice(2));
-    } else {
-      setMarket(currentMarket);
-    }
+    // With the new boss card system, just update the market
+    // Don't refill from market deck - that happens at the end of the boss turn
+    setMarket(currentMarket);
   };
 
   const dealDamageToBoss = (damage) => {
