@@ -861,8 +861,8 @@ function GameBoard({ playerCharacter, onRestart }) {
       onTouchMove={handleCardDragMove}
       onTouchEnd={handleCardDragEnd}
     >
-      {/* Top HUD - Enemy HP (topmost) then Block */}
-      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
+      {/* Top HUD — non-battlefield states only; during play the boss identity sits in the center */}
+      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && !showBattlefield && (
         <div className="top-hud">
           <div className="boss-hp-container">
             <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
@@ -930,34 +930,56 @@ function GameBoard({ playerCharacter, onRestart }) {
                   ))}
                 </div>
               </div>
-              <div className="boss-placeholder">🐉</div>
-              <div className="intent-card-row boss-cards-row">
-                {bossCards.map(card => (
-                  <div key={card.id} className="intent-card">
-                    <div className="card-symbols-only">
-                      {card.symbols.map((symbol, index) => (
-                        <span key={index} className="symbol-large">{symbol}</span>
-                      ))}
+              <div className="boss-identity">
+                <div className="boss-hp-container">
+                  <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+                  <div className="hp-bar boss-hp-bar">
+                    <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
+                    <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
+                  </div>
+                  <div className="block-bar boss-block-bar">
+                    <div
+                      className="block-fill"
+                      style={{
+                        width: `${bossBlockMax > 0 ? (bossBlock / bossBlockMax) * 100 : 0}%`
+                      }}
+                    ></div>
+                    <span className="block-text">
+                      {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
+                    </span>
+                  </div>
+                </div>
+                <div className="boss-placeholder">🐉</div>
+              </div>
+              <div className="boss-lower">
+                <div className="intent-card-row boss-cards-row">
+                  {bossCards.map(card => (
+                    <div key={card.id} className="intent-card">
+                      <div className="card-symbols-only">
+                        {card.symbols.map((symbol, index) => (
+                          <span key={index} className="symbol-large">{symbol}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {bossAttack > 0 && (
+                  <div className="enemy-attack-slot">
+                    <div className="attack-bar boss-attack-bar">
+                      <div
+                        className="attack-fill"
+                        style={{
+                          width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
+                        }}
+                      ></div>
+                      <span className="attack-text">
+                        {Math.max(0, bossAttack - playerBlock)} attack
+                      </span>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-            {bossAttack > 0 && (
-              <div className="enemy-attack-slot">
-                <div className="attack-bar boss-attack-bar">
-                  <div
-                    className="attack-fill"
-                    style={{
-                      width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
-                    }}
-                  ></div>
-                  <span className="attack-text">
-                    {Math.max(0, bossAttack - playerBlock)} attack
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
