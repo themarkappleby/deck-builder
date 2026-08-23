@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
 import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards, getCardPlayTotals, formatCardEffectLabels, formatLevelLines } from '../abilityActions';
-import Card, { CardEffectLabels } from './Card';
+import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
@@ -861,30 +861,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       onTouchMove={handleCardDragMove}
       onTouchEnd={handleCardDragEnd}
     >
-      {/* Top HUD — non-battlefield states only; during play the boss identity sits in the center */}
-      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && !showBattlefield && (
-        <div className="top-hud">
-          <div className="boss-hp-container">
-            <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
-            <div className="hp-bar boss-hp-bar">
-              <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
-              <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
-            </div>
-            <div className="block-bar boss-block-bar">
-              <div
-                className="block-fill"
-                style={{
-                  width: `${bossBlockMax > 0 ? (bossBlock / bossBlockMax) * 100 : 0}%`
-                }}
-              ></div>
-              <span className="block-text">
-                {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Center Area - Boss Display */}
       <div className={`center-area${gameState === 'abilityChoice' || gameState === 'levelUp' ? ' overlay-mode' : ''}`}>
         {gameState === 'abilityChoice' && (
@@ -931,7 +907,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 </div>
               </div>
               <div className="boss-identity">
-                <div className="boss-hp-container">
+                <div className="boss-status">
                   <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
                   <div className="hp-bar boss-hp-bar">
                     <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
@@ -954,13 +930,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               <div className="boss-lower">
                 <div className="intent-card-row boss-cards-row">
                   {bossCards.map(card => (
-                    <div key={card.id} className="intent-card">
-                      <div className="card-symbols-only">
-                        {card.symbols.map((symbol, index) => (
-                          <span key={index} className="symbol-large">{symbol}</span>
-                        ))}
-                      </div>
-                    </div>
+                    <Card key={card.id} card={card} className="intent-card" />
                   ))}
                 </div>
                 {bossAttack > 0 && (
@@ -1119,9 +1089,10 @@ function GameBoard({ playerCharacter, onRestart }) {
               
               const effectLabels = getHandCardLabels(card);
               return (
-                <div
+                <Card
                   key={card.id}
-                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
+                  card={card}
+                  className={`${draggingCard?.id === card.id ? 'dragging' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
                   style={{
                     transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
                     zIndex: index,
@@ -1131,14 +1102,8 @@ function GameBoard({ playerCharacter, onRestart }) {
                   }}
                   onMouseDown={(e) => handleCardDragStart(card, e, 'hand')}
                   onTouchStart={(e) => handleCardDragStart(card, e, 'hand')}
-                >
-                  <div className="card-symbols-only">
-                    {card.symbols.map((symbol, symbolIndex) => (
-                      <span key={symbolIndex} className="symbol-large">{symbol}</span>
-                    ))}
-                  </div>
-                  <CardEffectLabels labels={effectLabels} />
-                </div>
+                  effectLabels={effectLabels}
+                />
               );
             })}
           </div>
@@ -1207,11 +1172,7 @@ function GameBoard({ playerCharacter, onRestart }) {
             top: `${dragPosition.y}px`,
           }}
         >
-          <div className="card-symbols-only">
-            {draggingCard.symbols.map((symbol, index) => (
-              <span key={index} className="symbol-large">{symbol}</span>
-            ))}
-          </div>
+          <CardSymbols symbols={draggingCard.symbols} />
           {draggingSource === 'hand' && (
             <CardEffectLabels labels={getHandCardLabels(draggingCard)} />
           )}

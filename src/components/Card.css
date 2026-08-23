@@ -11,8 +11,9 @@
   transition: all 0.2s ease;
   cursor: pointer;
   flex-shrink: 0;
-  overflow: hidden;
+  box-sizing: border-box;
   container-type: size;
+  overflow: hidden;
 }
 
 .card:hover {
@@ -35,17 +36,42 @@
 }
 
 .card-symbols-only {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
-  gap: 2px;
-  padding: 4px;
+  display: grid;
   width: 100%;
   flex: 1;
   min-height: 0;
+  place-items: center;
+  justify-items: center;
+  align-items: center;
+  padding: max(6px, 10%);
+  gap: 4%;
+  box-sizing: border-box;
   overflow: hidden;
+}
+
+.card-symbols-only.symbol-count-1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.card-symbols-only.symbol-count-2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+.card-symbols-only.symbol-count-3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.card-symbols-only.symbol-count-3 .symbol-slot:last-child {
+  grid-column: 1 / -1;
+}
+
+.card-symbols-only.symbol-count-4,
+.card-symbols-only.symbol-count-5,
+.card-symbols-only.symbol-count-6 {
+  grid-template-columns: 1fr 1fr;
 }
 
 .card-effect-labels {
@@ -72,21 +98,25 @@
   white-space: nowrap;
 }
 
+.symbol-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+}
+
 .symbol-large {
-  font-size: min(1.8rem, 42cqmin);
+  /* Size from the grid cell so 2-up glyphs fit on 40px market cards.
+     Color emoji paint outside the em-box, so stay under 100cqmin. */
+  font-size: 62cqmin;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.card-symbols-only:has(> :nth-child(2)) .symbol-large {
-  font-size: min(1.4rem, 34cqmin);
-}
-
-.card-symbols-only:has(> :nth-child(3)) .symbol-large {
-  font-size: min(1.15rem, 28cqmin);
-  flex: 0 0 42%;
 }
 
 /* Only market cards fade when unaffordable; hand cards stay opaque */
@@ -106,5 +136,3 @@
 .card.market-card.purchasable:active {
   cursor: grabbing;
 }
-
-/* Cards are already sized for mobile */
