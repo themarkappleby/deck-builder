@@ -446,7 +446,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   return (
     <div className="game-board">
       {/* Top HUD - Boss HP */}
-      {gameState !== 'abilityChoice' && (
+      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="top-hud">
           <div className="boss-hp-container">
             <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
@@ -532,7 +532,7 @@ function GameBoard({ playerCharacter, onRestart }) {
       </div>
 
       {/* Bottom HUD - Player Stats & HP */}
-      {gameState !== 'abilityChoice' && (
+      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="bottom-hud">
           <div className="player-stats-bar">
             <div className="stat-item">💎 {resources}</div>
@@ -701,12 +701,12 @@ function GameBoard({ playerCharacter, onRestart }) {
       )}
 
       {/* Menu button */}
-      {gameState !== 'abilityChoice' && (
+      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
       )}
       
       {/* Menu popover */}
-      {showMenu && gameState !== 'abilityChoice' && (
+      {showMenu && gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="menu-popover">
           <button 
             className="menu-item" 
