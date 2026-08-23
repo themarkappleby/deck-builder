@@ -905,7 +905,10 @@ function GameBoard({ playerCharacter, onRestart }) {
       {/* Market Card Purchase Menu */}
       {selectedCard && selectedCardIsMarket && (
         <>
-          <div className="action-menu-overlay" onClick={() => setSelectedCard(null)} />
+          <div className="action-menu-overlay" onClick={() => {
+            setSelectedCard(null);
+            setSelectedCardIsMarket(false);
+          }} />
           <div className="action-menu">
             <div className="action-menu-header">
               <div className="action-menu-card-preview">
@@ -921,12 +924,16 @@ function GameBoard({ playerCharacter, onRestart }) {
                 onClick={() => {
                   purchaseCard(selectedCard);
                   setSelectedCard(null);
+                  setShowMarket(false);
                 }}
                 disabled={resources < selectedCard.symbols.length}
               >
                 💰 Buy Card ({selectedCard.symbols.length} 💎)
               </button>
-              <button className="action-button cancel-button" onClick={() => setSelectedCard(null)}>
+              <button className="action-button cancel-button" onClick={() => {
+                setSelectedCard(null);
+                setSelectedCardIsMarket(false);
+              }}>
                 ✖️ Cancel
               </button>
             </div>
