@@ -3,7 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>Deck Builder Boss Battler</title>
+    <!--
+      Inline on purpose: even a stale cached copy of this HTML still runs a
+      cache-busted version check, so iOS home-screen apps pick up deploys
+      after close/reopen without deleting the icon.
+    -->
+    <script>
+      (function () {
+        var STORAGE_KEY = 'deck-builder-build-id'
+        var BASE = '/deck-builder/'
+
+        function clearSiteCaches() {
+          var tasks = []
+          if ('caches' in window) {
+            tasks.push(
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (key) {
+                  return caches.delete(key)
+                }))
+              })
+            )
+          }
+          if ('serviceWorker' in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (reg) {
+                  return reg.unregister()
+                }))
+              })
+            )
+          }
+          return Promise.all(tasks)
+        }
+
+        function reloadWithCacheBust(version) {
+          var url = new URL(window.location.href)
+          url.searchParams.set('_v', version)
+          window.location.replace(url.pathname + url.search + url.hash)
+        }
+
+        function stripBustParam() {
+          var url = new URL(window.location.href)
+          if (!url.searchParams.has('_v')) return
+          url.searchParams.delete('_v')
+          var next = url.pathname + url.search + url.hash
+          history.replaceState(null, '', next)
+        }
+
+        function checkVersion() {
+          fetch(BASE + 'version.json?t=' + Date.now(), { cache: 'no-store' })
+            .then(function (response) {
+              return response.ok ? response.json() : null
+            })
+            .then(function (data) {
+              if (!data || !data.version) return
+              var current = null
+              try {
+                current = localStorage.getItem(STORAGE_KEY)
+              } catch (e) {}
+
+              if (current && current !== data.version) {
+                try {
+                  localStorage.setItem(STORAGE_KEY, data.version)
+                } catch (e) {}
+                clearSiteCaches().finally(function () {
+                  reloadWithCacheBust(data.version)
+                })
+                return
+              }
+
+              if (!current) {
+                try {
+                  localStorage.setItem(STORAGE_KEY, data.version)
+                } catch (e) {}
+              }
+              stripBustParam()
+            })
+            .catch(function () {})
+        }
+
+        checkVersion()
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') checkVersion()
+        })
+
+        window.addEventListener('pageshow', function () {
+          checkVersion()
+        })
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
