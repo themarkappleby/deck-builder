@@ -6,6 +6,8 @@ import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
 
+const LEVEL_UP_PICK_LIMIT = 2;
+
 function AbilityLines({ level }) {
   return formatLevelLines(level).map((line, index) => (
     <p key={index}>{line}</p>
@@ -211,16 +213,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlock(action.block || 0);
     setBossBlockMax(action.block || 0);
     
-    // Determine how many cards to draw based on race
-    let cardsToDraw = 6;
-    if (playerCharacter.race.id === 'elf') {
-      if (raceLevel >= 2) {
-        cardsToDraw = 8;
-      } else if (raceLevel >= 1) {
-        cardsToDraw = 7;
-      }
-    }
-    
     // Vampire B Level 2: Start each round with +1 blood token
     if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'B' && raceLevel >= 2) {
       setPlayerTokens(prev => ({
@@ -234,7 +226,19 @@ function GameBoard({ playerCharacter, onRestart }) {
     setGodAbilityUsesThisRound(0);
     setPendingDiscardAbility(null);
 
-    const drawnCards = drawCards(cardsToDraw);
+    // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
+    // must be discarded before drawing a fresh opening hand. Otherwise the
+    // new draw would sit on top of the old hand.
+    const leftoverHand = [...hand];
+    if (leftoverHand.length > 0) {
+      addLog(
+        leftoverHand.length === 1
+          ? 'Discarded leftover card from previous encounter'
+          : `Discarded ${leftoverHand.length} leftover cards from previous encounter`
+      );
+    }
+
+    const drawnCards = drawOpeningHand(getOpeningHandSize(), leftoverHand);
     const currentGodLevel = godLevelRef.current;
     const aresDamage = getAresStartOfRoundDamage(
       playerCharacter,
@@ -287,11 +291,20 @@ function GameBoard({ playerCharacter, onRestart }) {
     };
   };
 
-  const drawCards = (count) => {
-    let currentDeck = [...deck];
-    let currentDiscard = [...discard];
-    let drawnCards = [];
+  const getOpeningHandSize = () => {
+    let cardsToDraw = 6;
+    if (playerCharacter.race.id === 'elf') {
+      if (raceLevel >= 2) {
+        cardsToDraw = 8;
+      } else if (raceLevel >= 1) {
+        cardsToDraw = 7;
+      }
+    }
+    return cardsToDraw;
+  };
 
+  const drawFromPiles = (count, currentDeck, currentDiscard) => {
+    const drawnCards = [];
     for (let i = 0; i < count; i++) {
       if (currentDeck.length === 0) {
         if (currentDiscard.length === 0) break;
@@ -301,11 +314,15 @@ function GameBoard({ playerCharacter, onRestart }) {
       }
       drawnCards.push(currentDeck.pop());
     }
+    return { drawnCards, currentDeck, currentDiscard };
+  };
 
-    setDeck(currentDeck);
-    setDiscard(currentDiscard);
-    setHand(prev => [...prev, ...drawnCards]);
-    return drawnCards;
+  const drawOpeningHand = (count, leftoverHand = []) => {
+    const result = drawFromPiles(count, [...deck], [...discard, ...leftoverHand]);
+    setDeck(result.currentDeck);
+    setDiscard(result.currentDiscard);
+    setHand(result.drawnCards);
+    return result.drawnCards;
   };
 
   const shuffleArray = (array) => {
@@ -505,8 +522,8 @@ function GameBoard({ playerCharacter, onRestart }) {
       setGameState('victory');
       addLog('Victory! You won the game!');
     } else {
-      levelUpPicksRemainingRef.current = 2;
-      setLevelUpPicksRemaining(2);
+      levelUpPicksRemainingRef.current = LEVEL_UP_PICK_LIMIT;
+      setLevelUpPicksRemaining(LEVEL_UP_PICK_LIMIT);
       setGameState('levelUp');
       addLog('Choose 2 level up options!');
     }
@@ -979,7 +996,10 @@ function GameBoard({ playerCharacter, onRestart }) {
             </div>
             <div className="level-up-options">
               {raceLevel < 2 && (
-                <button onClick={() => levelUpCharacter('race')}>
+                <button
+                  onClick={() => levelUpCharacter('race')}
+                  disabled={levelUpPicksRemaining <= 0}
+                >
                   <strong>{playerCharacter.race.name} - Level {raceLevel} → {raceLevel + 1}</strong>
                   <AbilityLines level={playerCharacter.race.level2} />
                 </button>
@@ -992,7 +1012,10 @@ function GameBoard({ playerCharacter, onRestart }) {
               )}
               
               {classLevel < 2 && (
-                <button onClick={() => levelUpCharacter('class')}>
+                <button
+                  onClick={() => levelUpCharacter('class')}
+                  disabled={levelUpPicksRemaining <= 0}
+                >
                   <strong>{playerCharacter.class.name} - Level {classLevel} → {classLevel + 1}</strong>
                   {classLevel === 0 && (
                     <AbilityLines level={playerCharacter.class.level1} />
@@ -1010,7 +1033,10 @@ function GameBoard({ playerCharacter, onRestart }) {
               )}
               
               {godLevel < 2 && (
-                <button onClick={() => levelUpCharacter('god')}>
+                <button
+                  onClick={() => levelUpCharacter('god')}
+                  disabled={levelUpPicksRemaining <= 0}
+                >
                   <strong>{playerCharacter.god.name} - Level {godLevel} → {godLevel + 1}</strong>
                   {godLevel === 0 && (
                     <AbilityLines level={playerCharacter.god.level1} />
