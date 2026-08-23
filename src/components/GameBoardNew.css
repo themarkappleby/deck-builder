@@ -110,6 +110,12 @@
   min-height: 0;
 }
 
+.center-area.overlay-mode {
+  overflow-y: auto;
+  padding-bottom: 10px;
+  align-items: flex-start;
+}
+
 .center-content {
   text-align: center;
   width: 100%;
@@ -637,6 +643,8 @@
   border-radius: 8px;
   padding: 20px;
   max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .level-up-overlay h2,
@@ -644,6 +652,20 @@
   color: #ddd;
   margin-bottom: 20px;
   font-size: 1.3rem;
+}
+
+.level-up-current {
+  margin-bottom: 20px;
+}
+
+.level-up-current h3 {
+  color: #ccc;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.level-up-current .character-info {
+  margin-bottom: 0;
 }
 
 .game-over-overlay p {
