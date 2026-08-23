@@ -10,67 +10,33 @@ export const SYMBOLS = {
 
 export const races = [
   {
-    id: 'vampire',
-    name: 'Vampire',
+    id: 'mountain-dwarf',
+    name: 'Mountain dwarf',
     side: 'A',
     level1: {
-      effect: 'Spend 3 blood tokens: Heal 1 HP.',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Gain 1 blood token',
-      onSymbol: [{ type: 'token', token: 'blood', amount: 1 }]
+      symbolEffect: 'Double your block value',
+      onSymbol: [{ type: 'doubleBlock' }]
     },
     level2: {
-      effect: 'Spend 2 blood tokens: Heal 1 HP.',
-      additionalEffect: '🔺 symbols deal +1 damage'
+      effect: 'Your block value no longer resets to 0 at the start of your turn.'
     }
   },
   {
-    id: 'vampire',
-    name: 'Vampire',
-    side: 'B',
-    level1: {
-      effect: 'Spend 3 blood tokens: Deal 2 damage.',
-      symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Gain 1 blood token',
-      onSymbol: [{ type: 'token', token: 'blood', amount: 1 }]
-    },
-    level2: {
-      effect: 'Spend 2 blood tokens: Deal 3 damage.',
-      additionalEffect: 'Start each round with +1 blood token'
-    }
-  },
-  {
-    id: 'dwarf',
-    name: 'Dwarf',
+    id: 'forest-elf',
+    name: 'Forest elf',
     side: 'A',
     level1: {
-      effect: 'Start with +2 max HP (12 HP total)',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Gain 2 block',
-      onSymbol: [{ type: 'block', amount: 2 }]
+      symbolEffect: '+3 cards',
+      onSymbol: [{ type: 'draw', amount: 3 }]
     },
     level2: {
-      effect: 'Start with +4 max HP (14 HP total)',
-      additionalEffect: 'All 🔹 symbols grant +1 block'
-    }
-  },
-  {
-    id: 'elf',
-    name: 'Elf',
-    side: 'A',
-    level1: {
-      effect: 'Draw 7 cards at start of round instead of 6',
-      symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Draw 2 cards',
-      onSymbol: [{ type: 'draw', amount: 2 }]
-    },
-    level2: {
-      effect: 'Draw 8 cards at start of round',
-      additionalEffect: '🟩 symbols: Draw 1 card',
+      additionalEffect: '🟩 +1 card',
       extraTriggers: [
         {
           symbol: SYMBOLS.GREEN,
-          symbolEffect: 'Draw 1 card',
+          symbolEffect: '+1 card',
           onSymbol: [{ type: 'draw', amount: 1 }]
         }
       ]
@@ -80,83 +46,60 @@ export const races = [
 
 export const classes = [
   {
-    id: 'warrior',
-    name: 'Warrior',
+    id: 'gardener',
+    name: 'Gardener of Yiis',
     side: 'A',
     level1: {
       symbol: SYMBOLS.GREEN,
-      symbolEffect: 'Deal 2 damage',
-      onSymbol: [{ type: 'damage', amount: 2 }]
+      symbolEffect: '+2 0/1 tokens to the play field',
+      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener' }],
+      effect: 'If any tokens remain at the start of your next turn, you may discard any tokens to gain 2 resources per token discarded.'
     },
     level2: {
-      effect: '🔺 symbols deal +2 damage',
       symbol: SYMBOLS.GREEN,
-      symbolEffect: 'Deal 3 damage',
-      onSymbol: [{ type: 'damage', amount: 3 }]
+      symbolEffect: '+1 token',
+      onSymbol: [{ type: 'spawnToken', count: 1, kind: 'gardener' }],
+      effect: 'All gardener tokens are 1/2.',
+      replaceLevel1: false
     }
   },
   {
-    id: 'warrior',
-    name: 'Warrior',
-    side: 'B',
+    id: 'vampiera',
+    name: 'Vampiera noir',
+    side: 'A',
     level1: {
-      effect: 'Spend 3 rage: Your next 🔺 deals double damage.',
       symbol: SYMBOLS.GREEN,
-      symbolEffect: 'Gain 1 rage token',
-      onSymbol: [{ type: 'token', token: 'rage', amount: 1 }]
+      symbolEffect: '+1 token',
+      onSymbol: [{ type: 'spawnToken', count: 1, kind: 'vampiera' }],
+      effect: 'You may discard 3 tokens at any time to heal 3 HP. Max tokens: 6.'
     },
     level2: {
-      effect: 'Spend 2 rage: Your next 🔺 deals double damage.',
-      additionalEffect: '⭐️ symbols: Gain 2 rage tokens',
+      additionalEffect: '🔺 +1 token. Max tokens: 12.',
       extraTriggers: [
         {
-          symbol: SYMBOLS.STAR,
-          symbolEffect: 'Gain 2 rage tokens',
-          onSymbol: [{ type: 'token', token: 'rage', amount: 2 }]
+          symbol: SYMBOLS.ATTACK,
+          symbolEffect: '+1 token',
+          onSymbol: [{ type: 'spawnToken', count: 1, kind: 'vampiera' }]
         }
       ]
     }
   },
   {
-    id: 'priest',
-    name: 'Priest',
+    id: 'shield-warden',
+    name: 'Shield warden',
     side: 'A',
     level1: {
       symbol: SYMBOLS.GREEN,
-      symbolEffect: 'Gain 2 block',
-      onSymbol: [{ type: 'block', amount: 2 }]
+      symbolEffect: 'Deal damage equal to your current block value',
+      onSymbol: [{ type: 'damageEqualBlock' }]
     },
     level2: {
-      effect: '🔹 symbols grant +2 block',
-      additionalEffect: '⭐️ symbols: Heal 2 HP',
+      additionalEffect: '🔹 +1 block',
       extraTriggers: [
         {
-          symbol: SYMBOLS.STAR,
-          symbolEffect: 'Heal 2 HP',
-          onSymbol: [{ type: 'heal', amount: 2 }]
-        }
-      ]
-    }
-  },
-  {
-    id: 'mage',
-    name: 'Mage',
-    side: 'A',
-    level1: {
-      symbol: SYMBOLS.GREEN,
-      symbolEffect: 'Deal 2 damage to boss',
-      onSymbol: [{ type: 'damage', amount: 2 }]
-    },
-    level2: {
-      symbol: SYMBOLS.GREEN,
-      symbolEffect: 'Deal 3 damage to boss',
-      onSymbol: [{ type: 'damage', amount: 3 }],
-      additionalEffect: '⭐️ symbols: Deal 2 damage to boss',
-      extraTriggers: [
-        {
-          symbol: SYMBOLS.STAR,
-          symbolEffect: 'Deal 2 damage to boss',
-          onSymbol: [{ type: 'damage', amount: 2 }]
+          symbol: SYMBOLS.BLOCK,
+          symbolEffect: '+1 block',
+          onSymbol: [{ type: 'block', amount: 1 }]
         }
       ]
     }
@@ -165,70 +108,44 @@ export const classes = [
 
 export const gods = [
   {
-    id: 'ares',
-    name: 'Ares (God of War)',
+    id: 'brood-mother',
+    name: 'Brood mother',
     side: 'A',
     level1: {
       symbol: SYMBOLS.STAR,
-      symbolEffect: 'Deal 2 damage',
-      onSymbol: [{ type: 'damage', amount: 2 }]
+      symbolEffect: 'Double the number of tokens in your play area',
+      onSymbol: [{ type: 'doubleTokens' }],
+      effect: 'Max tokens: 12.'
     },
     level2: {
-      effect: 'Once per round: Discard a card to deal 3 damage',
-      symbol: SYMBOLS.STAR,
-      symbolEffect: 'Deal 3 damage',
-      onSymbol: [{ type: 'damage', amount: 3 }]
-    }
-  },
-  {
-    id: 'ares',
-    name: 'Ares (God of War)',
-    side: 'B',
-    level1: {
-      symbol: SYMBOLS.STAR,
-      symbolEffect: 'Deal 2 damage',
-      onSymbol: [{ type: 'damage', amount: 2 }]
-    },
-    level2: {
-      effect: 'At start of round: Deal 2 damage to boss for each 🔺 card in hand',
-      additionalEffect: 'Cards with 🔺 cost 1 less to play'
-    }
-  },
-  {
-    id: 'athena',
-    name: 'Athena (Goddess of Wisdom)',
-    side: 'A',
-    level1: {
-      symbol: SYMBOLS.STAR,
-      symbolEffect: 'Draw 1 card',
-      onSymbol: [{ type: 'draw', amount: 1 }]
-    },
-    level2: {
-      effect: 'Twice per round: Discard a card to draw 2 cards',
-      additionalEffect: '🟩 symbols: Draw 1 card',
       extraTriggers: [
         {
-          symbol: SYMBOLS.GREEN,
-          symbolEffect: 'Draw 1 card',
-          onSymbol: [{ type: 'draw', amount: 1 }]
+          symbol: SYMBOLS.STAR,
+          symbolEffect: '+1/+1 to all tokens in your play area',
+          onSymbol: [{ type: 'buffTokens', attack: 1, defense: 1 }]
         }
       ]
     }
   },
   {
-    id: 'apollo',
-    name: 'Apollo (God of Healing)',
+    id: 'angels-of-elandor',
+    name: 'Angels of Elandor',
     side: 'A',
     level1: {
       symbol: SYMBOLS.STAR,
-      symbolEffect: 'Heal 1 HP',
-      onSymbol: [{ type: 'heal', amount: 1 }]
+      starsRequired: 2,
+      symbolEffect: 'Ignore all incoming damage this round',
+      onSymbol: [{ type: 'starComboIgnoreDamage', starsRequired: 2 }],
+      effect: 'Both ⭐️ must be played in the same round.'
     },
     level2: {
-      effect: 'At end of round: If you blocked all damage, heal 2 HP',
-      symbol: SYMBOLS.STAR,
-      symbolEffect: 'Heal 2 HP',
-      onSymbol: [{ type: 'heal', amount: 2 }]
+      extraTriggers: [
+        {
+          symbol: SYMBOLS.STAR,
+          symbolEffect: 'Heal +1 HP',
+          onSymbol: [{ type: 'heal', amount: 1 }]
+        }
+      ]
     }
   }
 ];
@@ -342,3 +259,4 @@ export const getStartingDeck = () => [
   { id: 's9', name: 'Block', symbols: [SYMBOLS.BLOCK] },
   { id: 's10', name: 'Focus', symbols: [SYMBOLS.PURPLE] }
 ];
+

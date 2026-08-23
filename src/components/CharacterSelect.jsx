@@ -82,7 +82,7 @@ function CharacterSelect({ onCharacterSelect }) {
                 className={`selection-card ${selectedRace === race ? 'selected' : ''}`}
                 onClick={() => handleRaceSelect(race)}
               >
-                <h3>{race.name} (Side {race.side})</h3>
+                <h3>{race.name}</h3>
                 <div className="card-level">
                   <strong>Level 1:</strong>
                   <AbilityLines level={race.level1} />
@@ -108,7 +108,7 @@ function CharacterSelect({ onCharacterSelect }) {
                 className={`selection-card ${selectedClass === cls ? 'selected' : ''}`}
                 onClick={() => handleClassSelect(cls)}
               >
-                <h3>{cls.name} (Side {cls.side})</h3>
+                <h3>{cls.name}</h3>
                 <div className="card-level">
                   <strong>Level 1:</strong>
                   <AbilityLines level={cls.level1} />
@@ -134,7 +134,7 @@ function CharacterSelect({ onCharacterSelect }) {
                 className={`selection-card ${selectedGod === god ? 'selected' : ''}`}
                 onClick={() => handleGodSelect(god)}
               >
-                <h3>{god.name} (Side {god.side})</h3>
+                <h3>{god.name}</h3>
                 <div className="card-level">
                   <strong>Level 1:</strong>
                   <AbilityLines level={god.level1} />
