@@ -118,8 +118,8 @@
 
 .center-area.overlay-mode {
   overflow-y: auto;
-  padding-bottom: 10px;
-  align-items: stretch;
+  padding: 10px;
+  align-items: flex-start;
 }
 
 .center-content {
@@ -129,9 +129,8 @@
 }
 
 .player-turn-layout {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  flex: 1 1 auto;
+  display: flex;
+  flex: 1;
   height: 100%;
   width: 100%;
   min-height: 0;
@@ -145,18 +144,21 @@
   justify-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 0;
   height: 100%;
+  min-height: 0;
 }
 
 .market-column {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 4px;
   flex: 0 0 auto;
   align-self: start;
   justify-self: center;
+  min-height: 0;
+  padding-top: 8px;
 }
 
 .boss-stage {
@@ -180,8 +182,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   width: 100%;
+  padding: 0 12px;
+  box-sizing: border-box;
 }
 
 .boss-placeholder {
@@ -213,6 +217,16 @@
   min-width: calc(80px * 3 + 8px * 2);
 }
 
+.boss-lower {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 0;
+  padding-bottom: 220px;
+}
+
 .card.intent-card {
   background: #3a2a2a;
   border-color: #6a4a4a;
@@ -224,19 +238,9 @@
   border-color: #6a4a4a;
 }
 
-.market-row {
-  min-height: 55px;
-  min-width: calc(40px * 3 + 4px * 2);
-  gap: 4px;
-}
-
-.market-row .card,
 .market-slot-empty {
-  width: 40px;
-  height: 55px;
-}
-
-.market-slot-empty {
+  width: 80px;
+  height: 110px;
   border: 2px dashed #333;
   border-radius: 6px;
   box-sizing: border-box;
@@ -1091,12 +1095,14 @@
 }
 
 @media (max-width: 480px) {
-  .card.intent-card {
+  .card.intent-card,
+  .market-row .card,
+  .market-slot-empty {
     width: 64px;
     height: 88px;
   }
 
-  .boss-cards-row {
+  .intent-card-row {
     min-width: calc(64px * 3 + 6px * 2);
     min-height: 88px;
     gap: 6px;
