@@ -3,6 +3,8 @@
  * based on which sides/levels are currently unlocked.
  */
 
+import { SYMBOLS } from './gameData';
+
 /**
  * @param {object} playerCharacter
  * @param {{ raceLevel: number, classLevel: number, godLevel: number }} levels
@@ -110,4 +112,27 @@ export function getGodAbilityUsesPerRound(playerCharacter, godLevel) {
     return godLevel >= 2 ? 2 : 1;
   }
   return 0;
+}
+
+export function countAttackCards(hand) {
+  return (hand || []).filter(card =>
+    Array.isArray(card.symbols) && card.symbols.includes(SYMBOLS.ATTACK)
+  ).length;
+}
+
+/**
+ * Ares Side B: at start of round, deal damage for each 🔺 card in hand.
+ * Level 1: 1 damage per 🔺 card. Level 2: 2 damage per 🔺 card.
+ */
+export function getAresStartOfRoundDamage(playerCharacter, godLevel, hand) {
+  if (
+    !playerCharacter?.god ||
+    playerCharacter.god.id !== 'ares' ||
+    playerCharacter.god.side !== 'B' ||
+    godLevel < 1
+  ) {
+    return 0;
+  }
+  const damagePerCard = godLevel >= 2 ? 2 : 1;
+  return countAttackCards(hand) * damagePerCard;
 }
