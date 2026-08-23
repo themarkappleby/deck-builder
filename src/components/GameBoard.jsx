@@ -12,6 +12,48 @@ function AbilityLines({ level }) {
   ));
 }
 
+function CharacterAbilities({ playerCharacter, raceLevel, classLevel, godLevel }) {
+  return (
+    <div className="character-info">
+      <div className="character-section">
+        <h4>{playerCharacter.race.name} (Side {playerCharacter.race.side}) - Level {raceLevel}</h4>
+        <div className={`ability-box ${raceLevel >= 1 ? 'active' : ''}`}>
+          <strong>Level 1:</strong>
+          <AbilityLines level={playerCharacter.race.level1} />
+        </div>
+        <div className={`ability-box ${raceLevel >= 2 ? 'active' : ''}`}>
+          <strong>Level 2:</strong>
+          <AbilityLines level={playerCharacter.race.level2} />
+        </div>
+      </div>
+
+      <div className="character-section">
+        <h4>{playerCharacter.class.name} (Side {playerCharacter.class.side}) - Level {classLevel}</h4>
+        <div className={`ability-box ${classLevel >= 1 ? 'active' : ''}`}>
+          <strong>Level 1:</strong>
+          <AbilityLines level={playerCharacter.class.level1} />
+        </div>
+        <div className={`ability-box ${classLevel >= 2 ? 'active' : ''}`}>
+          <strong>Level 2:</strong>
+          <AbilityLines level={playerCharacter.class.level2} />
+        </div>
+      </div>
+
+      <div className="character-section">
+        <h4>{playerCharacter.god.name} (Side {playerCharacter.god.side}) - Level {godLevel}</h4>
+        <div className={`ability-box ${godLevel >= 1 ? 'active' : ''}`}>
+          <strong>Level 1:</strong>
+          <AbilityLines level={playerCharacter.god.level1} />
+        </div>
+        <div className={`ability-box ${godLevel >= 2 ? 'active' : ''}`}>
+          <strong>Level 2:</strong>
+          <AbilityLines level={playerCharacter.god.level2} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GameBoard({ playerCharacter, onRestart }) {
   const [gameState, setGameState] = useState('setup');
   const [bossNumber, setBossNumber] = useState(1);
@@ -43,6 +85,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [raceLevel, setRaceLevel] = useState(1);
   const [classLevel, setClassLevel] = useState(0);
   const [godLevel, setGodLevel] = useState(0);
+  const [levelUpPicksRemaining, setLevelUpPicksRemaining] = useState(0);
   
   const [log, setLog] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -55,8 +98,14 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', 'purchase', or null
   
   const logContentRef = useRef(null);
+  const raceLevelRef = useRef(raceLevel);
+  raceLevelRef.current = raceLevel;
+  const classLevelRef = useRef(classLevel);
+  classLevelRef.current = classLevel;
   const godLevelRef = useRef(godLevel);
   godLevelRef.current = godLevel;
+  const levelUpPicksRemainingRef = useRef(levelUpPicksRemaining);
+  levelUpPicksRemainingRef.current = levelUpPicksRemaining;
 
   // Derive remaining uses from the unlocked god level so unlocking Ares/Athena
   // mid-setup (or after a stale startRound closure) still enables the button.
@@ -456,8 +505,10 @@ function GameBoard({ playerCharacter, onRestart }) {
       setGameState('victory');
       addLog('Victory! You won the game!');
     } else {
+      levelUpPicksRemainingRef.current = 2;
+      setLevelUpPicksRemaining(2);
       setGameState('levelUp');
-      addLog('Choose 2 cards to level up!');
+      addLog('Choose 2 level up options!');
     }
   };
 
@@ -513,28 +564,49 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const levelUpCharacter = (cardType) => {
-    if (cardType === 'race' && raceLevel < 2) {
-      const newLevel = raceLevel + 1;
+    if (gameState !== 'levelUp' || levelUpPicksRemainingRef.current <= 0) {
+      return;
+    }
+
+    let applied = false;
+    if (cardType === 'race' && raceLevelRef.current < 2) {
+      const newLevel = raceLevelRef.current + 1;
+      raceLevelRef.current = newLevel;
       setRaceLevel(newLevel);
       addLog(`Race leveled up to ${newLevel}!`);
-      
+      applied = true;
+
       // Apply Dwarf HP bonus when leveling up
-      if (playerCharacter.race.id === 'dwarf') {
-        if (newLevel === 2) {
-          const newMaxHP = 14;
-          setPlayerMaxHP(newMaxHP);
-          setPlayerHP(prev => prev + 2); // Heal 2 HP when max increases
-          addLog('Max HP increased to 14!');
-        }
+      if (playerCharacter.race.id === 'dwarf' && newLevel === 2) {
+        const newMaxHP = 14;
+        setPlayerMaxHP(newMaxHP);
+        setPlayerHP(prev => prev + 2); // Heal 2 HP when max increases
+        addLog('Max HP increased to 14!');
       }
-    } else if (cardType === 'class' && classLevel < 2) {
-      const newLevel = classLevel + 1;
+    } else if (cardType === 'class' && classLevelRef.current < 2) {
+      const newLevel = classLevelRef.current + 1;
+      classLevelRef.current = newLevel;
       setClassLevel(newLevel);
       addLog(`Class leveled up to ${newLevel}!`);
-    } else if (cardType === 'god' && godLevel < 2) {
-      const newLevel = godLevel + 1;
+      applied = true;
+    } else if (cardType === 'god' && godLevelRef.current < 2) {
+      const newLevel = godLevelRef.current + 1;
+      godLevelRef.current = newLevel;
       setGodLevel(newLevel);
       addLog(`God leveled up to ${newLevel}!`);
+      applied = true;
+    }
+
+    if (!applied) {
+      return;
+    }
+
+    const remaining = levelUpPicksRemainingRef.current - 1;
+    levelUpPicksRemainingRef.current = remaining;
+    setLevelUpPicksRemaining(remaining);
+
+    if (remaining <= 0) {
+      startNextBoss();
     }
   };
 
@@ -552,6 +624,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlock(0);
     setBossBlockMax(0);
     setRoundNumber(1);
+    levelUpPicksRemainingRef.current = 0;
+    setLevelUpPicksRemaining(0);
     setGameState('ready');
     addLog(`Next boss: ${boss.name} (Level ${nextBossNumber})`);
   };
@@ -815,7 +889,7 @@ function GameBoard({ playerCharacter, onRestart }) {
       )}
 
       {/* Center Area - Boss Display */}
-      <div className="center-area">
+      <div className={`center-area${gameState === 'abilityChoice' || gameState === 'levelUp' ? ' overlay-mode' : ''}`}>
         {gameState === 'abilityChoice' && (
           <div className="center-content level-up-overlay">
             <h2>Choose Your Starting Ability</h2>
@@ -890,7 +964,19 @@ function GameBoard({ playerCharacter, onRestart }) {
 
         {gameState === 'levelUp' && (
           <div className="center-content level-up-overlay">
-            <h2>Level Up! Choose 2 cards:</h2>
+            <h2>
+              Level Up! Choose {levelUpPicksRemaining} more{' '}
+              {levelUpPicksRemaining === 1 ? 'option' : 'options'}
+            </h2>
+            <div className="level-up-current">
+              <h3>Your current abilities</h3>
+              <CharacterAbilities
+                playerCharacter={playerCharacter}
+                raceLevel={raceLevel}
+                classLevel={classLevel}
+                godLevel={godLevel}
+              />
+            </div>
             <div className="level-up-options">
               {raceLevel < 2 && (
                 <button onClick={() => levelUpCharacter('race')}>
@@ -941,7 +1027,6 @@ function GameBoard({ playerCharacter, onRestart }) {
                 </button>
               )}
             </div>
-            <button className="big-button" onClick={startNextBoss}>Continue to Next Boss</button>
           </div>
         )}
 
@@ -1103,44 +1188,12 @@ function GameBoard({ playerCharacter, onRestart }) {
         <div className="player-stats-overlay">
           <div className="player-stats-content">
             <h3>Your Character</h3>
-            
-            <div className="character-info">
-              <div className="character-section">
-                <h4>{playerCharacter.race.name} (Side {playerCharacter.race.side}) - Level {raceLevel}</h4>
-                <div className={`ability-box ${raceLevel >= 1 ? 'active' : ''}`}>
-                  <strong>Level 1:</strong>
-                  <AbilityLines level={playerCharacter.race.level1} />
-                </div>
-                <div className={`ability-box ${raceLevel >= 2 ? 'active' : ''}`}>
-                  <strong>Level 2:</strong>
-                  <AbilityLines level={playerCharacter.race.level2} />
-                </div>
-              </div>
-
-              <div className="character-section">
-                <h4>{playerCharacter.class.name} (Side {playerCharacter.class.side}) - Level {classLevel}</h4>
-                <div className={`ability-box ${classLevel >= 1 ? 'active' : ''}`}>
-                  <strong>Level 1:</strong>
-                  <AbilityLines level={playerCharacter.class.level1} />
-                </div>
-                <div className={`ability-box ${classLevel >= 2 ? 'active' : ''}`}>
-                  <strong>Level 2:</strong>
-                  <AbilityLines level={playerCharacter.class.level2} />
-                </div>
-              </div>
-
-              <div className="character-section">
-                <h4>{playerCharacter.god.name} (Side {playerCharacter.god.side}) - Level {godLevel}</h4>
-                <div className={`ability-box ${godLevel >= 1 ? 'active' : ''}`}>
-                  <strong>Level 1:</strong>
-                  <AbilityLines level={playerCharacter.god.level1} />
-                </div>
-                <div className={`ability-box ${godLevel >= 2 ? 'active' : ''}`}>
-                  <strong>Level 2:</strong>
-                  <AbilityLines level={playerCharacter.god.level2} />
-                </div>
-              </div>
-            </div>
+            <CharacterAbilities
+              playerCharacter={playerCharacter}
+              raceLevel={raceLevel}
+              classLevel={classLevel}
+              godLevel={godLevel}
+            />
 
             <button className="close-stats-btn" onClick={() => setShowPlayerStats(false)}>Close</button>
           </div>
