@@ -909,7 +909,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               return (
                 <div
                   key={card.id}
-                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < 1 ? 'unaffordable' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
+                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
                   style={{
                     transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
                     zIndex: index,
