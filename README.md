@@ -69,8 +69,9 @@ Make sure GitHub Pages is enabled in your repository settings:
 ### Card Symbols
 - 🔺 Attack: Deal 1 damage to boss (immediately)
 - 🔹 Block: Gain 1 block (reduces boss damage at end of round)
-- 🟣 Purple: Race-specific effect (if your race defines it)
-- 🟩 Green, ⭐️ Star, 🧡 Orange: Character-specific effects
+- 🟣 Purple: Level 1 race effect
+- 🟩 Green: Level 1 class effect
+- ⭐️ Star: Level 1 god effect
 
 ### Victory & Defeat
 - **Win**: Defeat all 3 bosses

@@ -22,9 +22,9 @@ The deck building cards are each made up of 1 or more symbols. The player’s pl
 
 Players’ starting decks all start with 5 🔺cards, 4 🔹cards and 1 🟣card.
 
-Each player board indicates 🔺is 1 attack and 🔹is 1 block. This is universal and applies to all characters. The race card level 1 portion indicates 🟣X (where X is unique for each race card).
+Each player board indicates 🔺 is 1 attack and 🔹 is 1 block. This is universal and applies to all characters. The race card level 1 portion indicates 🟣 X (where X is unique for each race card). The class card level 1 portion indicates 🟩 X (unique per class). The god card level 1 portion indicates ⭐️ X (unique per god).
 
-The level 2 race portion and the class and god cards may apply additional effects to 🔺🔹🟣🟩⭐️🧡symbols and/or alter the standard game rules in some other way.
+The level 2 race portion and the class and god cards may apply additional effects to 🔺🔹🟣🟩⭐️ symbols and/or alter the standard game rules in some other way.
 
 On a player's turn they will draw a hand of 6 cards. They can then play, purchase or trash cards by paying their cost. The cost of a card is determined by the number of symbols on the card. For example, a card with a 🔺and 🔹symbol cost 2, and a card with 2 🔺symbols costs 2. Cards purchased go to the player’s discard pile. Cards trashed, are trashed from the players hand and removed from the game. To pay a cost, players must discard a corresponding number of cards from their hand.
 

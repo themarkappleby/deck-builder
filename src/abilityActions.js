@@ -64,21 +64,20 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
     });
   }
 
-  // --- God abilities (activated, discard a card) ---
+  // --- God abilities (activated, discard a card) — level 2 ---
   if (
     playerCharacter.god.id === 'ares' &&
     playerCharacter.god.side === 'A' &&
-    godLevel >= 1
+    godLevel >= 2
   ) {
-    const damage = godLevel >= 2 ? 3 : 2;
     buttons.push({
       id: 'ares-discard',
       source: 'god',
-      label: `⚔️ Strike (${damage})`,
+      label: '⚔️ Strike (3)',
       className: 'god-btn',
       disabled: godUsesRemaining <= 0 || handSize === 0,
       action: 'aresDiscard',
-      damage,
+      damage: 3,
       usesRemaining: godUsesRemaining,
     });
   }
@@ -86,7 +85,7 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
   if (
     playerCharacter.god.id === 'athena' &&
     playerCharacter.god.side === 'A' &&
-    godLevel >= 1
+    godLevel >= 2
   ) {
     buttons.push({
       id: 'athena-discard',
@@ -104,12 +103,12 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
 
 /** Max god ability uses this round for the active god level. */
 export function getGodAbilityUsesPerRound(playerCharacter, godLevel) {
-  if (godLevel < 1) return 0;
+  if (godLevel < 2) return 0;
   if (playerCharacter.god.id === 'ares' && playerCharacter.god.side === 'A') {
     return 1;
   }
   if (playerCharacter.god.id === 'athena' && playerCharacter.god.side === 'A') {
-    return godLevel >= 2 ? 2 : 1;
+    return 2;
   }
   return 0;
 }
@@ -121,18 +120,116 @@ export function countAttackCards(hand) {
 }
 
 /**
- * Ares Side B: at start of round, deal damage for each 🔺 card in hand.
- * Level 1: 1 damage per 🔺 card. Level 2: 2 damage per 🔺 card.
+ * Ares Side B: at start of round (level 2), deal 2 damage for each 🔺 card in hand.
  */
 export function getAresStartOfRoundDamage(playerCharacter, godLevel, hand) {
   if (
     !playerCharacter?.god ||
     playerCharacter.god.id !== 'ares' ||
     playerCharacter.god.side !== 'B' ||
-    godLevel < 1
+    godLevel < 2
   ) {
     return 0;
   }
-  const damagePerCard = godLevel >= 2 ? 2 : 1;
-  return countAttackCards(hand) * damagePerCard;
+  return countAttackCards(hand) * 2;
+}
+
+/**
+ * Display lines for a race/class/god level (symbol trigger + extra text).
+ */
+export function formatLevelLines(level) {
+  if (!level) return [];
+  const lines = [];
+  if (level.symbol && level.symbolEffect) {
+    lines.push(`${level.symbol} = ${level.symbolEffect}`);
+  }
+  if (level.effect) lines.push(level.effect);
+  if (level.additionalEffect) lines.push(level.additionalEffect);
+  return lines;
+}
+
+function triggersFromPiece(piece, unlockedLevel, playedSymbol) {
+  if (!piece || unlockedLevel < 1) return [];
+
+  const results = [];
+  const level2ReplacesLevel1 =
+    unlockedLevel >= 2 &&
+    piece.level2?.symbol === playedSymbol &&
+    Array.isArray(piece.level2?.onSymbol);
+
+  if (
+    !level2ReplacesLevel1 &&
+    piece.level1?.symbol === playedSymbol &&
+    Array.isArray(piece.level1?.onSymbol)
+  ) {
+    results.push({
+      label: piece.level1.symbolEffect,
+      effects: piece.level1.onSymbol,
+    });
+  }
+
+  if (
+    unlockedLevel >= 2 &&
+    piece.level2?.symbol === playedSymbol &&
+    Array.isArray(piece.level2?.onSymbol)
+  ) {
+    results.push({
+      label: piece.level2.symbolEffect,
+      effects: piece.level2.onSymbol,
+    });
+  }
+
+  if (unlockedLevel >= 2 && Array.isArray(piece.level2?.extraTriggers)) {
+    for (const extra of piece.level2.extraTriggers) {
+      if (extra.symbol === playedSymbol && Array.isArray(extra.onSymbol)) {
+        results.push({
+          label: extra.symbolEffect,
+          effects: extra.onSymbol,
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Collect race (🟣), class (🟩), and god (⭐️) effects for the symbols on a played card.
+ */
+export function collectPlayEffects(playerCharacter, levels, symbols) {
+  const totals = {
+    damage: 0,
+    block: 0,
+    heal: 0,
+    draw: 0,
+    tokens: {},
+    logs: [],
+  };
+
+  (symbols || []).forEach(symbol => {
+    const triggers = [
+      ...triggersFromPiece(playerCharacter.race, levels.raceLevel, symbol),
+      ...triggersFromPiece(playerCharacter.class, levels.classLevel, symbol),
+      ...triggersFromPiece(playerCharacter.god, levels.godLevel, symbol),
+    ];
+
+    for (const trigger of triggers) {
+      totals.logs.push(`${symbol} effect: ${trigger.label}`);
+      for (const effect of trigger.effects) {
+        if (effect.type === 'damage') {
+          totals.damage += effect.amount;
+        } else if (effect.type === 'block') {
+          totals.block += effect.amount;
+        } else if (effect.type === 'heal') {
+          totals.heal += effect.amount;
+        } else if (effect.type === 'draw') {
+          totals.draw += effect.amount;
+        } else if (effect.type === 'token') {
+          totals.tokens[effect.token] = (totals.tokens[effect.token] || 0) + effect.amount;
+        }
+      }
+    }
+  });
+
+  return totals;
 }
