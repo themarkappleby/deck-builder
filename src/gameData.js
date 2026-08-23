@@ -118,13 +118,10 @@ export const gods = [
       effect: 'Max tokens: 12.'
     },
     level2: {
-      extraTriggers: [
-        {
-          symbol: SYMBOLS.STAR,
-          symbolEffect: '+1/+1 to all tokens in your play area',
-          onSymbol: [{ type: 'buffTokens', attack: 1, defense: 1 }]
-        }
-      ]
+      symbol: SYMBOLS.STAR,
+      symbolEffect: '+1/+1 to all tokens in your play area',
+      onSymbol: [{ type: 'buffTokens', attack: 1, defense: 1 }],
+      replaceLevel1: false
     }
   },
   {
@@ -133,19 +130,16 @@ export const gods = [
     side: 'A',
     level1: {
       symbol: SYMBOLS.STAR,
+      symbolEffect: 'Heal +1 HP',
+      onSymbol: [{ type: 'heal', amount: 1 }]
+    },
+    level2: {
+      symbol: SYMBOLS.STAR,
       starsRequired: 2,
       symbolEffect: 'Ignore all incoming damage this round',
       onSymbol: [{ type: 'starComboIgnoreDamage', starsRequired: 2 }],
-      effect: 'Both ⭐️ must be played in the same round.'
-    },
-    level2: {
-      extraTriggers: [
-        {
-          symbol: SYMBOLS.STAR,
-          symbolEffect: 'Heal +1 HP',
-          onSymbol: [{ type: 'heal', amount: 1 }]
-        }
-      ]
+      effect: 'Both ⭐️ must be played in the same round.',
+      replaceLevel1: false
     }
   }
 ];
