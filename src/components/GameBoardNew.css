@@ -127,36 +127,32 @@
 }
 
 .battlefield {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
   min-height: 0;
-  overflow: visible;
 }
 
-.boss-column,
 .market-column {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  width: 100%;
+  gap: 4px;
 }
 
 .boss-placeholder {
   font-size: 4rem;
   line-height: 1;
-  height: 4rem;
 }
 
 .market-label {
-  height: 4rem;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: bold;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -187,32 +183,31 @@
   box-sizing: border-box;
 }
 
+.market-row {
+  min-height: 55px;
+  min-width: calc(40px * 3 + 4px * 2);
+  gap: 4px;
+}
+
+.market-row .card,
 .market-slot-empty {
-  width: 80px;
-  height: 110px;
+  width: 40px;
+  height: 55px;
+}
+
+.market-row .card-symbols-only {
+  padding: 2px;
+  gap: 1px;
+}
+
+.market-row .symbol-large {
+  font-size: 0.9rem;
+}
+
+.market-slot-empty {
   border: 2px dashed #333;
   border-radius: 6px;
   box-sizing: border-box;
-}
-
-.intent-card-row.market-fading .card,
-.intent-card-row.market-fading .card.market-card.unaffordable {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.slide-in-from-left {
-  animation: slideInFromLeft 0.55s ease-out;
-}
-
-@keyframes slideInFromLeft {
-  from {
-    transform: translateX(-100vw);
-  }
-  to {
-    transform: translateX(0);
-  }
 }
 
 .game-board.is-dragging {
@@ -882,10 +877,10 @@
 }
 
 .drop-zone-center {
-  top: 22%;
-  left: 2%;
-  right: 50%;
-  bottom: 38%;
+  top: 25%;
+  left: 30%;
+  right: 30%;
+  bottom: 35%;
   background: radial-gradient(ellipse at center, rgba(90, 150, 42, 0.5), transparent 70%);
   border: 4px solid rgba(90, 150, 42, 0.8);
   border-radius: 20px;
@@ -1049,26 +1044,19 @@
   }
 }
 
-.market-column .card {
-  width: 80px;
-  height: 110px;
-}
-
 @media (max-width: 480px) {
-  .intent-card,
-  .market-slot-empty,
-  .market-column .card {
+  .intent-card {
     width: 64px;
     height: 88px;
   }
 
-  .intent-card-row {
+  .boss-cards-row {
     min-width: calc(64px * 3 + 6px * 2);
+    min-height: 88px;
     gap: 6px;
   }
 
-  .intent-card .symbol-large,
-  .market-column .symbol-large {
+  .intent-card .symbol-large {
     font-size: 1.4rem;
   }
 }
