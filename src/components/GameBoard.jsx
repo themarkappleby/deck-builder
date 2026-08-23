@@ -861,30 +861,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       onTouchMove={handleCardDragMove}
       onTouchEnd={handleCardDragEnd}
     >
-      {/* Top HUD - Enemy HP (topmost) then Block */}
-      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
-        <div className="top-hud">
-          <div className="boss-hp-container">
-            <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
-            <div className="hp-bar boss-hp-bar">
-              <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
-              <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
-            </div>
-            <div className="block-bar boss-block-bar">
-              <div
-                className="block-fill"
-                style={{
-                  width: `${bossBlockMax > 0 ? (bossBlock / bossBlockMax) * 100 : 0}%`
-                }}
-              ></div>
-              <span className="block-text">
-                {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Center Area - Boss Display */}
       <div className={`center-area${gameState === 'abilityChoice' || gameState === 'levelUp' ? ' overlay-mode' : ''}`}>
         {gameState === 'abilityChoice' && (
@@ -930,17 +906,37 @@ function GameBoard({ playerCharacter, onRestart }) {
                   ))}
                 </div>
               </div>
-              <div className="boss-placeholder">🐉</div>
-              <div className="intent-card-row boss-cards-row">
-                {bossCards.map(card => (
-                  <div key={card.id} className="intent-card">
-                    <div className="card-symbols-only">
-                      {card.symbols.map((symbol, index) => (
-                        <span key={index} className="symbol-large">{symbol}</span>
-                      ))}
-                    </div>
+              <div className="boss-cluster">
+                <div className="boss-status">
+                  <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+                  <div className="hp-bar boss-hp-bar">
+                    <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
+                    <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
                   </div>
-                ))}
+                  <div className="block-bar boss-block-bar">
+                    <div
+                      className="block-fill"
+                      style={{
+                        width: `${bossBlockMax > 0 ? (bossBlock / bossBlockMax) * 100 : 0}%`
+                      }}
+                    ></div>
+                    <span className="block-text">
+                      {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
+                    </span>
+                  </div>
+                </div>
+                <div className="boss-placeholder">🐉</div>
+                <div className="intent-card-row boss-cards-row">
+                  {bossCards.map(card => (
+                    <div key={card.id} className="intent-card">
+                      <div className="card-symbols-only">
+                        {card.symbols.map((symbol, index) => (
+                          <span key={index} className="symbol-large">{symbol}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             {bossAttack > 0 && (
