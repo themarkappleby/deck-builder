@@ -207,7 +207,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const playCard = (card) => {
-    const cost = card.symbols.length;
+    const cost = 1; // Playing a card always costs 1
     if (resources < cost) {
       addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
@@ -503,13 +503,14 @@ function GameBoard({ playerCharacter, onRestart }) {
     // Detect drop zones
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const canAfford = resources >= draggingCard.symbols.length;
+    const canAffordPlay = resources >= 1; // Playing costs 1
+    const canAffordTrash = resources >= draggingCard.symbols.length; // Trashing costs symbol count
     
     if (x < viewportWidth * 0.25) {
       setDropZone('discard');
-    } else if (x > viewportWidth * 0.75 && canAfford) {
+    } else if (x > viewportWidth * 0.75 && canAffordPlay) {
       setDropZone('play');
-    } else if (y < viewportHeight * 0.25 && canAfford) {
+    } else if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
     } else {
       setDropZone(null);
@@ -716,7 +717,7 @@ function GameBoard({ playerCharacter, onRestart }) {
             {hand.map(card => (
               <div
                 key={card.id}
-                className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < card.symbols.length ? 'unaffordable' : ''}`}
+                className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < 1 ? 'unaffordable' : ''}`}
                 onMouseDown={(e) => handleCardDragStart(card, e)}
                 onTouchStart={(e) => handleCardDragStart(card, e)}
               >
@@ -752,9 +753,9 @@ function GameBoard({ playerCharacter, onRestart }) {
           </div>
           
           {/* Play zone - only if player can afford */}
-          {resources >= draggingCard.symbols.length && (
+          {resources >= 1 && (
             <div className={`drop-zone drop-zone-right ${dropZone === 'play' ? 'active' : ''}`}>
-              <div className="drop-zone-label">PLAY<br/>{draggingCard.symbols.length} 💎</div>
+              <div className="drop-zone-label">PLAY<br/>1 💎</div>
             </div>
           )}
           
