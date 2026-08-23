@@ -137,7 +137,6 @@
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  margin-bottom: 6px;
 }
 
 .boss-stat-bar {
@@ -178,16 +177,43 @@
   letter-spacing: 0.02em;
 }
 
-/* Bottom HUD - Player Stats & HP */
-.bottom-hud {
+/* Lower HUD: enemy attack above player stats, below drawn cards */
+.lower-hud-stack {
   position: fixed;
   bottom: 180px;
   left: 0;
   right: 0;
-  padding: 6px 12px 8px;
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
   background: #1a1a1a;
   border-top: 2px solid #333;
-  z-index: 110;
+}
+
+.enemy-combat-hud {
+  padding: 6px 12px 4px;
+  background: transparent;
+  border-top: none;
+}
+
+.enemy-combat-hud .boss-combat-bars {
+  margin-bottom: 0;
+}
+
+/* Bottom HUD - Player Stats & HP */
+.bottom-hud {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  padding: 6px 12px 8px;
+  background: transparent;
+  border-top: none;
+  z-index: auto;
+}
+
+.enemy-combat-hud + .bottom-hud {
+  padding-top: 4px;
 }
 
 .player-stats-bar {

@@ -745,41 +745,11 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   return (
     <div className="game-board">
-      {/* Top HUD - Boss combat bars & HP */}
+      {/* Top HUD - Enemy HP is always the topmost bar */}
       {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="top-hud">
           <div className="boss-hp-container">
             <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
-            {(bossAttack > 0 || bossBlockMax > 0) && (
-              <div className="boss-combat-bars">
-                {bossAttack > 0 && (
-                  <div className="boss-stat-bar boss-attack-bar">
-                    <div
-                      className="boss-stat-fill"
-                      style={{
-                        width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
-                      }}
-                    ></div>
-                    <span className="boss-stat-text">
-                      Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
-                    </span>
-                  </div>
-                )}
-                {bossBlockMax > 0 && (
-                  <div className="boss-stat-bar boss-block-bar">
-                    <div
-                      className="boss-stat-fill"
-                      style={{
-                        width: `${(bossBlock / bossBlockMax) * 100}%`
-                      }}
-                    ></div>
-                    <span className="boss-stat-text">
-                      Block {bossBlock} / {bossBlockMax}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
             <div className="hp-bar boss-hp-bar">
               <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
               <span className="hp-text">{bossHP} / {bossMaxHP}</span>
@@ -921,24 +891,59 @@ function GameBoard({ playerCharacter, onRestart }) {
         )}
       </div>
 
-      {/* Bottom HUD - Player Stats & HP */}
+      {/* Lower HUD stack: enemy attack (below drawn cards) then player stats */}
       {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
-        <div className="bottom-hud">
-          <div className="player-stats-bar">
-            <div className="stat-item">💎 {resources}</div>
-            <div className="stat-item">🛡️ {playerBlock}</div>
-            <div className="stat-item">🎴 {deck.length}</div>
-            <div className="stat-item">🗑️ {discard.length}</div>
-            {abilityUI.tokenDisplays.map(token => (
-              <div key={token.key} className="stat-item">{token.icon} {token.value}</div>
-            ))}
-            {nextAttackDoubled && (
-              <div className="stat-item rage-active" title="Next attack doubled">💢×2</div>
-            )}
-          </div>
-          <div className="hp-bar player-hp-bar">
-            <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
-            <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
+        <div className="lower-hud-stack">
+          {(bossAttack > 0 || bossBlockMax > 0) && (
+            <div className="enemy-combat-hud">
+              <div className="boss-combat-bars">
+                {bossAttack > 0 && (
+                  <div className="boss-stat-bar boss-attack-bar">
+                    <div
+                      className="boss-stat-fill"
+                      style={{
+                        width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
+                      }}
+                    ></div>
+                    <span className="boss-stat-text">
+                      Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
+                    </span>
+                  </div>
+                )}
+                {bossBlockMax > 0 && (
+                  <div className="boss-stat-bar boss-block-bar">
+                    <div
+                      className="boss-stat-fill"
+                      style={{
+                        width: `${(bossBlock / bossBlockMax) * 100}%`
+                      }}
+                    ></div>
+                    <span className="boss-stat-text">
+                      Block {bossBlock} / {bossBlockMax}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="bottom-hud">
+            <div className="player-stats-bar">
+              <div className="stat-item">💎 {resources}</div>
+              <div className="stat-item">🛡️ {playerBlock}</div>
+              <div className="stat-item">🎴 {deck.length}</div>
+              <div className="stat-item">🗑️ {discard.length}</div>
+              {abilityUI.tokenDisplays.map(token => (
+                <div key={token.key} className="stat-item">{token.icon} {token.value}</div>
+              ))}
+              {nextAttackDoubled && (
+                <div className="stat-item rage-active" title="Next attack doubled">💢×2</div>
+              )}
+            </div>
+            <div className="hp-bar player-hp-bar">
+              <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
+              <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
+            </div>
           </div>
         </div>
       )}
