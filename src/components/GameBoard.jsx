@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
 import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards, collectPlayEffects, formatLevelLines } from '../abilityActions';
-import Card from './Card';
+import Card, { CardSymbols } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
@@ -862,11 +862,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               <div className="boss-placeholder">🐉</div>
               <div className="intent-card-row boss-cards-row">
                 {bossCards.map(card => (
-                  <div key={card.id} className="intent-card">
-                    {card.symbols.map((symbol, index) => (
-                      <span key={index} className="symbol-large">{symbol}</span>
-                    ))}
-                  </div>
+                  <Card key={card.id} card={card} className="intent-card" />
                 ))}
               </div>
             </div>
@@ -1003,9 +999,10 @@ function GameBoard({ playerCharacter, onRestart }) {
               const verticalOffset = Math.abs(offsetFromCenter) * 3;
               
               return (
-                <div
+                <Card
                   key={card.id}
-                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
+                  card={card}
+                  className={`${draggingCard?.id === card.id ? 'dragging' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
                   style={{
                     transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
                     zIndex: index,
@@ -1015,13 +1012,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                   }}
                   onMouseDown={(e) => handleCardDragStart(card, e, 'hand')}
                   onTouchStart={(e) => handleCardDragStart(card, e, 'hand')}
-                >
-                  <div className="card-symbols-only">
-                    {card.symbols.map((symbol, symbolIndex) => (
-                      <span key={symbolIndex} className="symbol-large">{symbol}</span>
-                    ))}
-                  </div>
-                </div>
+                />
               );
             })}
           </div>
@@ -1090,11 +1081,7 @@ function GameBoard({ playerCharacter, onRestart }) {
             top: `${dragPosition.y}px`,
           }}
         >
-          <div className="card-symbols-only">
-            {draggingCard.symbols.map((symbol, index) => (
-              <span key={index} className="symbol-large">{symbol}</span>
-            ))}
-          </div>
+          <CardSymbols symbols={draggingCard.symbols} />
         </div>
       )}
 

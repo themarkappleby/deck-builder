@@ -47,19 +47,15 @@
 }
 
 .action-menu-card-preview {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-  padding: 20px;
+  width: 80px;
+  height: 110px;
+  margin: 0 auto 15px;
   background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-}
-
-.preview-symbol {
-  font-size: 3rem;
+  border: 2px solid #555;
+  border-radius: 6px;
+  box-sizing: border-box;
+  container-type: size;
+  overflow: hidden;
 }
 
 .action-menu-cost {
@@ -126,10 +122,6 @@
 @media (max-width: 768px) {
   .action-menu {
     padding: 20px 15px 30px;
-  }
-
-  .preview-symbol {
-    font-size: 2.5rem;
   }
 
   .action-menu-cost {

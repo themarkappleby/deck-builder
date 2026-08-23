@@ -10,6 +10,9 @@
   transition: all 0.2s ease;
   cursor: pointer;
   flex-shrink: 0;
+  box-sizing: border-box;
+  container-type: size;
+  overflow: hidden;
 }
 
 .card:hover {
@@ -32,16 +35,45 @@
 }
 
 .card-symbols-only {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  justify-items: center;
   align-items: center;
-  gap: 4px;
-  padding: 8px;
+  padding: 10%;
+  gap: 4%;
+  box-sizing: border-box;
+}
+
+.card-symbols-only.symbol-count-1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.card-symbols-only.symbol-count-2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+.card-symbols-only.symbol-count-3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.card-symbols-only.symbol-count-3 .symbol-large:last-child {
+  grid-column: 1 / -1;
+}
+
+.card-symbols-only.symbol-count-4,
+.card-symbols-only.symbol-count-5,
+.card-symbols-only.symbol-count-6 {
+  grid-template-columns: 1fr 1fr;
 }
 
 .symbol-large {
-  font-size: 1.8rem;
+  font-size: min(36cqw, 28cqh);
+  line-height: 1;
 }
 
 /* Only market cards fade when unaffordable; hand cards stay opaque */
@@ -61,5 +93,3 @@
 .card.market-card.purchasable:active {
   cursor: grabbing;
 }
-
-/* Cards are already sized for mobile */
