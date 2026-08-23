@@ -41,16 +41,19 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [log, setLog] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
   
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [selectedCardIsMarket, setSelectedCardIsMarket] = useState(false);
-  const [showMarket, setShowMarket] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
   const [draggingCard, setDraggingCard] = useState(null);
+  const [draggingSource, setDraggingSource] = useState(null); // 'hand' | 'market'
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
-  const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', or null
+  const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', 'purchase', or null
+  const [slidePhase, setSlidePhase] = useState('idle'); // 'idle' | 'toMarket' | 'enterBoss'
+  const [slideOffset, setSlideOffset] = useState({ x: 0, y: 0 });
   
   const logContentRef = useRef(null);
+  const bossCardsRowRef = useRef(null);
+  const marketCardsRowRef = useRef(null);
+  const slideTimerRef = useRef(null);
 
   const abilityUI = getActiveAbilityUI(
     playerCharacter,
@@ -71,6 +74,20 @@ function GameBoard({ playerCharacter, onRestart }) {
       logContentRef.current.scrollTop = logContentRef.current.scrollHeight;
     }
   }, [log]);
+
+  useEffect(() => {
+    return () => {
+      if (slideTimerRef.current) {
+        clearTimeout(slideTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (slidePhase !== 'enterBoss') return undefined;
+    const timer = setTimeout(() => setSlidePhase('idle'), 600);
+    return () => clearTimeout(timer);
+  }, [slidePhase]);
 
   useEffect(() => {
     if (gameState === 'ready') {
@@ -141,6 +158,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarketDeck(currentMarketDeck);
     setMarket(currentMarket);
     setBossCards(drawnBossCards);
+    setSlideOffset({ x: 0, y: 0 });
+    setSlidePhase('enterBoss');
     
     // Calculate boss action from drawn cards
     const action = calculateBossActionFromCards(drawnBossCards);
@@ -472,21 +491,54 @@ function GameBoard({ playerCharacter, onRestart }) {
       addLog(`Boss healed ${bossAction.value} HP! (${newBossHP}/${bossMaxHP} HP)`);
     }
 
+    setBossAttack(0);
+    setBossBlock(0);
+    setBossBlockMax(0);
+
     // Unpurchased market cards return to the market deck so the boss
-    // can reshuffle them later; boss cards become the new market.
+    // can reshuffle them later. They fade out while the used boss cards
+    // slide into the market, then three new boss cards enter from the left.
+    const resolvingBossCards = bossCards;
     if (market.length > 0) {
       setMarketDeck(prev => [...prev, ...market]);
       addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the draw pile`);
     }
-    setMarket(bossCards);
-    setBossCards([]);
-    setBossAttack(0);
-    setBossBlock(0);
-    setBossBlockMax(0);
-    addLog('Boss cards moved to market!');
 
-    setRoundNumber(prev => prev + 1);
-    setGameState('ready');
+    if (resolvingBossCards.length === 0) {
+      setMarket([]);
+      setBossCards([]);
+      addLog('Boss cards moved to market!');
+      setRoundNumber(prev => prev + 1);
+      setGameState('ready');
+      return;
+    }
+
+    setGameState('bossResolve');
+    setSlidePhase('toMarket');
+    setSlideOffset({ x: 0, y: 0 });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const from = bossCardsRowRef.current?.getBoundingClientRect();
+        const to = marketCardsRowRef.current?.getBoundingClientRect();
+        if (from && to) {
+          setSlideOffset({ x: to.left - from.left, y: to.top - from.top });
+        }
+      });
+    });
+
+    if (slideTimerRef.current) {
+      clearTimeout(slideTimerRef.current);
+    }
+    slideTimerRef.current = setTimeout(() => {
+      setMarket(resolvingBossCards);
+      setBossCards([]);
+      setSlideOffset({ x: 0, y: 0 });
+      setSlidePhase('idle');
+      addLog('Boss cards moved to market!');
+      setRoundNumber(prev => prev + 1);
+      setGameState('ready');
+    }, 700);
   };
 
   const levelUpCharacter = (cardType) => {
@@ -686,14 +738,18 @@ function GameBoard({ playerCharacter, onRestart }) {
     setHand([...currentHand, ...drawnCards]);
   };
 
-  const handleCardDragStart = (card, e) => {
-    if (selectedCardIsMarket) return; // Don't allow dragging market cards
-    // When selecting a card for a god discard ability, resolve on click/tap instead of drag
-    if (pendingDiscardAbility) {
+  const handleCardDragStart = (card, e, source = 'hand') => {
+    if (slidePhase !== 'idle' || gameState !== 'playerTurn') return;
+    if (source === 'market') {
+      if (resources < card.symbols.length) return;
+      e.preventDefault();
+    } else if (pendingDiscardAbility) {
+      // When selecting a card for a god discard ability, resolve on click/tap instead of drag
       resolveGodDiscard(card);
       return;
     }
     setDraggingCard(card);
+    setDraggingSource(source);
     const touch = e.touches ? e.touches[0] : e;
     setDragPosition({ x: touch.clientX, y: touch.clientY });
   };
@@ -706,9 +762,14 @@ function GameBoard({ playerCharacter, onRestart }) {
     const y = touch.clientY;
     setDragPosition({ x, y });
 
-    // Detect drop zones
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
+
+    if (draggingSource === 'market') {
+      setDropZone(y > viewportHeight * 0.68 ? 'purchase' : null);
+      return;
+    }
+
     const canAffordPlay = resources >= 1; // Playing costs 1
     const canAffordTrash = resources >= draggingCard.symbols.length; // Trashing costs symbol count
     
@@ -718,8 +779,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     // Right zone for discard
     } else if (x > viewportWidth * 0.75) {
       setDropZone('discard');
-    // Middle/center zone for play (where the boss is)
-    } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
+    // Left/center zone for play (where the boss is)
+    } else if (x <= viewportWidth * 0.52 && y >= viewportHeight * 0.22 && y <= viewportHeight * 0.65 && canAffordPlay) {
       setDropZone('play');
     } else {
       setDropZone(null);
@@ -731,7 +792,11 @@ function GameBoard({ playerCharacter, onRestart }) {
     
     const card = draggingCard;
     
-    if (dropZone === 'play') {
+    if (draggingSource === 'market') {
+      if (dropZone === 'purchase') {
+        purchaseCard(card);
+      }
+    } else if (dropZone === 'play') {
       playCard(card);
     } else if (dropZone === 'discard') {
       discardForResource(card);
@@ -740,11 +805,21 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
     
     setDraggingCard(null);
+    setDraggingSource(null);
     setDropZone(null);
   };
 
+  const showBattlefield = gameState === 'playerTurn' || gameState === 'bossResolve' || gameState === 'ready';
+  const marketSlots = [0, 1, 2].map(index => market[index] || null);
+
   return (
-    <div className="game-board">
+    <div
+      className={`game-board${draggingCard ? ' is-dragging' : ''}`}
+      onMouseMove={handleCardDragMove}
+      onMouseUp={handleCardDragEnd}
+      onTouchMove={handleCardDragMove}
+      onTouchEnd={handleCardDragEnd}
+    >
       {/* Top HUD - Enemy HP (topmost) then Block */}
       {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="top-hud">
@@ -794,23 +869,54 @@ function GameBoard({ playerCharacter, onRestart }) {
           </div>
         )}
 
-        {gameState === 'playerTurn' && (
+        {showBattlefield && (
           <div className="center-content player-turn-layout">
-            <div className="boss-display">
-              <div className="boss-placeholder">🐉</div>
-              {bossAction && bossCards.length > 0 && (
-                <div className="boss-intent">
-                  <div className="boss-cards">
-                    {bossCards.map(card => (
-                      <div key={card.id} className="boss-card">
-                        {card.symbols.map((symbol, index) => (
-                          <span key={index} className="boss-card-symbol">{symbol}</span>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
+            <div className="battlefield">
+              <div className="boss-column">
+                <div className="boss-placeholder">🐉</div>
+                <div
+                  ref={bossCardsRowRef}
+                  className={`intent-card-row ${slidePhase === 'enterBoss' ? 'slide-in-from-left' : ''}`}
+                  style={{
+                    transform: slidePhase === 'toMarket'
+                      ? `translate(${slideOffset.x}px, ${slideOffset.y}px)`
+                      : undefined,
+                    transition: slidePhase === 'toMarket' ? 'transform 0.65s ease-in-out' : undefined,
+                    zIndex: slidePhase === 'toMarket' ? 5 : undefined,
+                  }}
+                >
+                  {bossCards.map(card => (
+                    <div key={card.id} className="intent-card">
+                      {card.symbols.map((symbol, index) => (
+                        <span key={index} className="symbol-large">{symbol}</span>
+                      ))}
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+              <div className="market-column">
+                <div className="market-label">Market</div>
+                <div
+                  ref={marketCardsRowRef}
+                  className={`intent-card-row ${slidePhase === 'toMarket' ? 'market-fading' : ''}`}
+                >
+                  {marketSlots.map((card, index) => (
+                    card ? (
+                      <Card
+                        key={card.id}
+                        card={card}
+                        isMarket={true}
+                        canAfford={resources >= card.symbols.length}
+                        className={draggingCard?.id === card.id ? 'dragging' : ''}
+                        onMouseDown={(e) => handleCardDragStart(card, e, 'market')}
+                        onTouchStart={(e) => handleCardDragStart(card, e, 'market')}
+                      />
+                    ) : (
+                      <div key={`market-slot-${index}`} className="market-slot-empty" />
+                    )
+                  ))}
+                </div>
+              </div>
             </div>
             {bossAttack > 0 && (
               <div className="enemy-attack-slot">
@@ -940,13 +1046,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
       {/* Hand - Fixed at bottom */}
       {gameState === 'playerTurn' && (
-        <div 
-          className="hand-container"
-          onMouseMove={handleCardDragMove}
-          onMouseUp={handleCardDragEnd}
-          onTouchMove={handleCardDragMove}
-          onTouchEnd={handleCardDragEnd}
-        >
+        <div className="hand-container">
           <div className="hand-row">
             {hand.map((card, index) => {
               const totalCards = hand.length;
@@ -974,8 +1074,8 @@ function GameBoard({ playerCharacter, onRestart }) {
                     '--hover-y': `${verticalOffset}px`,
                     '--hover-rotation': `${rotation}deg`,
                   }}
-                  onMouseDown={(e) => handleCardDragStart(card, e)}
-                  onTouchStart={(e) => handleCardDragStart(card, e)}
+                  onMouseDown={(e) => handleCardDragStart(card, e, 'hand')}
+                  onTouchStart={(e) => handleCardDragStart(card, e, 'hand')}
                 >
                   <div className="card-symbols-only">
                     {card.symbols.map((symbol, symbolIndex) => (
@@ -1014,10 +1114,9 @@ function GameBoard({ playerCharacter, onRestart }) {
         </div>
       )}
 
-      {/* Drop Zones - Show when dragging */}
-      {draggingCard && (
+      {draggingCard && draggingSource === 'hand' && (
         <>
-          {/* Play zone - center/middle (where boss is) - only if player can afford */}
+          {/* Play zone - left (where boss is) - only if player can afford */}
           {resources >= 1 && (
             <div className={`drop-zone drop-zone-center ${dropZone === 'play' ? 'active' : ''}`}>
               <div className="drop-zone-label">PLAY<br/>1 💎</div>
@@ -1035,44 +1134,27 @@ function GameBoard({ playerCharacter, onRestart }) {
               <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
             </div>
           )}
-          
-          {/* Floating card that follows cursor/finger */}
-          <div 
-            className="floating-card"
-            style={{
-              left: `${dragPosition.x}px`,
-              top: `${dragPosition.y}px`,
-            }}
-          >
-            <div className="card-symbols-only">
-              {draggingCard.symbols.map((symbol, index) => (
-                <span key={index} className="symbol-large">{symbol}</span>
-              ))}
-            </div>
-          </div>
         </>
       )}
 
-      {/* Market Overlay */}
-      {showMarket && gameState === 'playerTurn' && (
-        <div className="market-overlay">
-          <div className="market-content">
-            <h3>Market</h3>
-            <div className="market-grid">
-              {market.map(card => (
-                <Card
-                  key={card.id}
-                  card={card}
-                  onClick={() => {
-                    setSelectedCard(card);
-                    setSelectedCardIsMarket(true);
-                  }}
-                  isMarket={true}
-                  canAfford={resources >= card.symbols.length}
-                />
-              ))}
-            </div>
-            <button className="close-market-btn" onClick={() => setShowMarket(false)}>Close Market</button>
+      {draggingCard && draggingSource === 'market' && (
+        <div className={`drop-zone drop-zone-bottom ${dropZone === 'purchase' ? 'active' : ''}`}>
+          <div className="drop-zone-label">BUY<br/>{draggingCard.symbols.length} 💎</div>
+        </div>
+      )}
+
+      {draggingCard && (
+        <div 
+          className="floating-card"
+          style={{
+            left: `${dragPosition.x}px`,
+            top: `${dragPosition.y}px`,
+          }}
+        >
+          <div className="card-symbols-only">
+            {draggingCard.symbols.map((symbol, index) => (
+              <span key={index} className="symbol-large">{symbol}</span>
+            ))}
           </div>
         </div>
       )}
@@ -1156,15 +1238,6 @@ function GameBoard({ playerCharacter, onRestart }) {
           <button 
             className="menu-item" 
             onClick={() => {
-              setShowMarket(true);
-              setShowMenu(false);
-            }}
-          >
-            🛒 Market
-          </button>
-          <button 
-            className="menu-item" 
-            onClick={() => {
               setShowMenu(false);
               onRestart();
             }}
@@ -1177,46 +1250,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       {/* Backdrop to close menu */}
       {showMenu && (
         <div className="menu-backdrop" onClick={() => setShowMenu(false)}></div>
-      )}
-
-      {/* Market Card Purchase Menu */}
-      {selectedCard && selectedCardIsMarket && (
-        <>
-          <div className="action-menu-overlay" onClick={() => {
-            setSelectedCard(null);
-            setSelectedCardIsMarket(false);
-          }} />
-          <div className="action-menu">
-            <div className="action-menu-header">
-              <div className="action-menu-card-preview">
-                {selectedCard.symbols.map((symbol, index) => (
-                  <span key={index} className="preview-symbol">{symbol}</span>
-                ))}
-              </div>
-              <div className="action-menu-cost">Cost: {selectedCard.symbols.length} 💎</div>
-            </div>
-            <div className="action-menu-buttons">
-              <button
-                className="action-button buy-button"
-                onClick={() => {
-                  purchaseCard(selectedCard);
-                  setSelectedCard(null);
-                  setSelectedCardIsMarket(false);
-                  setShowMarket(false);
-                }}
-                disabled={resources < selectedCard.symbols.length}
-              >
-                💰 Buy Card ({selectedCard.symbols.length} 💎)
-              </button>
-              <button className="action-button cancel-button" onClick={() => {
-                setSelectedCard(null);
-                setSelectedCardIsMarket(false);
-              }}>
-                ✖️ Cancel
-              </button>
-            </div>
-          </div>
-        </>
       )}
     </div>
   );
