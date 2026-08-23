@@ -99,11 +99,21 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const startRound = () => {
-    // Draw 3 cards for boss action
+    // Draw cards for boss action (3 for the first boss), reshuffling
+    // the market into a new draw pile when the market deck runs out —
+    // same pattern as the player's discard reshuffle.
+    const bossCardsToDraw = 3;
     let currentMarketDeck = [...marketDeck];
+    let currentMarket = [...market];
     const drawnBossCards = [];
     
-    for (let i = 0; i < 3 && currentMarketDeck.length > 0; i++) {
+    for (let i = 0; i < bossCardsToDraw; i++) {
+      if (currentMarketDeck.length === 0) {
+        if (currentMarket.length === 0) break;
+        currentMarketDeck = shuffleArray([...currentMarket]);
+        currentMarket = [];
+        addLog('Market reshuffled into boss draw pile!');
+      }
       const card = currentMarketDeck.pop();
       drawnBossCards.push({
         ...card,
@@ -112,6 +122,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
     
     setMarketDeck(currentMarketDeck);
+    setMarket(currentMarket);
     setBossCards(drawnBossCards);
     
     // Calculate boss action from drawn cards
@@ -369,7 +380,12 @@ function GameBoard({ playerCharacter, onRestart }) {
       addLog(`Boss healed ${bossAction.value} HP! (${newBossHP}/${bossMaxHP} HP)`);
     }
 
-    // Boss cards become the new market
+    // Unpurchased market cards return to the market deck so the boss
+    // can reshuffle them later; boss cards become the new market.
+    if (market.length > 0) {
+      setMarketDeck(prev => [...prev, ...market]);
+      addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the draw pile`);
+    }
     setMarket(bossCards);
     setBossCards([]);
     addLog('Boss cards moved to market!');
