@@ -181,31 +181,34 @@
   line-height: 1.2;
 }
 
-/* Enemy attack bar — vertically centered between boss cards and player UI */
+/* Enemy attack bar — vertically centered between boss cards and player UI.
+   Match top-hud bar width (12px inset from viewport) despite center-area padding. */
 .enemy-attack-slot {
   grid-row: 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
   padding: 8px 12px;
   min-height: 36px;
   align-self: stretch;
   justify-self: stretch;
 }
 
-.boss-stat-bar {
+.attack-bar {
   position: relative;
-  height: 22px;
+  height: 18px;
   width: 100%;
   max-width: 100%;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.boss-stat-fill {
+.attack-fill {
   position: absolute;
   left: 0;
   top: 0;
@@ -213,21 +216,22 @@
   transition: width 0.35s ease;
 }
 
-.boss-attack-bar .boss-stat-fill {
+.boss-attack-bar .attack-fill {
   background: #e67e22;
 }
 
-.boss-stat-text {
+.attack-text {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   text-align: center;
-  line-height: 22px;
+  line-height: 18px;
   font-weight: bold;
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   z-index: 1;
   font-size: 0.85rem;
-  letter-spacing: 0.02em;
 }
 
 /* Bottom HUD - Player Stats & HP */
