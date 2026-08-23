@@ -105,10 +105,6 @@
   align-items: center;
 }
 
-.boss-intent-text {
-  font-weight: bold;
-}
-
 .boss-cards {
   display: flex;
   gap: 8px;
@@ -127,6 +123,50 @@
 
 .boss-card-symbol {
   font-size: 1.2rem;
+}
+
+.boss-combat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 180px;
+}
+
+.boss-stat-bar {
+  position: relative;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.boss-stat-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.boss-attack-bar .boss-stat-fill {
+  background: #e67e22;
+}
+
+.boss-block-bar .boss-stat-fill {
+  background: #3498db;
+}
+
+.boss-stat-text {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  line-height: 18px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  z-index: 1;
+  font-size: 0.8rem;
 }
 
 /* Bottom HUD - Player Stats & HP */
