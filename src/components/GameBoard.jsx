@@ -47,15 +47,10 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [draggingSource, setDraggingSource] = useState(null); // 'hand' | 'market'
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', 'purchase', or null
-  const [slidePhase, setSlidePhase] = useState('idle'); // 'idle' | 'toMarket' | 'enterBoss'
-  const [slideOffset, setSlideOffset] = useState({ x: 0, y: 0 });
   
   const logContentRef = useRef(null);
   const godLevelRef = useRef(godLevel);
   godLevelRef.current = godLevel;
-  const bossCardsRowRef = useRef(null);
-  const marketCardsRowRef = useRef(null);
-  const slideTimerRef = useRef(null);
 
   // Derive remaining uses from the unlocked god level so unlocking Ares/Athena
   // mid-setup (or after a stale startRound closure) still enables the button.
@@ -83,20 +78,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       logContentRef.current.scrollTop = logContentRef.current.scrollHeight;
     }
   }, [log]);
-
-  useEffect(() => {
-    return () => {
-      if (slideTimerRef.current) {
-        clearTimeout(slideTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (slidePhase !== 'enterBoss') return undefined;
-    const timer = setTimeout(() => setSlidePhase('idle'), 600);
-    return () => clearTimeout(timer);
-  }, [slidePhase]);
 
   useEffect(() => {
     if (gameState === 'ready') {
@@ -167,8 +148,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarketDeck(currentMarketDeck);
     setMarket(currentMarket);
     setBossCards(drawnBossCards);
-    setSlideOffset({ x: 0, y: 0 });
-    setSlidePhase('enterBoss');
     
     // Calculate boss action from drawn cards
     const action = calculateBossActionFromCards(drawnBossCards);
@@ -526,49 +505,17 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlockMax(0);
 
     // Unpurchased market cards return to the market deck so the boss
-    // can reshuffle them later. They fade out while the used boss cards
-    // slide into the market, then three new boss cards enter from the left.
-    const resolvingBossCards = bossCards;
+    // can reshuffle them later; boss cards become the new market.
     if (market.length > 0) {
       setMarketDeck(prev => [...prev, ...market]);
       addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the draw pile`);
     }
 
-    if (resolvingBossCards.length === 0) {
-      setMarket([]);
-      setBossCards([]);
-      addLog('Boss cards moved to market!');
-      setRoundNumber(prev => prev + 1);
-      setGameState('ready');
-      return;
-    }
-
-    setGameState('bossResolve');
-    setSlidePhase('toMarket');
-    setSlideOffset({ x: 0, y: 0 });
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const from = bossCardsRowRef.current?.getBoundingClientRect();
-        const to = marketCardsRowRef.current?.getBoundingClientRect();
-        if (from && to) {
-          setSlideOffset({ x: to.left - from.left, y: to.top - from.top });
-        }
-      });
-    });
-
-    if (slideTimerRef.current) {
-      clearTimeout(slideTimerRef.current);
-    }
-    slideTimerRef.current = setTimeout(() => {
-      setMarket(resolvingBossCards);
-      setBossCards([]);
-      setSlideOffset({ x: 0, y: 0 });
-      setSlidePhase('idle');
-      addLog('Boss cards moved to market!');
-      setRoundNumber(prev => prev + 1);
-      setGameState('ready');
-    }, 700);
+    setMarket(bossCards);
+    setBossCards([]);
+    addLog('Boss cards moved to market!');
+    setRoundNumber(prev => prev + 1);
+    setGameState('ready');
   };
 
   const levelUpCharacter = (cardType) => {
@@ -769,7 +716,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const handleCardDragStart = (card, e, source = 'hand') => {
-    if (slidePhase !== 'idle' || gameState !== 'playerTurn') return;
+    if (gameState !== 'playerTurn') return;
     if (source === 'market') {
       if (resources < card.symbols.length) return;
       e.preventDefault();
@@ -809,8 +756,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     // Right zone for discard
     } else if (x > viewportWidth * 0.75) {
       setDropZone('discard');
-    // Left/center zone for play (where the boss is)
-    } else if (x <= viewportWidth * 0.52 && y >= viewportHeight * 0.22 && y <= viewportHeight * 0.65 && canAffordPlay) {
+    // Middle/center zone for play (where the boss is)
+    } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
       setDropZone('play');
     } else {
       setDropZone(null);
@@ -839,7 +786,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setDropZone(null);
   };
 
-  const showBattlefield = gameState === 'playerTurn' || gameState === 'bossResolve' || gameState === 'ready';
+  const showBattlefield = gameState === 'playerTurn' || gameState === 'ready';
   const marketSlots = [0, 1, 2].map(index => market[index] || null);
 
   return (
@@ -902,34 +849,9 @@ function GameBoard({ playerCharacter, onRestart }) {
         {showBattlefield && (
           <div className="center-content player-turn-layout">
             <div className="battlefield">
-              <div className="boss-column">
-                <div className="boss-placeholder">🐉</div>
-                <div
-                  ref={bossCardsRowRef}
-                  className={`intent-card-row ${slidePhase === 'enterBoss' ? 'slide-in-from-left' : ''}`}
-                  style={{
-                    transform: slidePhase === 'toMarket'
-                      ? `translate(${slideOffset.x}px, ${slideOffset.y}px)`
-                      : undefined,
-                    transition: slidePhase === 'toMarket' ? 'transform 0.65s ease-in-out' : undefined,
-                    zIndex: slidePhase === 'toMarket' ? 5 : undefined,
-                  }}
-                >
-                  {bossCards.map(card => (
-                    <div key={card.id} className="intent-card">
-                      {card.symbols.map((symbol, index) => (
-                        <span key={index} className="symbol-large">{symbol}</span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
               <div className="market-column">
                 <div className="market-label">Market</div>
-                <div
-                  ref={marketCardsRowRef}
-                  className={`intent-card-row ${slidePhase === 'toMarket' ? 'market-fading' : ''}`}
-                >
+                <div className="intent-card-row market-row">
                   {marketSlots.map((card, index) => (
                     card ? (
                       <Card
@@ -946,6 +868,16 @@ function GameBoard({ playerCharacter, onRestart }) {
                     )
                   ))}
                 </div>
+              </div>
+              <div className="boss-placeholder">🐉</div>
+              <div className="intent-card-row boss-cards-row">
+                {bossCards.map(card => (
+                  <div key={card.id} className="intent-card">
+                    {card.symbols.map((symbol, index) => (
+                      <span key={index} className="symbol-large">{symbol}</span>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
             {bossAttack > 0 && (
@@ -1146,7 +1078,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
       {draggingCard && draggingSource === 'hand' && (
         <>
-          {/* Play zone - left (where boss is) - only if player can afford */}
+          {/* Play zone - center/middle (where the boss is) - only if player can afford */}
           {resources >= 1 && (
             <div className={`drop-zone drop-zone-center ${dropZone === 'play' ? 'active' : ''}`}>
               <div className="drop-zone-label">PLAY<br/>1 💎</div>
