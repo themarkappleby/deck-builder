@@ -61,8 +61,8 @@ export const races = [
     level1: {
       effect: 'Draw 6 cards at start of round instead of 5',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Draw 1 card',
-      onSymbol: [{ type: 'draw', amount: 1 }]
+      symbolEffect: 'Draw 2 cards',
+      onSymbol: [{ type: 'draw', amount: 2 }]
     },
     level2: {
       effect: 'Draw 7 cards at start of round',
