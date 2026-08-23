@@ -62,15 +62,16 @@ Make sure GitHub Pages is enabled in your repository settings:
 2. Start with 10 HP and a deck of 5 Attack cards, 4 Block cards, and 1 Purple card
 
 ### Gameplay
-- **Round Start**: Boss telegraphs their action, players draw 5 cards
+- **Round Start**: Boss telegraphs their action, players draw 6 cards
 - **Player Turn**: Play/purchase/trash cards by paying their cost (discard cards equal to symbol count)
 - **Round End**: Boss executes their action, dealing damage or using special abilities
 
 ### Card Symbols
 - 🔺 Attack: Deal 1 damage to boss (immediately)
 - 🔹 Block: Gain 1 block (reduces boss damage at end of round)
-- 🟣 Purple: Race-specific effect (if your race defines it)
-- 🟩 Green, ⭐️ Star, 🧡 Orange: Character-specific effects
+- 🟣 Purple: Level 1 race effect
+- 🟩 Green: Level 1 class effect
+- ⭐️ Star: Level 1 god effect
 
 ### Victory & Defeat
 - **Win**: Defeat all 3 bosses

@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards } from '../abilityActions';
+import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards, collectPlayEffects, formatLevelLines } from '../abilityActions';
 import Card from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
+
+function AbilityLines({ level }) {
+  return formatLevelLines(level).map((line, index) => (
+    <p key={index}>{line}</p>
+  ));
+}
 
 function GameBoard({ playerCharacter, onRestart }) {
   const [gameState, setGameState] = useState('setup');
@@ -235,12 +241,12 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const getOpeningHandSize = () => {
-    let cardsToDraw = 5;
+    let cardsToDraw = 6;
     if (playerCharacter.race.id === 'elf') {
       if (raceLevel >= 2) {
-        cardsToDraw = 7;
+        cardsToDraw = 8;
       } else if (raceLevel >= 1) {
-        cardsToDraw = 6;
+        cardsToDraw = 7;
       }
     }
     return cardsToDraw;
@@ -300,79 +306,54 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
 
     const newHand = hand.filter(c => c.id !== card.id);
-    setHand(newHand);
-    setDiscard(prev => [...prev, card]);
     setResources(prev => prev - cost);
 
     let damage = 0;
     let block = 0;
     let attackSymbols = 0;
 
-    let bloodTokensGained = 0;
-    let rageTokensGained = 0;
-    
     card.symbols.forEach(symbol => {
       if (symbol === SYMBOLS.ATTACK) {
         attackSymbols += 1;
         damage += 1;
-        // Apply Vampire blood token gain
-        if (playerCharacter.race.id === 'vampire' && raceLevel >= 1) {
-          bloodTokensGained++;
+        // Vampire Level 2: 🔺 symbols deal +1 damage
+        if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'A' && raceLevel >= 2) {
+          damage += 1;
         }
-        // Apply Warrior A class bonus
-        if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A') {
-          if (classLevel >= 2) {
-            damage += 2;
-          } else if (classLevel >= 1) {
-            damage += 1;
-          }
+        // Warrior A Level 2: 🔺 symbols deal +2 damage
+        if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A' && classLevel >= 2) {
+          damage += 2;
         }
       } else if (symbol === SYMBOLS.BLOCK) {
         block += 1;
-        // Apply Priest class bonus
-        if (playerCharacter.class.id === 'priest' && playerCharacter.class.side === 'A') {
-          if (classLevel >= 2) {
-            block += 2;
-          } else if (classLevel >= 1) {
-            block += 1;
-          }
+        // Priest Level 2: 🔹 symbols grant +2 block
+        if (playerCharacter.class.id === 'priest' && playerCharacter.class.side === 'A' && classLevel >= 2) {
+          block += 2;
         }
-        // Apply Dwarf race bonus
+        // Dwarf Level 2: all 🔹 symbols grant +1 block
         if (playerCharacter.race.id === 'dwarf' && raceLevel >= 2) {
           block += 1;
         }
-      } else if (symbol === SYMBOLS.PURPLE && raceLevel >= 1) {
-        const effect = playerCharacter.race.level1.symbolEffect;
-        addLog(`🟣 effect: ${effect}`);
-      } else if (symbol === SYMBOLS.STAR) {
-        // Warrior B Level 2: ⭐️ symbols grant 2 rage tokens
-        if (
-          playerCharacter.class.id === 'warrior' &&
-          playerCharacter.class.side === 'B' &&
-          classLevel >= 2
-        ) {
-          rageTokensGained += 2;
-          addLog('⭐️ effect: Gain 2 rage tokens');
-        }
       }
     });
+
+    const symbolEffects = collectPlayEffects(
+      playerCharacter,
+      { raceLevel, classLevel, godLevel },
+      card.symbols
+    );
+    damage += symbolEffects.damage;
+    block += symbolEffects.block;
+    symbolEffects.logs.forEach(message => addLog(message));
+
+    const bloodTokensGained = symbolEffects.tokens.blood || 0;
+    const rageTokensGained = symbolEffects.tokens.rage || 0;
 
     // Warrior B rage: next 🔺 deals double damage (consumes buff)
     if (nextAttackDoubled && attackSymbols > 0) {
       damage *= 2;
       setNextAttackDoubled(false);
       addLog('💢 Rage: attack damage doubled!');
-    }
-
-    // Warrior B: gain 1 rage token per attack that deals damage
-    if (
-      damage > 0 &&
-      attackSymbols > 0 &&
-      playerCharacter.class.id === 'warrior' &&
-      playerCharacter.class.side === 'B' &&
-      classLevel >= 1
-    ) {
-      rageTokensGained += attackSymbols;
     }
 
     if (bloodTokensGained > 0) {
@@ -398,6 +379,19 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (block > 0) {
       setPlayerBlock(prev => prev + block);
       addLog(`Gained ${block} block (Total: ${playerBlock + block})`);
+    }
+
+    if (symbolEffects.heal > 0) {
+      const newHP = Math.min(playerMaxHP, playerHP + symbolEffects.heal);
+      setPlayerHP(newHP);
+      addLog(`Healed ${symbolEffects.heal} HP (${newHP}/${playerMaxHP})`);
+    }
+
+    if (symbolEffects.draw > 0) {
+      drawCardsAfterDiscard(symbolEffects.draw, card, newHand);
+    } else {
+      setHand(newHand);
+      setDiscard(prev => [...prev, card]);
     }
 
     addLog(`Played ${card.name} (${cost} resources spent, ${resources - cost} remaining)`);
@@ -701,9 +695,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (ability === 'aresDiscard') {
       setHand(newHand);
       setDiscard(prev => [...prev, card]);
-      const damage = godLevel >= 2 ? 3 : 2;
-      dealDamageToBoss(damage);
-      addLog(`Discarded ${card.name} for Ares: Dealt ${damage} damage`);
+      dealDamageToBoss(3);
+      addLog(`Discarded ${card.name} for Ares: Dealt 3 damage`);
     } else if (ability === 'athenaDiscard') {
       addLog(`Discarded ${card.name} for Athena: Draw 2 cards`);
       drawCardsAfterDiscard(2, card, newHand);
@@ -844,18 +837,15 @@ function GameBoard({ playerCharacter, onRestart }) {
             <div className="level-up-options">
               <button onClick={() => selectStartingAbility('race')}>
                 <strong>{playerCharacter.race.name} - Level 2</strong>
-                <p>{playerCharacter.race.level2.effect}</p>
-                {playerCharacter.race.level2.additionalEffect && (
-                  <p>{playerCharacter.race.level2.additionalEffect}</p>
-                )}
+                <AbilityLines level={playerCharacter.race.level2} />
               </button>
               <button onClick={() => selectStartingAbility('class')}>
                 <strong>{playerCharacter.class.name} - Level 1</strong>
-                <p>{playerCharacter.class.level1.effect}</p>
+                <AbilityLines level={playerCharacter.class.level1} />
               </button>
               <button onClick={() => selectStartingAbility('god')}>
                 <strong>{playerCharacter.god.name} - Level 1</strong>
-                <p>{playerCharacter.god.level1.effect}</p>
+                <AbilityLines level={playerCharacter.god.level1} />
               </button>
             </div>
           </div>
@@ -920,10 +910,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               {raceLevel < 2 && (
                 <button onClick={() => levelUpCharacter('race')}>
                   <strong>{playerCharacter.race.name} - Level {raceLevel} → {raceLevel + 1}</strong>
-                  <p>{playerCharacter.race.level2.effect}</p>
-                  {playerCharacter.race.level2.additionalEffect && (
-                    <p>{playerCharacter.race.level2.additionalEffect}</p>
-                  )}
+                  <AbilityLines level={playerCharacter.race.level2} />
                 </button>
               )}
               {raceLevel >= 2 && (
@@ -937,15 +924,10 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <button onClick={() => levelUpCharacter('class')}>
                   <strong>{playerCharacter.class.name} - Level {classLevel} → {classLevel + 1}</strong>
                   {classLevel === 0 && (
-                    <p>{playerCharacter.class.level1.effect}</p>
+                    <AbilityLines level={playerCharacter.class.level1} />
                   )}
                   {classLevel === 1 && (
-                    <>
-                      <p>{playerCharacter.class.level2.effect}</p>
-                      {playerCharacter.class.level2.additionalEffect && (
-                        <p>{playerCharacter.class.level2.additionalEffect}</p>
-                      )}
-                    </>
+                    <AbilityLines level={playerCharacter.class.level2} />
                   )}
                 </button>
               )}
@@ -960,15 +942,10 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <button onClick={() => levelUpCharacter('god')}>
                   <strong>{playerCharacter.god.name} - Level {godLevel} → {godLevel + 1}</strong>
                   {godLevel === 0 && (
-                    <p>{playerCharacter.god.level1.effect}</p>
+                    <AbilityLines level={playerCharacter.god.level1} />
                   )}
                   {godLevel === 1 && (
-                    <>
-                      <p>{playerCharacter.god.level2.effect}</p>
-                      {playerCharacter.god.level2.additionalEffect && (
-                        <p>{playerCharacter.god.level2.additionalEffect}</p>
-                      )}
-                    </>
+                    <AbilityLines level={playerCharacter.god.level2} />
                   )}
                 </button>
               )}
@@ -1147,15 +1124,11 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <h4>{playerCharacter.race.name} (Side {playerCharacter.race.side}) - Level {raceLevel}</h4>
                 <div className={`ability-box ${raceLevel >= 1 ? 'active' : ''}`}>
                   <strong>Level 1:</strong>
-                  <p>{playerCharacter.race.level1.effect}</p>
-                  <p>🟣 = {playerCharacter.race.level1.symbolEffect}</p>
+                  <AbilityLines level={playerCharacter.race.level1} />
                 </div>
                 <div className={`ability-box ${raceLevel >= 2 ? 'active' : ''}`}>
                   <strong>Level 2:</strong>
-                  <p>{playerCharacter.race.level2.effect}</p>
-                  {playerCharacter.race.level2.additionalEffect && (
-                    <p>{playerCharacter.race.level2.additionalEffect}</p>
-                  )}
+                  <AbilityLines level={playerCharacter.race.level2} />
                 </div>
               </div>
 
@@ -1163,14 +1136,11 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <h4>{playerCharacter.class.name} (Side {playerCharacter.class.side}) - Level {classLevel}</h4>
                 <div className={`ability-box ${classLevel >= 1 ? 'active' : ''}`}>
                   <strong>Level 1:</strong>
-                  <p>{playerCharacter.class.level1.effect}</p>
+                  <AbilityLines level={playerCharacter.class.level1} />
                 </div>
                 <div className={`ability-box ${classLevel >= 2 ? 'active' : ''}`}>
                   <strong>Level 2:</strong>
-                  <p>{playerCharacter.class.level2.effect}</p>
-                  {playerCharacter.class.level2.additionalEffect && (
-                    <p>{playerCharacter.class.level2.additionalEffect}</p>
-                  )}
+                  <AbilityLines level={playerCharacter.class.level2} />
                 </div>
               </div>
 
@@ -1178,14 +1148,11 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <h4>{playerCharacter.god.name} (Side {playerCharacter.god.side}) - Level {godLevel}</h4>
                 <div className={`ability-box ${godLevel >= 1 ? 'active' : ''}`}>
                   <strong>Level 1:</strong>
-                  <p>{playerCharacter.god.level1.effect}</p>
+                  <AbilityLines level={playerCharacter.god.level1} />
                 </div>
                 <div className={`ability-box ${godLevel >= 2 ? 'active' : ''}`}>
                   <strong>Level 2:</strong>
-                  <p>{playerCharacter.god.level2.effect}</p>
-                  {playerCharacter.god.level2.additionalEffect && (
-                    <p>{playerCharacter.god.level2.additionalEffect}</p>
-                  )}
+                  <AbilityLines level={playerCharacter.god.level2} />
                 </div>
               </div>
             </div>

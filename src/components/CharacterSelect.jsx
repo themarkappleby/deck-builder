@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { races, classes, gods } from '../gameData';
+import { formatLevelLines } from '../abilityActions';
 import './CharacterSelect.css';
+
+function AbilityLines({ level }) {
+  return formatLevelLines(level).map((line, index) => (
+    <p key={index}>{line}</p>
+  ));
+}
 
 function CharacterSelect({ onCharacterSelect }) {
   const [currentStep, setCurrentStep] = useState('race'); // 'race', 'class', 'god'
@@ -78,13 +85,11 @@ function CharacterSelect({ onCharacterSelect }) {
                 <h3>{race.name} (Side {race.side})</h3>
                 <div className="card-level">
                   <strong>Level 1:</strong>
-                  <p>{race.level1.effect}</p>
-                  <p>🟣 = {race.level1.symbolEffect}</p>
+                  <AbilityLines level={race.level1} />
                 </div>
                 <div className="card-level">
                   <strong>Level 2:</strong>
-                  <p>{race.level2.effect}</p>
-                  {race.level2.additionalEffect && <p>{race.level2.additionalEffect}</p>}
+                  <AbilityLines level={race.level2} />
                 </div>
               </div>
             ))}
@@ -106,12 +111,11 @@ function CharacterSelect({ onCharacterSelect }) {
                 <h3>{cls.name} (Side {cls.side})</h3>
                 <div className="card-level">
                   <strong>Level 1:</strong>
-                  <p>{cls.level1.effect}</p>
+                  <AbilityLines level={cls.level1} />
                 </div>
                 <div className="card-level">
                   <strong>Level 2:</strong>
-                  <p>{cls.level2.effect}</p>
-                  {cls.level2.additionalEffect && <p>{cls.level2.additionalEffect}</p>}
+                  <AbilityLines level={cls.level2} />
                 </div>
               </div>
             ))}
@@ -133,12 +137,11 @@ function CharacterSelect({ onCharacterSelect }) {
                 <h3>{god.name} (Side {god.side})</h3>
                 <div className="card-level">
                   <strong>Level 1:</strong>
-                  <p>{god.level1.effect}</p>
+                  <AbilityLines level={god.level1} />
                 </div>
                 <div className="card-level">
                   <strong>Level 2:</strong>
-                  <p>{god.level2.effect}</p>
-                  {god.level2.additionalEffect && <p>{god.level2.additionalEffect}</p>}
+                  <AbilityLines level={god.level2} />
                 </div>
               </div>
             ))}
