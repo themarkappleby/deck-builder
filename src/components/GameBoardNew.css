@@ -113,6 +113,7 @@
   display: flex;
   gap: 8px;
   justify-content: center;
+  align-items: stretch;
 }
 
 .boss-card {
@@ -121,12 +122,18 @@
   border-radius: 4px;
   padding: 6px 10px;
   display: flex;
+  flex-direction: column;
   gap: 4px;
   align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .boss-card-symbol {
   font-size: 1.2rem;
+  line-height: 1.2;
 }
 
 /* Bottom HUD - Player Stats & HP */
