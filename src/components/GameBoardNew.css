@@ -373,7 +373,7 @@
 }
 
 .level-up-options button {
-  padding: 12px 20px;
+  padding: 15px 20px;
   font-size: 0.95rem;
   background: #2a2a3a;
   color: white;
@@ -381,10 +381,25 @@
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: left;
 }
 
 .level-up-options button:hover {
   background: #333344;
+}
+
+.level-up-options button strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
+.level-up-options button p {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin: 4px 0;
+  line-height: 1.4;
 }
 
 .big-button {

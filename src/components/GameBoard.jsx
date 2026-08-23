@@ -98,7 +98,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossMaxHP(bossData.hp);
     
     addLog('Game started! Face the boss: ' + boss.name);
-    setGameState('ready');
+    setGameState('abilityChoice');
   };
 
   const startRound = () => {
@@ -372,6 +372,29 @@ function GameBoard({ playerCharacter, onRestart }) {
     setLog(prev => [...prev, `${message}`]);
   };
 
+  const selectStartingAbility = (abilityType) => {
+    if (abilityType === 'race') {
+      setRaceLevel(2);
+      addLog(`Race leveled up to 2!`);
+      
+      // Apply Dwarf HP bonus if race level 2
+      if (playerCharacter.race.id === 'dwarf') {
+        const newMaxHP = 14;
+        setPlayerMaxHP(newMaxHP);
+        setPlayerHP(newMaxHP);
+        addLog('Max HP increased to 14!');
+      }
+    } else if (abilityType === 'class') {
+      setClassLevel(1);
+      addLog(`Class leveled up to 1!`);
+    } else if (abilityType === 'god') {
+      setGodLevel(1);
+      addLog(`God leveled up to 1!`);
+    }
+    
+    setGameState('ready');
+  };
+
   const handleCardDragStart = (card, e) => {
     if (selectedCardIsMarket) return; // Don't allow dragging market cards
     setDraggingCard(card);
@@ -435,6 +458,29 @@ function GameBoard({ playerCharacter, onRestart }) {
 
       {/* Center Area - Boss Display */}
       <div className="center-area">
+        {gameState === 'abilityChoice' && (
+          <div className="center-content level-up-overlay">
+            <h2>Choose Your Starting Ability</h2>
+            <div className="level-up-options">
+              <button onClick={() => selectStartingAbility('race')}>
+                <strong>{playerCharacter.race.name} - Level 2</strong>
+                <p>{playerCharacter.race.level2.effect}</p>
+                {playerCharacter.race.level2.additionalEffect && (
+                  <p>{playerCharacter.race.level2.additionalEffect}</p>
+                )}
+              </button>
+              <button onClick={() => selectStartingAbility('class')}>
+                <strong>{playerCharacter.class.name} - Level 1</strong>
+                <p>{playerCharacter.class.level1.effect}</p>
+              </button>
+              <button onClick={() => selectStartingAbility('god')}>
+                <strong>{playerCharacter.god.name} - Level 1</strong>
+                <p>{playerCharacter.god.level1.effect}</p>
+              </button>
+            </div>
+          </div>
+        )}
+
         {gameState === 'playerTurn' && (
           <div className="center-content">
             <div className="boss-display">
