@@ -499,12 +499,15 @@ function GameBoard({ playerCharacter, onRestart }) {
     const canAffordPlay = resources >= 1; // Playing costs 1
     const canAffordTrash = resources >= draggingCard.symbols.length; // Trashing costs symbol count
     
-    if (x < viewportWidth * 0.25) {
-      setDropZone('discard');
-    } else if (x > viewportWidth * 0.75 && canAffordPlay) {
-      setDropZone('play');
-    } else if (y < viewportHeight * 0.25 && canAffordTrash) {
+    // Top zone for trash (highest priority)
+    if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
+    // Right zone for discard
+    } else if (x > viewportWidth * 0.75) {
+      setDropZone('discard');
+    // Middle/center zone for play (where the boss is)
+    } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
+      setDropZone('play');
     } else {
       setDropZone(null);
     }
@@ -763,19 +766,19 @@ function GameBoard({ playerCharacter, onRestart }) {
       {/* Drop Zones - Show when dragging */}
       {draggingCard && (
         <>
-          {/* Discard zone - always available */}
-          <div className={`drop-zone drop-zone-left ${dropZone === 'discard' ? 'active' : ''}`}>
-            <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
-          </div>
-          
-          {/* Play zone - only if player can afford */}
+          {/* Play zone - center/middle (where boss is) - only if player can afford */}
           {resources >= 1 && (
-            <div className={`drop-zone drop-zone-right ${dropZone === 'play' ? 'active' : ''}`}>
+            <div className={`drop-zone drop-zone-center ${dropZone === 'play' ? 'active' : ''}`}>
               <div className="drop-zone-label">PLAY<br/>1 💎</div>
             </div>
           )}
           
-          {/* Trash zone - only if player can afford */}
+          {/* Discard zone - right side - always available */}
+          <div className={`drop-zone drop-zone-right ${dropZone === 'discard' ? 'active' : ''}`}>
+            <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
+          </div>
+          
+          {/* Trash zone - top - only if player can afford */}
           {resources >= draggingCard.symbols.length && (
             <div className={`drop-zone drop-zone-top ${dropZone === 'trash' ? 'active' : ''}`}>
               <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
