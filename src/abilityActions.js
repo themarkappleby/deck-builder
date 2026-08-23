@@ -182,20 +182,34 @@ export function getAresStartOfRoundDamage() {
   return 0;
 }
 
+function formatSymbolLine(symbol, symbolEffect, starsRequired) {
+  if (!symbol || !symbolEffect) return null;
+  const icons = starsRequired > 1 ? symbol.repeat(starsRequired) : symbol;
+  return `${icons} = ${symbolEffect}`;
+}
+
 /**
  * Display lines for a race/class/god level (symbol trigger + extra text).
  */
 export function formatLevelLines(level) {
   if (!level) return [];
   const lines = [];
-  if (level.symbol && level.symbolEffect) {
-    const icons = level.starsRequired > 1
-      ? level.symbol.repeat(level.starsRequired)
-      : level.symbol;
-    lines.push(`${icons} = ${level.symbolEffect}`);
+  const seen = new Set();
+  const push = (line) => {
+    if (!line || seen.has(line)) return;
+    seen.add(line);
+    lines.push(line);
+  };
+
+  push(formatSymbolLine(level.symbol, level.symbolEffect, level.starsRequired));
+  if (level.effect) push(level.effect);
+  if (level.additionalEffect) {
+    push(level.additionalEffect);
+  } else if (Array.isArray(level.extraTriggers)) {
+    for (const extra of level.extraTriggers) {
+      push(formatSymbolLine(extra.symbol, extra.symbolEffect, extra.starsRequired));
+    }
   }
-  if (level.effect) lines.push(level.effect);
-  if (level.additionalEffect) lines.push(level.additionalEffect);
   return lines;
 }
 
