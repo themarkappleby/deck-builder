@@ -728,11 +728,6 @@
   cursor: grabbing;
 }
 
-.hand-row .card.unaffordable {
-  opacity: 0.4;
-  border-color: #333;
-}
-
 .card-symbols-only {
   display: flex;
   flex-wrap: wrap;
