@@ -118,12 +118,105 @@
 
 .player-turn-layout {
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
+  grid-template-rows: 1fr auto;
   flex: 1;
   height: 100%;
   width: 100%;
   min-height: 0;
   align-self: stretch;
+}
+
+.battlefield {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.boss-column,
+.market-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.boss-placeholder {
+  font-size: 4rem;
+  line-height: 1;
+  height: 4rem;
+}
+
+.market-label {
+  height: 4rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.intent-card-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  min-height: 110px;
+  min-width: calc(80px * 3 + 8px * 2);
+}
+
+.intent-card {
+  width: 80px;
+  height: 110px;
+  background: #3a2a2a;
+  border: 2px solid #6a4a4a;
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.market-slot-empty {
+  width: 80px;
+  height: 110px;
+  border: 2px dashed #333;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.intent-card-row.market-fading .card,
+.intent-card-row.market-fading .card.market-card.unaffordable {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.slide-in-from-left {
+  animation: slideInFromLeft 0.55s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100vw);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.game-board.is-dragging {
+  touch-action: none;
 }
 
 .boss-display {
@@ -133,11 +226,6 @@
   gap: 10px;
   grid-row: 2;
   justify-self: center;
-}
-
-.boss-placeholder {
-  font-size: 4rem;
-  line-height: 1;
 }
 
 .boss-intent {
@@ -181,10 +269,8 @@
   line-height: 1.2;
 }
 
-/* Enemy attack bar — vertically centered between boss cards and player UI.
-   Match top-hud bar width (12px inset from viewport) despite center-area padding. */
+/* Enemy attack bar — below the battlefield, full HUD width. */
 .enemy-attack-slot {
-  grid-row: 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -796,10 +882,10 @@
 }
 
 .drop-zone-center {
-  top: 25%;
-  left: 30%;
-  right: 30%;
-  bottom: 35%;
+  top: 22%;
+  left: 2%;
+  right: 50%;
+  bottom: 38%;
   background: radial-gradient(ellipse at center, rgba(90, 150, 42, 0.5), transparent 70%);
   border: 4px solid rgba(90, 150, 42, 0.8);
   border-radius: 20px;
@@ -839,6 +925,21 @@
   background: linear-gradient(to bottom, rgba(150, 42, 42, 0.8), transparent);
   border-bottom: 4px solid rgb(150, 42, 42);
   box-shadow: inset 0 0 40px rgba(150, 42, 42, 0.5);
+}
+
+.drop-zone-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32%;
+  background: linear-gradient(to top, rgba(201, 162, 39, 0.5), transparent);
+  border-top: 4px solid rgba(201, 162, 39, 0.8);
+}
+
+.drop-zone-bottom.active {
+  background: linear-gradient(to top, rgba(201, 162, 39, 0.8), transparent);
+  border-top: 4px solid rgb(201, 162, 39);
+  box-shadow: inset 0 0 40px rgba(201, 162, 39, 0.5);
 }
 
 .drop-zone-label {
@@ -945,5 +1046,29 @@
   to {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
+  }
+}
+
+.market-column .card {
+  width: 80px;
+  height: 110px;
+}
+
+@media (max-width: 480px) {
+  .intent-card,
+  .market-slot-empty,
+  .market-column .card {
+    width: 64px;
+    height: 88px;
+  }
+
+  .intent-card-row {
+    min-width: calc(64px * 3 + 6px * 2);
+    gap: 6px;
+  }
+
+  .intent-card .symbol-large,
+  .market-column .symbol-large {
+    font-size: 1.4rem;
   }
 }

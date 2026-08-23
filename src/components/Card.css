@@ -48,6 +48,18 @@
 .card.market-card.unaffordable {
   opacity: 0.4;
   border-color: #333;
+  cursor: default;
+  pointer-events: none;
+}
+
+.card.market-card.purchasable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.card.market-card.purchasable:active {
+  cursor: grabbing;
 }
 
 /* Cards are already sized for mobile */
