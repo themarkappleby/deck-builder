@@ -12,6 +12,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [bossHP, setBossHP] = useState(0);
   const [bossMaxHP, setBossMaxHP] = useState(0);
   const [bossAction, setBossAction] = useState(null);
+  const [bossCards, setBossCards] = useState([]);
   
   const [playerHP, setPlayerHP] = useState(10);
   const [playerMaxHP, setPlayerMaxHP] = useState(10);
@@ -68,14 +69,10 @@ function GameBoard({ playerCharacter, onRestart }) {
     
     const shuffled = shuffleArray([...startingDeck]);
     const marketDeckShuffled = shuffleArray([...marketCards]);
-    const initialMarket = marketDeckShuffled.slice(0, 5).map((card, index) => ({
-      ...card,
-      id: `${card.id}_market_${index}_${Date.now()}`
-    }));
     
     setDeck(shuffled);
-    setMarketDeck(marketDeckShuffled.slice(5));
-    setMarket(initialMarket);
+    setMarketDeck(marketDeckShuffled);
+    setMarket([]); // Start with empty market
     
     // Apply Dwarf HP bonus
     let startingHP = 10;
@@ -102,7 +99,23 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const startRound = () => {
-    const action = rollBossAction();
+    // Draw 3 cards for boss action
+    let currentMarketDeck = [...marketDeck];
+    const drawnBossCards = [];
+    
+    for (let i = 0; i < 3 && currentMarketDeck.length > 0; i++) {
+      const card = currentMarketDeck.pop();
+      drawnBossCards.push({
+        ...card,
+        id: `${card.id}_boss_${Date.now()}_${i}`
+      });
+    }
+    
+    setMarketDeck(currentMarketDeck);
+    setBossCards(drawnBossCards);
+    
+    // Calculate boss action from drawn cards
+    const action = calculateBossActionFromCards(drawnBossCards);
     setBossAction(action);
     
     // Determine how many cards to draw based on race
@@ -130,11 +143,28 @@ function GameBoard({ playerCharacter, onRestart }) {
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
 
-  const rollBossAction = () => {
-    const bossLevel = bossNumber === 1 ? 'level1' : bossNumber === 2 ? 'level2' : 'level3';
-    const actions = currentBoss[bossLevel].actions;
-    const randomIndex = Math.floor(Math.random() * actions.length);
-    return actions[randomIndex];
+  const calculateBossActionFromCards = (cards) => {
+    let attackCount = 0;
+    let blockCount = 0;
+    
+    cards.forEach(card => {
+      card.symbols.forEach(symbol => {
+        if (symbol === SYMBOLS.ATTACK) {
+          attackCount++;
+        } else if (symbol === SYMBOLS.BLOCK) {
+          blockCount++;
+        }
+      });
+    });
+    
+    // Boss attacks for damage equal to attack symbols
+    const damage = attackCount;
+    
+    return {
+      type: 'attack',
+      value: damage,
+      description: `Attacks for ${damage} damage`
+    };
   };
 
   const drawCards = (count) => {
@@ -346,6 +376,11 @@ function GameBoard({ playerCharacter, onRestart }) {
       addLog(`Boss healed ${bossAction.value} HP! (${newBossHP}/${bossMaxHP} HP)`);
     }
 
+    // Boss cards become the new market
+    setMarket(bossCards);
+    setBossCards([]);
+    addLog('Boss cards moved to market!');
+
     setRoundNumber(prev => prev + 1);
     setGameState('ready');
   };
@@ -544,7 +579,18 @@ function GameBoard({ playerCharacter, onRestart }) {
               <div className="boss-placeholder">🐉</div>
               {bossAction && (
                 <div className="boss-intent">
-                  {bossAction.description}
+                  <div className="boss-intent-text">{bossAction.description}</div>
+                  {bossCards.length > 0 && (
+                    <div className="boss-cards">
+                      {bossCards.map(card => (
+                        <div key={card.id} className="boss-card">
+                          {card.symbols.map((symbol, index) => (
+                            <span key={index} className="boss-card-symbol">{symbol}</span>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

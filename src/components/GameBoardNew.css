@@ -99,6 +99,34 @@
   font-size: 0.85rem;
   max-width: 90%;
   color: #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.boss-intent-text {
+  font-weight: bold;
+}
+
+.boss-cards {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.boss-card {
+  background: #3a2a2a;
+  border: 2px solid #6a4a4a;
+  border-radius: 4px;
+  padding: 6px 10px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.boss-card-symbol {
+  font-size: 1.2rem;
 }
 
 /* Bottom HUD - Player Stats & HP */
