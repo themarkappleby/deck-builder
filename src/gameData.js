@@ -5,8 +5,7 @@ export const SYMBOLS = {
   BLOCK: '🔹',
   PURPLE: '🟣',
   GREEN: '🟩',
-  STAR: '⭐️',
-  ORANGE: '🧡'
+  STAR: '⭐️'
 };
 
 export const races = [
@@ -15,12 +14,13 @@ export const races = [
     name: 'Vampire',
     side: 'A',
     level1: {
-      effect: 'When you play 🔺, gain 1 blood token. Spend 3 blood tokens: Heal 1 HP.',
+      effect: 'Spend 3 blood tokens: Heal 1 HP.',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Draw 1 card'
+      symbolEffect: 'Gain 1 blood token',
+      onSymbol: [{ type: 'token', token: 'blood', amount: 1 }]
     },
     level2: {
-      effect: 'When you play 🔺, gain 1 blood token. Spend 2 blood tokens: Heal 1 HP.',
+      effect: 'Spend 2 blood tokens: Heal 1 HP.',
       additionalEffect: '🔺 symbols deal +1 damage'
     }
   },
@@ -29,12 +29,13 @@ export const races = [
     name: 'Vampire',
     side: 'B',
     level1: {
-      effect: 'When you play 🔺, gain 1 blood token. Spend 3 blood tokens: Deal 2 damage.',
+      effect: 'Spend 3 blood tokens: Deal 2 damage.',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Gain 1 block'
+      symbolEffect: 'Gain 1 blood token',
+      onSymbol: [{ type: 'token', token: 'blood', amount: 1 }]
     },
     level2: {
-      effect: 'When you play 🔺, gain 1 blood token. Spend 2 blood tokens: Deal 3 damage.',
+      effect: 'Spend 2 blood tokens: Deal 3 damage.',
       additionalEffect: 'Start each round with +1 blood token'
     }
   },
@@ -45,7 +46,8 @@ export const races = [
     level1: {
       effect: 'Start with +2 max HP (12 HP total)',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Gain 2 block'
+      symbolEffect: 'Gain 2 block',
+      onSymbol: [{ type: 'block', amount: 2 }]
     },
     level2: {
       effect: 'Start with +4 max HP (14 HP total)',
@@ -59,11 +61,19 @@ export const races = [
     level1: {
       effect: 'Draw 6 cards at start of round instead of 5',
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: 'Draw 1 card'
+      symbolEffect: 'Draw 1 card',
+      onSymbol: [{ type: 'draw', amount: 1 }]
     },
     level2: {
       effect: 'Draw 7 cards at start of round',
-      additionalEffect: '🟩 symbols: Draw 1 card'
+      additionalEffect: '🟩 symbols: Draw 1 card',
+      extraTriggers: [
+        {
+          symbol: SYMBOLS.GREEN,
+          symbolEffect: 'Draw 1 card',
+          onSymbol: [{ type: 'draw', amount: 1 }]
+        }
+      ]
     }
   }
 ];
@@ -74,11 +84,15 @@ export const classes = [
     name: 'Warrior',
     side: 'A',
     level1: {
-      effect: '🔺 symbols deal +1 damage'
+      symbol: SYMBOLS.GREEN,
+      symbolEffect: 'Deal 2 damage',
+      onSymbol: [{ type: 'damage', amount: 2 }]
     },
     level2: {
       effect: '🔺 symbols deal +2 damage',
-      additionalEffect: '⭐️ symbols: Deal 3 damage'
+      symbol: SYMBOLS.GREEN,
+      symbolEffect: 'Deal 3 damage',
+      onSymbol: [{ type: 'damage', amount: 3 }]
     }
   },
   {
@@ -86,11 +100,21 @@ export const classes = [
     name: 'Warrior',
     side: 'B',
     level1: {
-      effect: 'When you deal damage with 🔺, gain 1 rage token. Spend 3 rage: Your next 🔺 deals double damage.'
+      effect: 'Spend 3 rage: Your next 🔺 deals double damage.',
+      symbol: SYMBOLS.GREEN,
+      symbolEffect: 'Gain 1 rage token',
+      onSymbol: [{ type: 'token', token: 'rage', amount: 1 }]
     },
     level2: {
-      effect: 'When you deal damage with 🔺, gain 1 rage token. Spend 2 rage: Your next 🔺 deals double damage.',
-      additionalEffect: '⭐️ symbols: Gain 2 rage tokens'
+      effect: 'Spend 2 rage: Your next 🔺 deals double damage.',
+      additionalEffect: '⭐️ symbols: Gain 2 rage tokens',
+      extraTriggers: [
+        {
+          symbol: SYMBOLS.STAR,
+          symbolEffect: 'Gain 2 rage tokens',
+          onSymbol: [{ type: 'token', token: 'rage', amount: 2 }]
+        }
+      ]
     }
   },
   {
@@ -98,11 +122,20 @@ export const classes = [
     name: 'Priest',
     side: 'A',
     level1: {
-      effect: '🔹 symbols grant +1 block'
+      symbol: SYMBOLS.GREEN,
+      symbolEffect: 'Gain 2 block',
+      onSymbol: [{ type: 'block', amount: 2 }]
     },
     level2: {
       effect: '🔹 symbols grant +2 block',
-      additionalEffect: '🧡 symbols: Heal 2 HP'
+      additionalEffect: '⭐️ symbols: Heal 2 HP',
+      extraTriggers: [
+        {
+          symbol: SYMBOLS.STAR,
+          symbolEffect: 'Heal 2 HP',
+          onSymbol: [{ type: 'heal', amount: 2 }]
+        }
+      ]
     }
   },
   {
@@ -110,11 +143,22 @@ export const classes = [
     name: 'Mage',
     side: 'A',
     level1: {
-      effect: '⭐️ symbols: Deal 2 damage to boss'
+      symbol: SYMBOLS.GREEN,
+      symbolEffect: 'Deal 2 damage to boss',
+      onSymbol: [{ type: 'damage', amount: 2 }]
     },
     level2: {
-      effect: '⭐️ symbols: Deal 3 damage to boss',
-      additionalEffect: '🟩 symbols: Deal 2 damage to boss'
+      symbol: SYMBOLS.GREEN,
+      symbolEffect: 'Deal 3 damage to boss',
+      onSymbol: [{ type: 'damage', amount: 3 }],
+      additionalEffect: '⭐️ symbols: Deal 2 damage to boss',
+      extraTriggers: [
+        {
+          symbol: SYMBOLS.STAR,
+          symbolEffect: 'Deal 2 damage to boss',
+          onSymbol: [{ type: 'damage', amount: 2 }]
+        }
+      ]
     }
   }
 ];
@@ -125,11 +169,15 @@ export const gods = [
     name: 'Ares (God of War)',
     side: 'A',
     level1: {
-      effect: 'Once per round: Discard a card to deal 2 damage'
+      symbol: SYMBOLS.STAR,
+      symbolEffect: 'Deal 2 damage',
+      onSymbol: [{ type: 'damage', amount: 2 }]
     },
     level2: {
       effect: 'Once per round: Discard a card to deal 3 damage',
-      additionalEffect: '🧡 symbols: Deal 2 damage'
+      symbol: SYMBOLS.STAR,
+      symbolEffect: 'Deal 3 damage',
+      onSymbol: [{ type: 'damage', amount: 3 }]
     }
   },
   {
@@ -137,7 +185,9 @@ export const gods = [
     name: 'Ares (God of War)',
     side: 'B',
     level1: {
-      effect: 'At start of round: Deal 1 damage to boss for each 🔺 card in hand'
+      symbol: SYMBOLS.STAR,
+      symbolEffect: 'Deal 2 damage',
+      onSymbol: [{ type: 'damage', amount: 2 }]
     },
     level2: {
       effect: 'At start of round: Deal 2 damage to boss for each 🔺 card in hand',
@@ -149,11 +199,20 @@ export const gods = [
     name: 'Athena (Goddess of Wisdom)',
     side: 'A',
     level1: {
-      effect: 'Once per round: Discard a card to draw 2 cards'
+      symbol: SYMBOLS.STAR,
+      symbolEffect: 'Draw 1 card',
+      onSymbol: [{ type: 'draw', amount: 1 }]
     },
     level2: {
       effect: 'Twice per round: Discard a card to draw 2 cards',
-      additionalEffect: '🟩 symbols: Draw 1 card'
+      additionalEffect: '🟩 symbols: Draw 1 card',
+      extraTriggers: [
+        {
+          symbol: SYMBOLS.GREEN,
+          symbolEffect: 'Draw 1 card',
+          onSymbol: [{ type: 'draw', amount: 1 }]
+        }
+      ]
     }
   },
   {
@@ -161,11 +220,15 @@ export const gods = [
     name: 'Apollo (God of Healing)',
     side: 'A',
     level1: {
-      effect: 'At end of round: If you blocked all damage, heal 1 HP'
+      symbol: SYMBOLS.STAR,
+      symbolEffect: 'Heal 1 HP',
+      onSymbol: [{ type: 'heal', amount: 1 }]
     },
     level2: {
       effect: 'At end of round: If you blocked all damage, heal 2 HP',
-      additionalEffect: '🧡 symbols: Heal 1 HP'
+      symbol: SYMBOLS.STAR,
+      symbolEffect: 'Heal 2 HP',
+      onSymbol: [{ type: 'heal', amount: 2 }]
     }
   }
 ];
@@ -258,9 +321,9 @@ export const marketCards = [
   { id: 'm7', name: 'Versatile', symbols: [SYMBOLS.ATTACK, SYMBOLS.PURPLE] },
   { id: 'm8', name: 'Nature\'s Gift', symbols: [SYMBOLS.GREEN, SYMBOLS.GREEN] },
   { id: 'm9', name: 'Stellar Power', symbols: [SYMBOLS.STAR, SYMBOLS.STAR] },
-  { id: 'm10', name: 'Flame Strike', symbols: [SYMBOLS.ORANGE, SYMBOLS.ATTACK] },
+  { id: 'm10', name: 'Divine Strike', symbols: [SYMBOLS.STAR, SYMBOLS.ATTACK] },
   { id: 'm11', name: 'Combo Attack', symbols: [SYMBOLS.ATTACK, SYMBOLS.ATTACK, SYMBOLS.STAR] },
-  { id: 'm12', name: 'Healing Block', symbols: [SYMBOLS.BLOCK, SYMBOLS.ORANGE] },
+  { id: 'm12', name: 'Healing Block', symbols: [SYMBOLS.BLOCK, SYMBOLS.GREEN] },
   { id: 'm13', name: 'Wild Magic', symbols: [SYMBOLS.PURPLE, SYMBOLS.GREEN] },
   { id: 'm14', name: 'Quick Draw', symbols: [SYMBOLS.GREEN] },
   { id: 'm15', name: 'Simple Strike', symbols: [SYMBOLS.ATTACK] },
