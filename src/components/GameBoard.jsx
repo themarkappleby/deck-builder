@@ -555,15 +555,67 @@ function GameBoard({ playerCharacter, onRestart }) {
           <div className="center-content level-up-overlay">
             <h2>Level Up! Choose 2 cards:</h2>
             <div className="level-up-options">
-              <button onClick={() => levelUpCharacter('race')}>
-                Level Up Race {raceLevel < 2 ? `(${raceLevel} → ${raceLevel + 1})` : '(Max)'}
-              </button>
-              <button onClick={() => levelUpCharacter('class')}>
-                Level Up Class {classLevel < 2 ? `(${classLevel} → ${classLevel + 1})` : '(Max)'}
-              </button>
-              <button onClick={() => levelUpCharacter('god')}>
-                Level Up God {godLevel < 2 ? `(${godLevel} → ${godLevel + 1})` : '(Max)'}
-              </button>
+              {raceLevel < 2 && (
+                <button onClick={() => levelUpCharacter('race')}>
+                  <strong>{playerCharacter.race.name} - Level {raceLevel} → {raceLevel + 1}</strong>
+                  <p>{playerCharacter.race.level2.effect}</p>
+                  {playerCharacter.race.level2.additionalEffect && (
+                    <p>{playerCharacter.race.level2.additionalEffect}</p>
+                  )}
+                </button>
+              )}
+              {raceLevel >= 2 && (
+                <button disabled>
+                  <strong>{playerCharacter.race.name} - Max Level</strong>
+                  <p>Already at maximum level</p>
+                </button>
+              )}
+              
+              {classLevel < 2 && (
+                <button onClick={() => levelUpCharacter('class')}>
+                  <strong>{playerCharacter.class.name} - Level {classLevel} → {classLevel + 1}</strong>
+                  {classLevel === 0 && (
+                    <p>{playerCharacter.class.level1.effect}</p>
+                  )}
+                  {classLevel === 1 && (
+                    <>
+                      <p>{playerCharacter.class.level2.effect}</p>
+                      {playerCharacter.class.level2.additionalEffect && (
+                        <p>{playerCharacter.class.level2.additionalEffect}</p>
+                      )}
+                    </>
+                  )}
+                </button>
+              )}
+              {classLevel >= 2 && (
+                <button disabled>
+                  <strong>{playerCharacter.class.name} - Max Level</strong>
+                  <p>Already at maximum level</p>
+                </button>
+              )}
+              
+              {godLevel < 2 && (
+                <button onClick={() => levelUpCharacter('god')}>
+                  <strong>{playerCharacter.god.name} - Level {godLevel} → {godLevel + 1}</strong>
+                  {godLevel === 0 && (
+                    <p>{playerCharacter.god.level1.effect}</p>
+                  )}
+                  {godLevel === 1 && (
+                    <>
+                      <p>{playerCharacter.god.level2.effect}</p>
+                      {playerCharacter.god.level2.additionalEffect && (
+                        <p>{playerCharacter.god.level2.additionalEffect}</p>
+                      )}
+                    </>
+                  )}
+                </button>
+              )}
+              {godLevel >= 2 && (
+                <button disabled>
+                  <strong>{playerCharacter.god.name} - Max Level</strong>
+                  <p>Already at maximum level</p>
+                </button>
+              )}
             </div>
             <button className="big-button" onClick={startNextBoss}>Continue to Next Boss</button>
           </div>

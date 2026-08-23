@@ -417,6 +417,16 @@
   line-height: 1.4;
 }
 
+.level-up-options button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #1a1a2a;
+}
+
+.level-up-options button:disabled:hover {
+  background: #1a1a2a;
+}
+
 .big-button {
   padding: 15px 35px;
   font-size: 1.1rem;
