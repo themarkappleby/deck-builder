@@ -62,7 +62,7 @@ Make sure GitHub Pages is enabled in your repository settings:
 2. Start with 10 HP and a deck of 5 Attack cards, 4 Block cards, and 1 Purple card
 
 ### Gameplay
-- **Round Start**: Boss telegraphs their action, players draw 5 cards
+- **Round Start**: Boss telegraphs their action, players draw 6 cards
 - **Player Turn**: Play/purchase/trash cards by paying their cost (discard cards equal to symbol count)
 - **Round End**: Boss executes their action, dealing damage or using special abilities
 

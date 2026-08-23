@@ -26,7 +26,7 @@ Each player board indicates 🔺is 1 attack and 🔹is 1 block. This is universa
 
 The level 2 race portion and the class and god cards may apply additional effects to 🔺🔹🟣🟩⭐️🧡symbols and/or alter the standard game rules in some other way.
 
-On a player's turn they will draw a hand of 5 cards. They can then play, purchase or trash cards by paying their cost. The cost of a card is determined by the number of symbols on the card. For example, a card with a 🔺and 🔹symbol cost 2, and a card with 2 🔺symbols costs 2. Cards purchased go to the player’s discard pile. Cards trashed, are trashed from the players hand and removed from the game. To pay a cost, players must discard a corresponding number of cards from their hand.
+On a player's turn they will draw a hand of 6 cards. They can then play, purchase or trash cards by paying their cost. The cost of a card is determined by the number of symbols on the card. For example, a card with a 🔺and 🔹symbol cost 2, and a card with 2 🔺symbols costs 2. Cards purchased go to the player’s discard pile. Cards trashed, are trashed from the players hand and removed from the game. To pay a cost, players must discard a corresponding number of cards from their hand.
 
 There is a random market of 5 potential new cards players can purchase on their turn. When a card is purchased, immediately also discard the rightmost card, shift all the cards right and draw 2 new market cards, filling in the spaces on the left.
 
