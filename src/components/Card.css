@@ -10,6 +10,8 @@
   transition: all 0.2s ease;
   cursor: pointer;
   flex-shrink: 0;
+  overflow: hidden;
+  container-type: size;
 }
 
 .card:hover {
@@ -36,12 +38,29 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 4px;
-  padding: 8px;
+  align-content: center;
+  gap: 2px;
+  padding: 4px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .symbol-large {
-  font-size: 1.8rem;
+  font-size: min(1.8rem, 42cqmin);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-symbols-only:has(> :nth-child(2)) .symbol-large {
+  font-size: min(1.4rem, 34cqmin);
+}
+
+.card-symbols-only:has(> :nth-child(3)) .symbol-large {
+  font-size: min(1.15rem, 28cqmin);
+  flex: 0 0 42%;
 }
 
 /* Only market cards fade when unaffordable; hand cards stay opaque */

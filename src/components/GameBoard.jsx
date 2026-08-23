@@ -863,9 +863,11 @@ function GameBoard({ playerCharacter, onRestart }) {
               <div className="intent-card-row boss-cards-row">
                 {bossCards.map(card => (
                   <div key={card.id} className="intent-card">
-                    {card.symbols.map((symbol, index) => (
-                      <span key={index} className="symbol-large">{symbol}</span>
-                    ))}
+                    <div className="card-symbols-only">
+                      {card.symbols.map((symbol, index) => (
+                        <span key={index} className="symbol-large">{symbol}</span>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
