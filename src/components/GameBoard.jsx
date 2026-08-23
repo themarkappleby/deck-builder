@@ -539,6 +539,21 @@ function GameBoard({ playerCharacter, onRestart }) {
           <div className={`drop-zone drop-zone-bottom ${dropZone === 'trash' ? 'active' : ''}`}>
             <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
           </div>
+          
+          {/* Floating card that follows cursor/finger */}
+          <div 
+            className="floating-card"
+            style={{
+              left: `${dragPosition.x}px`,
+              top: `${dragPosition.y}px`,
+            }}
+          >
+            <div className="card-symbols-only">
+              {draggingCard.symbols.map((symbol, index) => (
+                <span key={index} className="symbol-large">{symbol}</span>
+              ))}
+            </div>
+          </div>
         </>
       )}
 

@@ -668,7 +668,36 @@
 }
 
 .card.dragging {
-  opacity: 0.5;
+  opacity: 0.3;
   transform: scale(0.9);
   cursor: grabbing;
+}
+
+/* Floating card that follows cursor */
+.floating-card {
+  position: fixed;
+  width: 100px;
+  height: 130px;
+  background: #2a2a2a;
+  border: 3px solid #888;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  animation: float 0.3s ease-out;
+}
+
+@keyframes float {
+  from {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
