@@ -14,6 +14,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [bossMaxHP, setBossMaxHP] = useState(0);
   const [bossAction, setBossAction] = useState(null);
   const [bossCards, setBossCards] = useState([]);
+  const [bossAttack, setBossAttack] = useState(0);
+  const [bossBlock, setBossBlock] = useState(0);
+  const [bossBlockMax, setBossBlockMax] = useState(0);
   
   const [playerHP, setPlayerHP] = useState(10);
   const [playerMaxHP, setPlayerMaxHP] = useState(10);
@@ -142,6 +145,9 @@ function GameBoard({ playerCharacter, onRestart }) {
     // Calculate boss action from drawn cards
     const action = calculateBossActionFromCards(drawnBossCards);
     setBossAction(action);
+    setBossAttack(action.value);
+    setBossBlock(action.block || 0);
+    setBossBlockMax(action.block || 0);
     
     // Determine how many cards to draw based on race
     let cardsToDraw = 5;
@@ -186,13 +192,19 @@ function GameBoard({ playerCharacter, onRestart }) {
       });
     });
     
-    // Boss attacks for damage equal to attack symbols
+    // Boss attacks for damage equal to attack symbols.
+    // Witch (and card-drawn bosses) accumulate block from 🔹 for this round only.
     const damage = attackCount;
+    const parts = [`Attacks for ${damage} damage`];
+    if (blockCount > 0) {
+      parts.push(`gains ${blockCount} block`);
+    }
     
     return {
       type: 'attack',
       value: damage,
-      description: `Attacks for ${damage} damage`
+      block: blockCount,
+      description: parts.join(', ')
     };
   };
 
@@ -389,12 +401,29 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const dealDamageToBoss = (damage) => {
-    const newHP = Math.max(0, bossHP - damage);
-    setBossHP(newHP);
-    addLog(`Dealt ${damage} damage to boss! (${newHP}/${bossMaxHP} HP)`);
+    const absorbed = Math.min(damage, bossBlock);
+    const remainingDamage = damage - absorbed;
+    const newBlock = bossBlock - absorbed;
 
-    if (newHP === 0) {
-      handleBossDefeated();
+    if (absorbed > 0) {
+      setBossBlock(newBlock);
+    }
+
+    if (remainingDamage > 0) {
+      const newHP = Math.max(0, bossHP - remainingDamage);
+      setBossHP(newHP);
+
+      if (absorbed > 0) {
+        addLog(`Boss blocked ${absorbed}, dealt ${remainingDamage} damage! (${newHP}/${bossMaxHP} HP, ${newBlock} block left)`);
+      } else {
+        addLog(`Dealt ${remainingDamage} damage to boss! (${newHP}/${bossMaxHP} HP)`);
+      }
+
+      if (newHP === 0) {
+        handleBossDefeated();
+      }
+    } else if (absorbed > 0) {
+      addLog(`Boss blocked all ${damage} damage (${newBlock} block remaining)`);
     }
   };
 
@@ -451,6 +480,9 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
     setMarket(bossCards);
     setBossCards([]);
+    setBossAttack(0);
+    setBossBlock(0);
+    setBossBlockMax(0);
     addLog('Boss cards moved to market!');
 
     setRoundNumber(prev => prev + 1);
@@ -493,6 +525,9 @@ function GameBoard({ playerCharacter, onRestart }) {
     setCurrentBoss(boss);
     setBossHP(bossData.hp);
     setBossMaxHP(bossData.hp);
+    setBossAttack(0);
+    setBossBlock(0);
+    setBossBlockMax(0);
     setRoundNumber(1);
     setGameState('ready');
     addLog(`Next boss: ${boss.name} (Level ${nextBossNumber})`);
@@ -754,7 +789,6 @@ function GameBoard({ playerCharacter, onRestart }) {
               <div className="boss-placeholder">🐉</div>
               {bossAction && (
                 <div className="boss-intent">
-                  <div className="boss-intent-text">{bossAction.description}</div>
                   {bossCards.length > 0 && (
                     <div className="boss-cards">
                       {bossCards.map(card => (
@@ -766,6 +800,34 @@ function GameBoard({ playerCharacter, onRestart }) {
                       ))}
                     </div>
                   )}
+                  <div className="boss-combat-bars">
+                    {bossAttack > 0 && (
+                      <div className="boss-stat-bar boss-attack-bar">
+                        <div
+                          className="boss-stat-fill"
+                          style={{
+                            width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
+                          }}
+                        ></div>
+                        <span className="boss-stat-text">
+                          Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
+                        </span>
+                      </div>
+                    )}
+                    {bossBlockMax > 0 && (
+                      <div className="boss-stat-bar boss-block-bar">
+                        <div
+                          className="boss-stat-fill"
+                          style={{
+                            width: `${(bossBlock / bossBlockMax) * 100}%`
+                          }}
+                        ></div>
+                        <span className="boss-stat-text">
+                          Block {bossBlock} / {bossBlockMax}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
