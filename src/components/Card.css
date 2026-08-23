@@ -44,6 +44,7 @@
   padding: 10%;
   gap: 4%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .card-symbols-only.symbol-count-1 {
@@ -74,6 +75,9 @@
 .symbol-large {
   font-size: min(36cqw, 28cqh);
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Only market cards fade when unaffordable; hand cards stay opaque */
