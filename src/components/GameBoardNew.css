@@ -108,10 +108,10 @@
 .center-area {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  padding-bottom: 240px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 8px 8px 240px;
   overflow: hidden;
   min-height: 0;
 }
@@ -119,7 +119,7 @@
 .center-area.overlay-mode {
   overflow-y: auto;
   padding-bottom: 10px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .center-content {
@@ -130,8 +130,8 @@
 
 .player-turn-layout {
   display: grid;
-  grid-template-rows: 1fr auto;
-  flex: 1;
+  grid-template-rows: minmax(0, 1fr) auto;
+  flex: 1 1 auto;
   height: 100%;
   width: 100%;
   min-height: 0;
@@ -139,14 +139,14 @@
 }
 
 .battlefield {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 14px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: stretch;
+  justify-items: center;
+  gap: 8px;
   width: 100%;
   min-height: 0;
-  padding-top: 4px;
+  height: 100%;
 }
 
 .market-column {
@@ -155,6 +155,16 @@
   align-items: center;
   gap: 4px;
   flex: 0 0 auto;
+  align-self: start;
+  justify-self: center;
+}
+
+.boss-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
 }
 
 .boss-cluster {
@@ -230,6 +240,10 @@
   border: 2px dashed #333;
   border-radius: 6px;
   box-sizing: border-box;
+}
+
+.game-board {
+  padding: 0;
 }
 
 .game-board.is-dragging {
