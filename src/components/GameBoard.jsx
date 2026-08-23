@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
+import { getActiveAbilityUI, getGodAbilityUsesPerRound } from '../abilityActions';
 import Card from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -18,6 +19,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [playerMaxHP, setPlayerMaxHP] = useState(10);
   const [playerBlock, setPlayerBlock] = useState(0);
   const [playerTokens, setPlayerTokens] = useState({});
+  const [nextAttackDoubled, setNextAttackDoubled] = useState(false);
+  const [godUsesRemaining, setGodUsesRemaining] = useState(0);
+  const [pendingDiscardAbility, setPendingDiscardAbility] = useState(null); // 'aresDiscard' | 'athenaDiscard'
   
   const [deck, setDeck] = useState([]);
   const [hand, setHand] = useState([]);
@@ -44,6 +48,16 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', or null
   
   const logContentRef = useRef(null);
+
+  const abilityUI = getActiveAbilityUI(
+    playerCharacter,
+    { raceLevel, classLevel, godLevel },
+    {
+      tokens: playerTokens,
+      godUsesRemaining,
+      handSize: hand.length,
+    }
+  );
 
   useEffect(() => {
     initializeGame();
@@ -147,6 +161,10 @@ function GameBoard({ playerCharacter, onRestart }) {
       }));
       addLog('Gained 1 blood token (Vampire Level 2)');
     }
+
+    // Refresh once-per-round god ability uses
+    setGodUsesRemaining(getGodAbilityUsesPerRound(playerCharacter, godLevel));
+    setPendingDiscardAbility(null);
     
     drawCards(cardsToDraw);
     setPlayerBlock(0);
@@ -224,6 +242,11 @@ function GameBoard({ playerCharacter, onRestart }) {
       return;
     }
 
+    // Cancel pending god discard selection when playing a card normally
+    if (pendingDiscardAbility) {
+      setPendingDiscardAbility(null);
+    }
+
     const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
     setDiscard(prev => [...prev, card]);
@@ -231,17 +254,20 @@ function GameBoard({ playerCharacter, onRestart }) {
 
     let damage = 0;
     let block = 0;
+    let attackSymbols = 0;
 
     let bloodTokensGained = 0;
+    let rageTokensGained = 0;
     
     card.symbols.forEach(symbol => {
       if (symbol === SYMBOLS.ATTACK) {
+        attackSymbols += 1;
         damage += 1;
         // Apply Vampire blood token gain
         if (playerCharacter.race.id === 'vampire' && raceLevel >= 1) {
           bloodTokensGained++;
         }
-        // Apply Warrior class bonus
+        // Apply Warrior A class bonus
         if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A') {
           if (classLevel >= 2) {
             damage += 2;
@@ -266,8 +292,36 @@ function GameBoard({ playerCharacter, onRestart }) {
       } else if (symbol === SYMBOLS.PURPLE && raceLevel >= 1) {
         const effect = playerCharacter.race.level1.symbolEffect;
         addLog(`🟣 effect: ${effect}`);
+      } else if (symbol === SYMBOLS.STAR) {
+        // Warrior B Level 2: ⭐️ symbols grant 2 rage tokens
+        if (
+          playerCharacter.class.id === 'warrior' &&
+          playerCharacter.class.side === 'B' &&
+          classLevel >= 2
+        ) {
+          rageTokensGained += 2;
+          addLog('⭐️ effect: Gain 2 rage tokens');
+        }
       }
     });
+
+    // Warrior B rage: next 🔺 deals double damage (consumes buff)
+    if (nextAttackDoubled && attackSymbols > 0) {
+      damage *= 2;
+      setNextAttackDoubled(false);
+      addLog('💢 Rage: attack damage doubled!');
+    }
+
+    // Warrior B: gain 1 rage token per attack that deals damage
+    if (
+      damage > 0 &&
+      attackSymbols > 0 &&
+      playerCharacter.class.id === 'warrior' &&
+      playerCharacter.class.side === 'B' &&
+      classLevel >= 1
+    ) {
+      rageTokensGained += attackSymbols;
+    }
 
     if (bloodTokensGained > 0) {
       setPlayerTokens(prev => ({
@@ -275,6 +329,14 @@ function GameBoard({ playerCharacter, onRestart }) {
         blood: (prev.blood || 0) + bloodTokensGained
       }));
       addLog(`Gained ${bloodTokensGained} blood token${bloodTokensGained > 1 ? 's' : ''} (Total: ${(playerTokens.blood || 0) + bloodTokensGained})`);
+    }
+
+    if (rageTokensGained > 0) {
+      setPlayerTokens(prev => ({
+        ...prev,
+        rage: (prev.rage || 0) + rageTokensGained
+      }));
+      addLog(`Gained ${rageTokensGained} rage token${rageTokensGained > 1 ? 's' : ''} (Total: ${(playerTokens.rage || 0) + rageTokensGained})`);
     }
 
     if (damage > 0) {
@@ -349,6 +411,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const endTurn = () => {
+    setPendingDiscardAbility(null);
     setDiscard(prev => [...prev, ...hand]);
     setHand([]);
 
@@ -463,7 +526,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const spendBloodTokens = () => {
-    if (playerCharacter.race.id !== 'vampire') return;
+    if (playerCharacter.race.id !== 'vampire' || raceLevel < 1) return;
     
     const bloodTokens = playerTokens.blood || 0;
     const requiredTokens = raceLevel >= 2 ? 2 : 3;
@@ -473,29 +536,128 @@ function GameBoard({ playerCharacter, onRestart }) {
       return;
     }
     
-    // Spend tokens
     setPlayerTokens(prev => ({
       ...prev,
       blood: (prev.blood || 0) - requiredTokens
     }));
     
-    // Apply effect based on vampire side
     if (playerCharacter.race.side === 'A') {
-      // Vampire A: Heal
       const healAmount = 1;
       const newHP = Math.min(playerMaxHP, playerHP + healAmount);
       setPlayerHP(newHP);
       addLog(`Spent ${requiredTokens} blood tokens: Healed 1 HP (${newHP}/${playerMaxHP})`);
     } else {
-      // Vampire B: Deal damage
       const damageAmount = raceLevel >= 2 ? 3 : 2;
       dealDamageToBoss(damageAmount);
       addLog(`Spent ${requiredTokens} blood tokens: Dealt ${damageAmount} damage to boss`);
     }
   };
 
+  const spendRageTokens = () => {
+    if (
+      playerCharacter.class.id !== 'warrior' ||
+      playerCharacter.class.side !== 'B' ||
+      classLevel < 1
+    ) {
+      return;
+    }
+
+    const rageTokens = playerTokens.rage || 0;
+    const requiredTokens = classLevel >= 2 ? 2 : 3;
+
+    if (rageTokens < requiredTokens) {
+      addLog(`Not enough rage tokens! Need ${requiredTokens}, have ${rageTokens}`);
+      return;
+    }
+
+    if (nextAttackDoubled) {
+      addLog('Rage is already active for your next attack!');
+      return;
+    }
+
+    setPlayerTokens(prev => ({
+      ...prev,
+      rage: (prev.rage || 0) - requiredTokens
+    }));
+    setNextAttackDoubled(true);
+    addLog(`Spent ${requiredTokens} rage tokens: Next 🔺 deals double damage!`);
+  };
+
+  const handleAbilityButton = (button) => {
+    if (button.action === 'spendBlood') {
+      spendBloodTokens();
+    } else if (button.action === 'spendRage') {
+      spendRageTokens();
+    } else if (button.action === 'aresDiscard' || button.action === 'athenaDiscard') {
+      if (godUsesRemaining <= 0) {
+        addLog('No god ability uses remaining this round');
+        return;
+      }
+      if (hand.length === 0) {
+        addLog('No cards in hand to discard');
+        return;
+      }
+      if (pendingDiscardAbility === button.action) {
+        setPendingDiscardAbility(null);
+        addLog('Cancelled ability — select a card to discard cancelled');
+      } else {
+        setPendingDiscardAbility(button.action);
+        addLog(
+          button.action === 'aresDiscard'
+            ? 'Select a card to discard for Ares (deal damage)'
+            : 'Select a card to discard for Athena (draw 2)'
+        );
+      }
+    }
+  };
+
+  const resolveGodDiscard = (card) => {
+    if (!pendingDiscardAbility || godUsesRemaining <= 0) return;
+
+    const ability = pendingDiscardAbility;
+    const newHand = hand.filter(c => c.id !== card.id);
+    setGodUsesRemaining(prev => prev - 1);
+    setPendingDiscardAbility(null);
+
+    if (ability === 'aresDiscard') {
+      setHand(newHand);
+      setDiscard(prev => [...prev, card]);
+      const damage = godLevel >= 2 ? 3 : 2;
+      dealDamageToBoss(damage);
+      addLog(`Discarded ${card.name} for Ares: Dealt ${damage} damage`);
+    } else if (ability === 'athenaDiscard') {
+      addLog(`Discarded ${card.name} for Athena: Draw 2 cards`);
+      drawCardsAfterDiscard(2, card, newHand);
+    }
+  };
+
+  const drawCardsAfterDiscard = (count, discardedCard, currentHand) => {
+    let currentDeck = [...deck];
+    let currentDiscard = [...discard, discardedCard];
+    let drawnCards = [];
+
+    for (let i = 0; i < count; i++) {
+      if (currentDeck.length === 0) {
+        if (currentDiscard.length === 0) break;
+        currentDeck = shuffleArray([...currentDiscard]);
+        currentDiscard = [];
+        addLog('Deck reshuffled!');
+      }
+      drawnCards.push(currentDeck.pop());
+    }
+
+    setDeck(currentDeck);
+    setDiscard(currentDiscard);
+    setHand([...currentHand, ...drawnCards]);
+  };
+
   const handleCardDragStart = (card, e) => {
     if (selectedCardIsMarket) return; // Don't allow dragging market cards
+    // When selecting a card for a god discard ability, resolve on click/tap instead of drag
+    if (pendingDiscardAbility) {
+      resolveGodDiscard(card);
+      return;
+    }
     setDraggingCard(card);
     const touch = e.touches ? e.touches[0] : e;
     setDragPosition({ x: touch.clientX, y: touch.clientY });
@@ -705,8 +867,11 @@ function GameBoard({ playerCharacter, onRestart }) {
             <div className="stat-item">🛡️ {playerBlock}</div>
             <div className="stat-item">🎴 {deck.length}</div>
             <div className="stat-item">🗑️ {discard.length}</div>
-            {playerCharacter.race.id === 'vampire' && raceLevel >= 1 && (
-              <div className="stat-item">🩸 {playerTokens.blood || 0}</div>
+            {abilityUI.tokenDisplays.map(token => (
+              <div key={token.key} className="stat-item">{token.icon} {token.value}</div>
+            ))}
+            {nextAttackDoubled && (
+              <div className="stat-item rage-active" title="Next attack doubled">💢×2</div>
             )}
           </div>
           <div className="hp-bar player-hp-bar">
@@ -744,7 +909,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               return (
                 <div
                   key={card.id}
-                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < 1 ? 'unaffordable' : ''}`}
+                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < 1 ? 'unaffordable' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
                   style={{
                     transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
                     zIndex: index,
@@ -765,15 +930,28 @@ function GameBoard({ playerCharacter, onRestart }) {
             })}
           </div>
           <div className="hand-actions">
-            {playerCharacter.race.id === 'vampire' && raceLevel >= 1 && (
-              <button 
-                className="action-btn blood-btn" 
-                onClick={spendBloodTokens}
-                disabled={(playerTokens.blood || 0) < (raceLevel >= 2 ? 2 : 3)}
-              >
-                🩸 Spend ({raceLevel >= 2 ? 2 : 3})
-              </button>
+            {pendingDiscardAbility && (
+              <div className="ability-prompt">
+                Tap a card to discard
+                <button
+                  className="action-btn cancel-ability-btn"
+                  onClick={() => setPendingDiscardAbility(null)}
+                >
+                  Cancel
+                </button>
+              </div>
             )}
+            {abilityUI.buttons.map(button => (
+              <button
+                key={button.id}
+                className={`action-btn ${button.className}${pendingDiscardAbility === button.action ? ' ability-armed' : ''}`}
+                onClick={() => handleAbilityButton(button)}
+                disabled={button.disabled && pendingDiscardAbility !== button.action}
+              >
+                {button.label}
+                {button.usesRemaining != null ? ` (${button.usesRemaining})` : ''}
+              </button>
+            ))}
             <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
           </div>
         </div>
