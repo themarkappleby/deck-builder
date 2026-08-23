@@ -474,7 +474,7 @@ function GameBoard({ playerCharacter, onRestart }) {
       setDropZone('discard');
     } else if (x > viewportWidth * 0.75 && canAfford) {
       setDropZone('play');
-    } else if (y > viewportHeight * 0.75 && canAfford) {
+    } else if (y < viewportHeight * 0.25 && canAfford) {
       setDropZone('trash');
     } else {
       setDropZone(null);
@@ -714,7 +714,7 @@ function GameBoard({ playerCharacter, onRestart }) {
           
           {/* Trash zone - only if player can afford */}
           {resources >= draggingCard.symbols.length && (
-            <div className={`drop-zone drop-zone-bottom ${dropZone === 'trash' ? 'active' : ''}`}>
+            <div className={`drop-zone drop-zone-top ${dropZone === 'trash' ? 'active' : ''}`}>
               <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
             </div>
           )}
