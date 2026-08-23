@@ -1088,3 +1088,79 @@
     gap: 6px;
   }
 }
+
+.play-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.play-field-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c9a227;
+}
+
+.play-token-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 320px;
+}
+
+.play-token {
+  width: 52px;
+  height: 52px;
+  border: 2px solid #6a5a3a;
+  border-radius: 8px;
+  background: #2a2418;
+  color: #eee;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  pointer-events: all;
+}
+
+.play-token.no-stats {
+  border-style: dashed;
+  opacity: 0.9;
+}
+
+.play-token.can-attack {
+  border-color: #c0392b;
+  box-shadow: 0 0 8px rgba(192, 57, 43, 0.45);
+}
+
+.play-token.has-attacked {
+  opacity: 0.45;
+}
+
+.play-token-kind {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.play-token-stats {
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.action-btn.harvest-btn {
+  background: #2a4a2a;
+  border-color: #3a6a3a;
+}
+
+.action-btn.harvest-btn:hover:not(:disabled) {
+  background: #335533;
+}
+

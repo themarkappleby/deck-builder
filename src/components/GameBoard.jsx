@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards, getCardPlayTotals, formatCardEffectLabels, formatLevelLines } from '../abilityActions';
+import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, formatTokenStats, getMaxTokens } from '../abilityActions';
 import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -18,7 +18,7 @@ function CharacterAbilities({ playerCharacter, raceLevel, classLevel, godLevel }
   return (
     <div className="character-info">
       <div className="character-section">
-        <h4>{playerCharacter.race.name} (Side {playerCharacter.race.side}) - Level {raceLevel}</h4>
+        <h4>{playerCharacter.race.name} - Level {raceLevel}</h4>
         <div className={`ability-box ${raceLevel >= 1 ? 'active' : ''}`}>
           <strong>Level 1:</strong>
           <AbilityLines level={playerCharacter.race.level1} />
@@ -30,7 +30,7 @@ function CharacterAbilities({ playerCharacter, raceLevel, classLevel, godLevel }
       </div>
 
       <div className="character-section">
-        <h4>{playerCharacter.class.name} (Side {playerCharacter.class.side}) - Level {classLevel}</h4>
+        <h4>{playerCharacter.class.name} - Level {classLevel}</h4>
         <div className={`ability-box ${classLevel >= 1 ? 'active' : ''}`}>
           <strong>Level 1:</strong>
           <AbilityLines level={playerCharacter.class.level1} />
@@ -42,7 +42,7 @@ function CharacterAbilities({ playerCharacter, raceLevel, classLevel, godLevel }
       </div>
 
       <div className="character-section">
-        <h4>{playerCharacter.god.name} (Side {playerCharacter.god.side}) - Level {godLevel}</h4>
+        <h4>{playerCharacter.god.name} - Level {godLevel}</h4>
         <div className={`ability-box ${godLevel >= 1 ? 'active' : ''}`}>
           <strong>Level 1:</strong>
           <AbilityLines level={playerCharacter.god.level1} />
@@ -71,10 +71,13 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [playerHP, setPlayerHP] = useState(10);
   const [playerMaxHP, setPlayerMaxHP] = useState(10);
   const [playerBlock, setPlayerBlock] = useState(0);
-  const [playerTokens, setPlayerTokens] = useState({});
-  const [nextAttackDoubled, setNextAttackDoubled] = useState(false);
-  const [godAbilityUsesThisRound, setGodAbilityUsesThisRound] = useState(0);
-  const [pendingDiscardAbility, setPendingDiscardAbility] = useState(null); // 'aresDiscard' | 'athenaDiscard'
+  const [playTokens, setPlayTokens] = useState([]);
+  const [pendingTokenAction, setPendingTokenAction] = useState(null); // 'harvest' | null
+  const [incomingDamage, setIncomingDamage] = useState(0);
+  const [ignoreIncomingDamage, setIgnoreIncomingDamage] = useState(false);
+  const [starsThisRound, setStarsThisRound] = useState(0);
+  const [harvestNextTurn, setHarvestNextTurn] = useState(false);
+  const [canHarvestThisTurn, setCanHarvestThisTurn] = useState(false);
   
   const [deck, setDeck] = useState([]);
   const [hand, setHand] = useState([]);
@@ -108,21 +111,19 @@ function GameBoard({ playerCharacter, onRestart }) {
   godLevelRef.current = godLevel;
   const levelUpPicksRemainingRef = useRef(levelUpPicksRemaining);
   levelUpPicksRemainingRef.current = levelUpPicksRemaining;
+  const playTokensRef = useRef(playTokens);
+  playTokensRef.current = playTokens;
+  const incomingDamageRef = useRef(incomingDamage);
+  incomingDamageRef.current = incomingDamage;
 
-  // Derive remaining uses from the unlocked god level so unlocking Ares/Athena
-  // mid-setup (or after a stale startRound closure) still enables the button.
-  const godUsesRemaining = Math.max(
-    0,
-    getGodAbilityUsesPerRound(playerCharacter, godLevel) - godAbilityUsesThisRound
-  );
+  const levels = { raceLevel, classLevel, godLevel };
 
   const abilityUI = getActiveAbilityUI(
     playerCharacter,
-    { raceLevel, classLevel, godLevel },
+    levels,
     {
-      tokens: playerTokens,
-      godUsesRemaining,
-      handSize: hand.length,
+      tokens: playTokens,
+      canHarvest: canHarvestThisTurn,
     }
   );
 
@@ -155,17 +156,11 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarketDeck(marketDeckShuffled);
     setMarket([]); // Start with empty market
     
-    // Apply Dwarf HP bonus
-    let startingHP = 10;
-    if (playerCharacter.race.id === 'dwarf') {
-      if (raceLevel >= 2) {
-        startingHP = 14;
-      } else if (raceLevel >= 1) {
-        startingHP = 12;
-      }
-    }
-    setPlayerHP(startingHP);
-    setPlayerMaxHP(startingHP);
+    setPlayerHP(10);
+    setPlayerMaxHP(10);
+    setPlayTokens([]);
+    setIgnoreIncomingDamage(false);
+    setStarsThisRound(0);
     
     const boss = bosses[0];
     const bossLevel = bossNumber === 1 ? 'level1' : bossNumber === 2 ? 'level2' : 'level3';
@@ -213,18 +208,17 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlock(action.block || 0);
     setBossBlockMax(action.block || 0);
     
-    // Vampire B Level 2: Start each round with +1 blood token
-    if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'B' && raceLevel >= 2) {
-      setPlayerTokens(prev => ({
-        ...prev,
-        blood: (prev.blood || 0) + 1
-      }));
-      addLog('Gained 1 blood token (Vampire Level 2)');
+    setIgnoreIncomingDamage(false);
+    setStarsThisRound(0);
+    setPendingTokenAction(null);
+    setIncomingDamage(0);
+    setPlayTokens(prev => prev.map(token => ({ ...token, hasAttacked: false })));
+    if (harvestNextTurn) {
+      setCanHarvestThisTurn(true);
+      setHarvestNextTurn(false);
+    } else {
+      setCanHarvestThisTurn(false);
     }
-
-    // Refresh once-per-round activated god ability uses (Ares A / Athena)
-    setGodAbilityUsesThisRound(0);
-    setPendingDiscardAbility(null);
 
     // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
     // must be discarded before drawing a fresh opening hand. Otherwise the
@@ -238,26 +232,13 @@ function GameBoard({ playerCharacter, onRestart }) {
       );
     }
 
-    const drawnCards = drawOpeningHand(getOpeningHandSize(), leftoverHand);
-    const currentGodLevel = godLevelRef.current;
-    const aresDamage = getAresStartOfRoundDamage(
-      playerCharacter,
-      currentGodLevel,
-      drawnCards
-    );
-    let bossDefeatedThisRoundStart = false;
-    if (aresDamage > 0) {
-      const attackCards = countAttackCards(drawnCards);
-      bossDefeatedThisRoundStart = dealDamageToBoss(aresDamage, { block: action.block || 0 });
-      addLog(
-        `Ares: ${attackCards} 🔺 in hand, dealt ${aresDamage} damage to boss`
-      );
-    }
+    drawOpeningHand(getOpeningHandSize(), leftoverHand);
 
-    setPlayerBlock(0);
-    if (!bossDefeatedThisRoundStart) {
-      setGameState('playerTurn');
+    const keepBlock = playerCharacter.race.id === 'mountain-dwarf' && raceLevelRef.current >= 2;
+    if (!keepBlock) {
+      setPlayerBlock(0);
     }
+    setGameState('playerTurn');
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
 
@@ -291,17 +272,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     };
   };
 
-  const getOpeningHandSize = () => {
-    let cardsToDraw = 6;
-    if (playerCharacter.race.id === 'elf') {
-      if (raceLevel >= 2) {
-        cardsToDraw = 8;
-      } else if (raceLevel >= 1) {
-        cardsToDraw = 7;
-      }
-    }
-    return cardsToDraw;
-  };
+  const getOpeningHandSize = () => 6;
 
   const drawFromPiles = (count, currentDeck, currentDiscard) => {
     const drawnCards = [];
@@ -344,16 +315,21 @@ function GameBoard({ playerCharacter, onRestart }) {
     addLog(`Discarded ${card.name} (+1 resource, total: ${resources + 1})`);
   };
 
+  const playContext = () => ({
+    playerBlock,
+    starsThisRound,
+    fieldTokenCount: playTokens.length,
+  });
+
   const playCard = (card) => {
-    const cost = 1; // Playing a card always costs 1
+    const cost = 1;
     if (resources < cost) {
       addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
     }
 
-    // Cancel pending god discard selection when playing a card normally
-    if (pendingDiscardAbility) {
-      setPendingDiscardAbility(null);
+    if (pendingTokenAction === 'harvest') {
+      setPendingTokenAction(null);
     }
 
     const newHand = hand.filter(c => c.id !== card.id);
@@ -362,37 +338,46 @@ function GameBoard({ playerCharacter, onRestart }) {
     const symbolEffects = getCardPlayTotals(
       playerCharacter,
       { raceLevel, classLevel, godLevel },
-      card.symbols
+      card.symbols,
+      playContext()
     );
-    let damage = symbolEffects.damage;
-    let block = symbolEffects.block;
-    const attackSymbols = symbolEffects.attackSymbols;
+    const damage = symbolEffects.damage;
+    const block = symbolEffects.block;
     symbolEffects.logs.forEach(message => addLog(message));
 
-    const bloodTokensGained = symbolEffects.tokens.blood || 0;
-    const rageTokensGained = symbolEffects.tokens.rage || 0;
-
-    // Warrior B rage: next 🔺 deals double damage (consumes buff)
-    if (nextAttackDoubled && attackSymbols > 0) {
-      damage *= 2;
-      setNextAttackDoubled(false);
-      addLog('💢 Rage: attack damage doubled!');
+    let nextTokens = playTokens;
+    if (symbolEffects.spawn.length > 0) {
+      const result = addTokensToField(nextTokens, symbolEffects.spawn, playerCharacter, { raceLevel, classLevel, godLevel });
+      nextTokens = result.tokens;
+      if (result.added.length > 0) {
+        addLog(`Spawned ${result.added.length} token${result.added.length > 1 ? 's' : ''} (${nextTokens.length} in play)`);
+      }
+      if (result.capped) {
+        addLog(`Token limit reached (${getMaxTokens(playerCharacter, { raceLevel, classLevel, godLevel })})`);
+      }
+      if (symbolEffects.gardenerHarvest) {
+        setHarvestNextTurn(true);
+      }
+    }
+    if (symbolEffects.doubleTokens) {
+      const result = doublePlayTokens(nextTokens, playerCharacter, { raceLevel, classLevel, godLevel });
+      nextTokens = result.tokens;
+      addLog(`Doubled tokens (${result.added.length} added, ${nextTokens.length} in play)`);
+    }
+    if ((symbolEffects.buffTokens?.attack || 0) > 0 || (symbolEffects.buffTokens?.defense || 0) > 0) {
+      nextTokens = buffPlayTokens(nextTokens, symbolEffects.buffTokens.attack, symbolEffects.buffTokens.defense);
+      addLog(`Tokens gained +${symbolEffects.buffTokens.attack}/+${symbolEffects.buffTokens.defense}`);
+    }
+    if (nextTokens !== playTokens) {
+      setPlayTokens(nextTokens);
     }
 
-    if (bloodTokensGained > 0) {
-      setPlayerTokens(prev => ({
-        ...prev,
-        blood: (prev.blood || 0) + bloodTokensGained
-      }));
-      addLog(`Gained ${bloodTokensGained} blood token${bloodTokensGained > 1 ? 's' : ''} (Total: ${(playerTokens.blood || 0) + bloodTokensGained})`);
+    if (symbolEffects.starsPlayed > 0) {
+      setStarsThisRound(prev => prev + symbolEffects.starsPlayed);
     }
-
-    if (rageTokensGained > 0) {
-      setPlayerTokens(prev => ({
-        ...prev,
-        rage: (prev.rage || 0) + rageTokensGained
-      }));
-      addLog(`Gained ${rageTokensGained} rage token${rageTokensGained > 1 ? 's' : ''} (Total: ${(playerTokens.rage || 0) + rageTokensGained})`);
+    if (symbolEffects.ignoreDamage) {
+      setIgnoreIncomingDamage(true);
+      addLog('Angels of Elandor: ignore all incoming damage this round');
     }
 
     if (damage > 0) {
@@ -424,7 +409,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     getCardPlayTotals(
       playerCharacter,
       { raceLevel, classLevel, godLevel },
-      card.symbols
+      card.symbols,
+      playContext()
     )
   );
 
@@ -510,44 +496,18 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const endTurn = () => {
-    setPendingDiscardAbility(null);
+    setPendingTokenAction(null);
     setDiscard(prev => [...prev, ...hand]);
     setHand([]);
-
     executeBossAction();
   };
 
-  const executeBossAction = () => {
-    if (!bossAction) return;
-
-    if (bossAction.type === 'attack') {
-      const damage = Math.max(0, bossAction.value - playerBlock);
-      const newHP = Math.max(0, playerHP - damage);
-      setPlayerHP(newHP);
-      
-      if (damage === 0) {
-        addLog(`Boss attacks for ${bossAction.value}, but you blocked it all!`);
-      } else {
-        addLog(`Boss attacks for ${bossAction.value}! You blocked ${playerBlock}, took ${damage} damage. (${newHP}/${playerMaxHP} HP)`);
-      }
-
-      if (newHP === 0) {
-        setGameState('defeat');
-        addLog('You have been defeated!');
-        return;
-      }
-    } else if (bossAction.type === 'heal') {
-      const newBossHP = Math.min(bossMaxHP, bossHP + bossAction.value);
-      setBossHP(newBossHP);
-      addLog(`Boss healed ${bossAction.value} HP! (${newBossHP}/${bossMaxHP} HP)`);
-    }
-
+  const finishBossTurn = () => {
     setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
+    setIncomingDamage(0);
 
-    // Unpurchased market cards return to the market deck so the boss
-    // can reshuffle them later; boss cards become the new market.
     if (market.length > 0) {
       setMarketDeck(prev => [...prev, ...market]);
       addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the draw pile`);
@@ -558,6 +518,56 @@ function GameBoard({ playerCharacter, onRestart }) {
     addLog('Boss cards moved to market!');
     setRoundNumber(prev => prev + 1);
     setGameState('ready');
+  };
+
+  const applyRemainingPlayerDamage = (damage) => {
+    const newHP = Math.max(0, playerHP - damage);
+    setPlayerHP(newHP);
+    if (damage <= 0) {
+      addLog('You took no damage.');
+    } else {
+      addLog(`Took ${damage} damage (${newHP}/${playerMaxHP} HP)`);
+    }
+    if (newHP === 0) {
+      setGameState('defeat');
+      addLog('You have been defeated!');
+      return true;
+    }
+    return false;
+  };
+
+  const executeBossAction = () => {
+    if (!bossAction) return;
+
+    if (bossAction.type === 'attack') {
+      if (ignoreIncomingDamage) {
+        addLog(`Boss attacks for ${bossAction.value}, but incoming damage is ignored!`);
+        finishBossTurn();
+        return;
+      }
+      const afterBlock = Math.max(0, bossAction.value - playerBlock);
+      if (afterBlock === 0) {
+        addLog(`Boss attacks for ${bossAction.value}, but you blocked it all!`);
+        finishBossTurn();
+        return;
+      }
+      const blockable = playTokens.some(tokenCanBlock);
+      if (blockable) {
+        setIncomingDamage(afterBlock);
+        setGameState('assignDamage');
+        addLog(`Boss attacks for ${bossAction.value}. Assign ${afterBlock} remaining damage to tokens or take it.`);
+        return;
+      }
+      if (applyRemainingPlayerDamage(afterBlock)) {
+        return;
+      }
+    } else if (bossAction.type === 'heal') {
+      const newBossHP = Math.min(bossMaxHP, bossHP + bossAction.value);
+      setBossHP(newBossHP);
+      addLog(`Boss healed ${bossAction.value} HP! (${newBossHP}/${bossMaxHP} HP)`);
+    }
+
+    finishBossTurn();
   };
 
   const levelUpCharacter = (cardType) => {
@@ -573,19 +583,16 @@ function GameBoard({ playerCharacter, onRestart }) {
       addLog(`Race leveled up to ${newLevel}!`);
       applied = true;
 
-      // Apply Dwarf HP bonus when leveling up
-      if (playerCharacter.race.id === 'dwarf' && newLevel === 2) {
-        const newMaxHP = 14;
-        setPlayerMaxHP(newMaxHP);
-        setPlayerHP(prev => prev + 2); // Heal 2 HP when max increases
-        addLog('Max HP increased to 14!');
-      }
     } else if (cardType === 'class' && classLevelRef.current < 2) {
       const newLevel = classLevelRef.current + 1;
       classLevelRef.current = newLevel;
       setClassLevel(newLevel);
       addLog(`Class leveled up to ${newLevel}!`);
       applied = true;
+      if (playerCharacter.class.id === 'gardener' && newLevel === 2) {
+        setPlayTokens(prev => upgradeGardenerTokens(prev, 2));
+        addLog('Gardener tokens are now 1/2.');
+      }
     } else if (cardType === 'god' && godLevelRef.current < 2) {
       const newLevel = godLevelRef.current + 1;
       godLevelRef.current = newLevel;
@@ -636,13 +643,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       setRaceLevel(2);
       addLog(`Race leveled up to 2!`);
       
-      // Apply Dwarf HP bonus if race level 2
-      if (playerCharacter.race.id === 'dwarf') {
-        const newMaxHP = 14;
-        setPlayerMaxHP(newMaxHP);
-        setPlayerHP(newMaxHP);
-        addLog('Max HP increased to 14!');
-      }
     } else if (abilityType === 'class') {
       setClassLevel(1);
       addLog(`Class leveled up to 1!`);
@@ -654,108 +654,59 @@ function GameBoard({ playerCharacter, onRestart }) {
     setGameState('ready');
   };
 
-  const spendBloodTokens = () => {
-    if (playerCharacter.race.id !== 'vampire' || raceLevel < 1) return;
-    
-    const bloodTokens = playerTokens.blood || 0;
-    const requiredTokens = raceLevel >= 2 ? 2 : 3;
-    
-    if (bloodTokens < requiredTokens) {
-      addLog(`Not enough blood tokens! Need ${requiredTokens}, have ${bloodTokens}`);
-      return;
-    }
-    
-    setPlayerTokens(prev => ({
-      ...prev,
-      blood: (prev.blood || 0) - requiredTokens
-    }));
-    
-    if (playerCharacter.race.side === 'A') {
-      const healAmount = 1;
-      const newHP = Math.min(playerMaxHP, playerHP + healAmount);
-      setPlayerHP(newHP);
-      addLog(`Spent ${requiredTokens} blood tokens: Healed 1 HP (${newHP}/${playerMaxHP})`);
-    } else {
-      const damageAmount = raceLevel >= 2 ? 3 : 2;
-      dealDamageToBoss(damageAmount);
-      addLog(`Spent ${requiredTokens} blood tokens: Dealt ${damageAmount} damage to boss`);
-    }
-  };
-
-  const spendRageTokens = () => {
-    if (
-      playerCharacter.class.id !== 'warrior' ||
-      playerCharacter.class.side !== 'B' ||
-      classLevel < 1
-    ) {
-      return;
-    }
-
-    const rageTokens = playerTokens.rage || 0;
-    const requiredTokens = classLevel >= 2 ? 2 : 3;
-
-    if (rageTokens < requiredTokens) {
-      addLog(`Not enough rage tokens! Need ${requiredTokens}, have ${rageTokens}`);
-      return;
-    }
-
-    if (nextAttackDoubled) {
-      addLog('Rage is already active for your next attack!');
-      return;
-    }
-
-    setPlayerTokens(prev => ({
-      ...prev,
-      rage: (prev.rage || 0) - requiredTokens
-    }));
-    setNextAttackDoubled(true);
-    addLog(`Spent ${requiredTokens} rage tokens: Next 🔺 deals double damage!`);
-  };
-
   const handleAbilityButton = (button) => {
-    if (button.action === 'spendBlood') {
-      spendBloodTokens();
-    } else if (button.action === 'spendRage') {
-      spendRageTokens();
-    } else if (button.action === 'aresDiscard' || button.action === 'athenaDiscard') {
-      if (godUsesRemaining <= 0) {
-        addLog('No god ability uses remaining this round');
-        return;
-      }
-      if (hand.length === 0) {
-        addLog('No cards in hand to discard');
-        return;
-      }
-      if (pendingDiscardAbility === button.action) {
-        setPendingDiscardAbility(null);
-        addLog('Cancelled ability — select a card to discard cancelled');
+    if (button.action === 'harvestTokens') {
+      if (pendingTokenAction === 'harvest') {
+        setPendingTokenAction(null);
+        addLog('Cancelled harvest');
       } else {
-        setPendingDiscardAbility(button.action);
-        addLog(
-          button.action === 'aresDiscard'
-            ? 'Select a card to discard for Ares (deal damage)'
-            : 'Select a card to discard for Athena (draw 2)'
-        );
+        setPendingTokenAction('harvest');
+        addLog('Select tokens to discard for 2 resources each');
       }
+    } else if (button.action === 'vampieraHeal') {
+      if (playTokens.length < 3) {
+        addLog('Need 3 tokens to heal');
+        return;
+      }
+      setPlayTokens(prev => prev.slice(0, -3));
+      const newHP = Math.min(playerMaxHP, playerHP + 3);
+      setPlayerHP(newHP);
+      addLog(`Discarded 3 tokens: Healed 3 HP (${newHP}/${playerMaxHP})`);
     }
   };
 
-  const resolveGodDiscard = (card) => {
-    if (!pendingDiscardAbility || godUsesRemaining <= 0) return;
+  const handleTokenClick = (token) => {
+    if (gameState === 'assignDamage') {
+      if (!tokenCanBlock(token)) {
+        addLog('That token cannot block');
+        return;
+      }
+      const result = assignDamageToToken(playTokensRef.current, token.id, incomingDamageRef.current);
+      setPlayTokens(result.tokens);
+      playTokensRef.current = result.tokens;
+      setIncomingDamage(result.remaining);
+      incomingDamageRef.current = result.remaining;
+      addLog(`Token blocked ${result.absorbed} damage`);
+      if (result.remaining <= 0) {
+        addLog('All remaining damage was assigned to tokens');
+        finishBossTurn();
+      }
+      return;
+    }
 
-    const ability = pendingDiscardAbility;
-    const newHand = hand.filter(c => c.id !== card.id);
-    setGodAbilityUsesThisRound(prev => prev + 1);
-    setPendingDiscardAbility(null);
+    if (gameState !== 'playerTurn') return;
 
-    if (ability === 'aresDiscard') {
-      setHand(newHand);
-      setDiscard(prev => [...prev, card]);
-      dealDamageToBoss(3);
-      addLog(`Discarded ${card.name} for Ares: Dealt 3 damage`);
-    } else if (ability === 'athenaDiscard') {
-      addLog(`Discarded ${card.name} for Athena: Draw 2 cards`);
-      drawCardsAfterDiscard(2, card, newHand);
+    if (pendingTokenAction === 'harvest') {
+      setPlayTokens(prev => prev.filter(t => t.id !== token.id));
+      setResources(prev => prev + 2);
+      addLog(`Harvested a token (+2 resources)`);
+      return;
+    }
+
+    if (tokenCanAttack(token)) {
+      dealDamageToBoss(token.attack);
+      setPlayTokens(prev => prev.map(t => t.id === token.id ? { ...t, hasAttacked: true } : t));
+      addLog(`Token attacked for ${token.attack}`);
     }
   };
 
@@ -784,10 +735,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (source === 'market') {
       if (resources < card.symbols.length) return;
       e.preventDefault();
-    } else if (pendingDiscardAbility) {
-      // When selecting a card for a god discard ability, resolve on click/tap instead of drag
-      resolveGodDiscard(card);
-      return;
     }
     setDraggingCard(card);
     setDraggingSource(source);
@@ -850,7 +797,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setDropZone(null);
   };
 
-  const showBattlefield = gameState === 'playerTurn' || gameState === 'ready';
+  const showBattlefield = gameState === 'playerTurn' || gameState === 'ready' || gameState === 'assignDamage';
   const marketSlots = [0, 1, 2].map(index => market[index] || null);
 
   return (
@@ -934,6 +881,35 @@ function GameBoard({ playerCharacter, onRestart }) {
                   ))}
                 </div>
               </div>
+              {(playTokens.length > 0 || gameState === 'assignDamage') && (
+                <div className="play-field">
+                  <div className="play-field-label">
+                    {gameState === 'assignDamage'
+                      ? `Assign ${incomingDamage} damage`
+                      : pendingTokenAction === 'harvest'
+                        ? 'Harvest tokens'
+                        : 'Play field'}
+                  </div>
+                  <div className="play-token-row">
+                    {playTokens.map(token => (
+                      <button
+                        key={token.id}
+                        type="button"
+                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' && pendingTokenAction !== 'harvest' ? ' can-attack' : ''}${token.hasAttacked ? ' has-attacked' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
+                        onClick={() => handleTokenClick(token)}
+                      >
+                        <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : '🪙'}</span>
+                        <span className="play-token-stats">{formatTokenStats(token)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {gameState === 'assignDamage' && (
+                    <button className="action-btn" onClick={() => { if (!applyRemainingPlayerDamage(incomingDamage)) finishBossTurn(); }}>
+                      Take remaining damage
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             {bossAttack > 0 && (
               <div className="enemy-attack-slot">
@@ -1054,11 +1030,12 @@ function GameBoard({ playerCharacter, onRestart }) {
             <div className="stat-item">💎 {resources}</div>
             <div className="stat-item">🎴 {deck.length}</div>
             <div className="stat-item">🗑️ {discard.length}</div>
-            {abilityUI.tokenDisplays.map(token => (
-              <div key={token.key} className="stat-item">{token.icon} {token.value}</div>
-            ))}
-            {nextAttackDoubled && (
-              <div className="stat-item rage-active" title="Next attack doubled">💢×2</div>
+            <div className="stat-item">🔹 {playerBlock}</div>
+            {playTokens.length > 0 && (
+              <div className="stat-item">🪙 {playTokens.length}{Number.isFinite(getMaxTokens(playerCharacter, levels)) ? `/${getMaxTokens(playerCharacter, levels)}` : ''}</div>
+            )}
+            {ignoreIncomingDamage && (
+              <div className="stat-item" title="Ignore incoming damage">✨ Guard</div>
             )}
           </div>
           <div className="hp-bar player-hp-bar">
@@ -1092,7 +1069,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <Card
                   key={card.id}
                   card={card}
-                  className={`${draggingCard?.id === card.id ? 'dragging' : ''} ${pendingDiscardAbility ? 'ability-target' : ''}`}
+                  className={`${draggingCard?.id === card.id ? 'dragging' : ''}`}
                   style={{
                     transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
                     zIndex: index,
@@ -1108,23 +1085,23 @@ function GameBoard({ playerCharacter, onRestart }) {
             })}
           </div>
           <div className="hand-actions">
-            {pendingDiscardAbility && (
+            {pendingTokenAction === 'harvest' && (
               <div className="ability-prompt">
-                Tap a card to discard
+                Tap tokens to harvest
                 <button
                   className="action-btn cancel-ability-btn"
-                  onClick={() => setPendingDiscardAbility(null)}
+                  onClick={() => setPendingTokenAction(null)}
                 >
-                  Cancel
+                  Done
                 </button>
               </div>
             )}
             {abilityUI.buttons.map(button => (
               <button
                 key={button.id}
-                className={`action-btn ${button.className}${pendingDiscardAbility === button.action ? ' ability-armed' : ''}`}
+                className={`action-btn ${button.className}${pendingTokenAction === 'harvest' && button.action === 'harvestTokens' ? ' ability-armed' : ''}`}
                 onClick={() => handleAbilityButton(button)}
-                disabled={button.disabled && pendingDiscardAbility !== button.action}
+                disabled={button.disabled}
               >
                 {button.label}
                 {button.usesRemaining != null ? ` (${button.usesRemaining})` : ''}

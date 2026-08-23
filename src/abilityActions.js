@@ -1,115 +1,174 @@
 /**
  * Derives active UI ability actions from the player's race, class, and god
- * based on which sides/levels are currently unlocked.
+ * based on which levels are currently unlocked.
  */
 
 import { SYMBOLS } from './gameData';
 
+let tokenSeq = 0;
+
+export function createPlayToken({ attack, defense, kind } = {}) {
+  tokenSeq += 1;
+  const token = {
+    id: `token_${tokenSeq}_${Date.now()}`,
+    kind: kind || 'generic',
+    hasAttacked: false,
+  };
+  if (attack != null) token.attack = attack;
+  if (defense != null) token.defense = defense;
+  return token;
+}
+
+export function tokenHasCombatStats(token) {
+  return token.attack != null || token.defense != null;
+}
+
+export function tokenCanAttack(token) {
+  return token.attack != null && token.attack > 0 && !token.hasAttacked;
+}
+
+export function tokenCanBlock(token) {
+  return token.defense != null && token.defense > 0;
+}
+
+export function formatTokenStats(token) {
+  if (!tokenHasCombatStats(token)) return '—';
+  return `${token.attack ?? 0}/${token.defense ?? 0}`;
+}
+
+export function getGardenerTokenStats(classLevel) {
+  return classLevel >= 2 ? { attack: 1, defense: 2 } : { attack: 0, defense: 1 };
+}
+
+export function getMaxTokens(playerCharacter, levels) {
+  const caps = [];
+  if (playerCharacter.class?.id === 'vampiera' && levels.classLevel >= 1) {
+    caps.push(levels.classLevel >= 2 ? 12 : 6);
+  }
+  if (playerCharacter.god?.id === 'brood-mother' && levels.godLevel >= 1) {
+    caps.push(12);
+  }
+  return caps.length ? Math.max(...caps) : Infinity;
+}
+
+export function resolveSpawnTemplate(template, playerCharacter, levels) {
+  const next = { ...template };
+  if (next.kind === 'gardener') {
+    const stats = getGardenerTokenStats(levels.classLevel);
+    next.attack = next.attack != null ? Math.max(next.attack, stats.attack) : stats.attack;
+    next.defense = next.defense != null ? Math.max(next.defense, stats.defense) : stats.defense;
+  }
+  return next;
+}
+
+export function addTokensToField(existing, templates, playerCharacter, levels) {
+  const max = getMaxTokens(playerCharacter, levels);
+  const next = [...existing];
+  const added = [];
+  const requested = templates.reduce((sum, t) => sum + (t.count || 1), 0);
+  for (const template of templates) {
+    const resolved = resolveSpawnTemplate(template, playerCharacter, levels);
+    const count = resolved.count || 1;
+    for (let i = 0; i < count; i += 1) {
+      if (next.length >= max) break;
+      const token = createPlayToken(resolved);
+      next.push(token);
+      added.push(token);
+    }
+  }
+  return { tokens: next, added, capped: added.length < requested };
+}
+
+export function doublePlayTokens(existing, playerCharacter, levels) {
+  const max = getMaxTokens(playerCharacter, levels);
+  const copies = [];
+  for (const token of existing) {
+    if (existing.length + copies.length >= max) break;
+    copies.push(createPlayToken({
+      attack: token.attack,
+      defense: token.defense,
+      kind: token.kind,
+    }));
+  }
+  return { tokens: [...existing, ...copies], added: copies };
+}
+
+export function buffPlayTokens(existing, attack = 0, defense = 0) {
+  return existing.map(token => ({
+    ...token,
+    attack: (token.attack ?? 0) + attack,
+    defense: (token.defense ?? 0) + defense,
+  }));
+}
+
+export function upgradeGardenerTokens(existing, classLevel) {
+  if (classLevel < 2) return existing;
+  const stats = getGardenerTokenStats(classLevel);
+  return existing.map(token => {
+    if (token.kind !== 'gardener') return token;
+    return {
+      ...token,
+      attack: Math.max(token.attack ?? 0, stats.attack),
+      defense: Math.max(token.defense ?? 0, stats.defense),
+    };
+  });
+}
+
+export function assignDamageToToken(tokens, tokenId, incoming) {
+  const token = tokens.find(t => t.id === tokenId);
+  if (!token || !tokenCanBlock(token) || incoming <= 0) {
+    return { tokens, absorbed: 0, remaining: incoming };
+  }
+  const absorbed = Math.min(token.defense, incoming);
+  return {
+    tokens: tokens.filter(t => t.id !== tokenId),
+    absorbed,
+    remaining: incoming - absorbed,
+  };
+}
+
 /**
  * @param {object} playerCharacter
  * @param {{ raceLevel: number, classLevel: number, godLevel: number }} levels
- * @param {{ tokens?: object, godUsesRemaining?: number, handSize?: number }} context
- * @returns {{ tokens: Array, buttons: Array }}
+ * @param {{ tokens?: Array, canHarvest?: boolean }} context
+ * @returns {{ tokenDisplays: Array, buttons: Array }}
  */
 export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
-  const { raceLevel, classLevel, godLevel } = levels;
-  const tokens = context.tokens || {};
-  const handSize = context.handSize ?? 0;
-  const godUsesRemaining = context.godUsesRemaining ?? 0;
-
-  const tokenDisplays = [];
+  const tokens = context.tokens || [];
   const buttons = [];
 
-  // --- Race abilities ---
-  if (playerCharacter.race.id === 'vampire' && raceLevel >= 1) {
-    const cost = raceLevel >= 2 ? 2 : 3;
-    const blood = tokens.blood || 0;
-    tokenDisplays.push({
-      key: 'blood',
-      icon: '🩸',
-      value: blood,
-    });
-    buttons.push({
-      id: 'spend-blood',
-      source: 'race',
-      label: `🩸 Spend (${cost})`,
-      className: 'blood-btn',
-      disabled: blood < cost,
-      action: 'spendBlood',
-      cost,
-    });
-  }
-
-  // --- Class abilities ---
   if (
-    playerCharacter.class.id === 'warrior' &&
-    playerCharacter.class.side === 'B' &&
-    classLevel >= 1
+    playerCharacter.class.id === 'gardener' &&
+    levels.classLevel >= 1 &&
+    context.canHarvest &&
+    tokens.length > 0
   ) {
-    const cost = classLevel >= 2 ? 2 : 3;
-    const rage = tokens.rage || 0;
-    tokenDisplays.push({
-      key: 'rage',
-      icon: '💢',
-      value: rage,
-    });
     buttons.push({
-      id: 'spend-rage',
+      id: 'harvest-tokens',
       source: 'class',
-      label: `💢 Rage (${cost})`,
-      className: 'rage-btn',
-      disabled: rage < cost,
-      action: 'spendRage',
-      cost,
+      label: 'Harvest (2💎)',
+      className: 'harvest-btn',
+      disabled: false,
+      action: 'harvestTokens',
     });
   }
 
-  // --- God abilities (activated, discard a card) — level 2 ---
-  if (
-    playerCharacter.god.id === 'ares' &&
-    playerCharacter.god.side === 'A' &&
-    godLevel >= 2
-  ) {
+  if (playerCharacter.class.id === 'vampiera' && levels.classLevel >= 1) {
     buttons.push({
-      id: 'ares-discard',
-      source: 'god',
-      label: '⚔️ Strike (3)',
-      className: 'god-btn',
-      disabled: godUsesRemaining <= 0 || handSize === 0,
-      action: 'aresDiscard',
-      damage: 3,
-      usesRemaining: godUsesRemaining,
+      id: 'vampiera-heal',
+      source: 'class',
+      label: 'Discard 3 tokens: heal 3 HP',
+      className: 'blood-btn',
+      disabled: tokens.length < 3,
+      action: 'vampieraHeal',
     });
   }
 
-  if (
-    playerCharacter.god.id === 'athena' &&
-    playerCharacter.god.side === 'A' &&
-    godLevel >= 2
-  ) {
-    buttons.push({
-      id: 'athena-discard',
-      source: 'god',
-      label: '📖 Wisdom',
-      className: 'god-btn',
-      disabled: godUsesRemaining <= 0 || handSize === 0,
-      action: 'athenaDiscard',
-      usesRemaining: godUsesRemaining,
-    });
-  }
-
-  return { tokenDisplays, buttons };
+  return { tokenDisplays: [], tokenDisplays: [], buttons };
 }
 
 /** Max god ability uses this round for the active god level. */
-export function getGodAbilityUsesPerRound(playerCharacter, godLevel) {
-  if (godLevel < 2) return 0;
-  if (playerCharacter.god.id === 'ares' && playerCharacter.god.side === 'A') {
-    return 1;
-  }
-  if (playerCharacter.god.id === 'athena' && playerCharacter.god.side === 'A') {
-    return 2;
-  }
+export function getGodAbilityUsesPerRound() {
   return 0;
 }
 
@@ -119,19 +178,8 @@ export function countAttackCards(hand) {
   ).length;
 }
 
-/**
- * Ares Side B: at start of round (level 2), deal 2 damage for each 🔺 card in hand.
- */
-export function getAresStartOfRoundDamage(playerCharacter, godLevel, hand) {
-  if (
-    !playerCharacter?.god ||
-    playerCharacter.god.id !== 'ares' ||
-    playerCharacter.god.side !== 'B' ||
-    godLevel < 2
-  ) {
-    return 0;
-  }
-  return countAttackCards(hand) * 2;
+export function getAresStartOfRoundDamage() {
+  return 0;
 }
 
 /**
@@ -141,7 +189,10 @@ export function formatLevelLines(level) {
   if (!level) return [];
   const lines = [];
   if (level.symbol && level.symbolEffect) {
-    lines.push(`${level.symbol} = ${level.symbolEffect}`);
+    const icons = level.starsRequired > 1
+      ? level.symbol.repeat(level.starsRequired)
+      : level.symbol;
+    lines.push(`${icons} = ${level.symbolEffect}`);
   }
   if (level.effect) lines.push(level.effect);
   if (level.additionalEffect) lines.push(level.additionalEffect);
@@ -152,13 +203,14 @@ function triggersFromPiece(piece, unlockedLevel, playedSymbol) {
   if (!piece || unlockedLevel < 1) return [];
 
   const results = [];
-  const level2ReplacesLevel1 =
+  const replaceLevel1 =
     unlockedLevel >= 2 &&
+    piece.level2?.replaceLevel1 !== false &&
     piece.level2?.symbol === playedSymbol &&
     Array.isArray(piece.level2?.onSymbol);
 
   if (
-    !level2ReplacesLevel1 &&
+    !replaceLevel1 &&
     piece.level1?.symbol === playedSymbol &&
     Array.isArray(piece.level1?.onSymbol)
   ) {
@@ -193,18 +245,29 @@ function triggersFromPiece(piece, unlockedLevel, playedSymbol) {
   return results;
 }
 
-/**
- * Collect race (🟣), class (🟩), and god (⭐️) effects for the symbols on a played card.
- */
-export function collectPlayEffects(playerCharacter, levels, symbols) {
-  const totals = {
+function emptyPlayTotals() {
+  return {
     damage: 0,
     block: 0,
     heal: 0,
     draw: 0,
     tokens: {},
+    spawn: [],
+    doubleTokens: false,
+    buffTokens: { attack: 0, defense: 0 },
+    starsPlayed: 0,
+    ignoreDamage: false,
+    gardenerHarvest: false,
     logs: [],
   };
+}
+
+/**
+ * Collect race (🟣), class (🟩), and god (⭐️) effects for the symbols on a played card.
+ */
+export function collectPlayEffects(playerCharacter, levels, symbols, context = {}) {
+  const totals = emptyPlayTotals();
+  const playerBlock = context.playerBlock || 0;
 
   (symbols || []).forEach(symbol => {
     const triggers = [
@@ -226,6 +289,27 @@ export function collectPlayEffects(playerCharacter, levels, symbols) {
           totals.draw += effect.amount;
         } else if (effect.type === 'token') {
           totals.tokens[effect.token] = (totals.tokens[effect.token] || 0) + effect.amount;
+        } else if (effect.type === 'doubleBlock') {
+          totals.block += playerBlock + totals.block;
+        } else if (effect.type === 'damageEqualBlock') {
+          totals.damage += playerBlock + totals.block;
+        } else if (effect.type === 'spawnToken') {
+          totals.spawn.push({ ...effect });
+          if (effect.kind === 'gardener') {
+            totals.gardenerHarvest = true;
+          }
+        } else if (effect.type === 'doubleTokens') {
+          totals.doubleTokens = true;
+        } else if (effect.type === 'buffTokens') {
+          totals.buffTokens.attack += effect.attack || 0;
+          totals.buffTokens.defense += effect.defense || 0;
+        } else if (effect.type === 'starComboIgnoreDamage') {
+          totals.starsPlayed += 1;
+          const already = context.starsThisRound || 0;
+          const required = effect.starsRequired || 2;
+          if (already + totals.starsPlayed >= required && already < required) {
+            totals.ignoreDamage = true;
+          }
         }
       }
     }
@@ -234,36 +318,22 @@ export function collectPlayEffects(playerCharacter, levels, symbols) {
   return totals;
 }
 
-export function getAttackPerSymbol(playerCharacter, levels) {
-  let perSymbol = 1;
-  if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'A' && levels.raceLevel >= 2) {
-    perSymbol += 1;
-  }
-  if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A' && levels.classLevel >= 2) {
-    perSymbol += 2;
-  }
-  return perSymbol;
+export function getAttackPerSymbol() {
+  return 1;
 }
 
-export function getBlockPerSymbol(playerCharacter, levels) {
-  let perSymbol = 1;
-  if (playerCharacter.class.id === 'priest' && playerCharacter.class.side === 'A' && levels.classLevel >= 2) {
-    perSymbol += 2;
-  }
-  if (playerCharacter.race.id === 'dwarf' && levels.raceLevel >= 2) {
-    perSymbol += 1;
-  }
-  return perSymbol;
+export function getBlockPerSymbol() {
+  return 1;
 }
 
 /**
  * Full play totals for a card: base 🔺/🔹 plus race/class/god symbol abilities.
  */
-export function getCardPlayTotals(playerCharacter, levels, symbols) {
+export function getCardPlayTotals(playerCharacter, levels, symbols, context = {}) {
   const cardSymbols = symbols || [];
   const attackSymbols = cardSymbols.filter(symbol => symbol === SYMBOLS.ATTACK).length;
   const blockSymbols = cardSymbols.filter(symbol => symbol === SYMBOLS.BLOCK).length;
-  const ability = collectPlayEffects(playerCharacter, levels, cardSymbols);
+  const ability = collectPlayEffects(playerCharacter, levels, cardSymbols, context);
 
   return {
     damage: attackSymbols * getAttackPerSymbol(playerCharacter, levels) + ability.damage,
@@ -271,18 +341,27 @@ export function getCardPlayTotals(playerCharacter, levels, symbols) {
     heal: ability.heal,
     draw: ability.draw,
     tokens: ability.tokens,
+    spawn: ability.spawn,
+    doubleTokens: ability.doubleTokens,
+    buffTokens: ability.buffTokens,
+    starsPlayed: ability.starsPlayed,
+    ignoreDamage: ability.ignoreDamage,
+    gardenerHarvest: ability.gardenerHarvest,
     attackSymbols,
     logs: ability.logs,
   };
 }
 
-const TOKEN_LABELS = {
-  rage: 'Rage',
-  blood: 'Blood',
-};
+function spawnLabel(template) {
+  const count = template.count || 1;
+  if (template.attack != null || template.defense != null) {
+    return `+${count} ${template.attack ?? 0}/${template.defense ?? 0}`;
+  }
+  return `+${count} token${count > 1 ? 's' : ''}`;
+}
 
 /**
- * Concise labels for a card's play effects, e.g. ["1 ATK", "1 DEF", "1 Rage"].
+ * Concise labels for a card's play effects, e.g. ["1 ATK", "1 DEF"].
  */
 export function formatCardEffectLabels(totals) {
   const labels = [];
@@ -290,10 +369,22 @@ export function formatCardEffectLabels(totals) {
   if (totals.block > 0) labels.push(`${totals.block} DEF`);
   if (totals.heal > 0) labels.push(`${totals.heal} HP`);
   if (totals.draw > 0) labels.push(`Draw ${totals.draw}`);
+  for (const template of totals.spawn || []) {
+    labels.push(spawnLabel(template));
+  }
+  if (totals.doubleTokens) labels.push('Double tokens');
+  if ((totals.buffTokens?.attack || 0) > 0 || (totals.buffTokens?.defense || 0) > 0) {
+    labels.push(`+${totals.buffTokens.attack}/+${totals.buffTokens.defense}`);
+  }
+  if (totals.ignoreDamage) labels.push('Ignore dmg');
   for (const [token, amount] of Object.entries(totals.tokens || {})) {
     if (amount > 0) {
-      labels.push(`${amount} ${TOKEN_LABELS[token] || token}`);
+      labels.push(`${amount} ${token}`);
     }
   }
   return labels;
 }
+
+
+
+
