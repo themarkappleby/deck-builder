@@ -632,7 +632,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                           }}
                         ></div>
                         <span className="boss-stat-text">
-                          🔺 {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
+                          Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
                         </span>
                       </div>
                     )}
@@ -645,7 +645,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                           }}
                         ></div>
                         <span className="boss-stat-text">
-                          🔹 {bossBlock} / {bossBlockMax}
+                          Block {bossBlock} / {bossBlockMax}
                         </span>
                       </div>
                     )}
