@@ -115,6 +115,15 @@ function GameBoard({ playerCharacter, onRestart }) {
       }
     }
     
+    // Vampire B Level 2: Start each round with +1 blood token
+    if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'B' && raceLevel >= 2) {
+      setPlayerTokens(prev => ({
+        ...prev,
+        blood: (prev.blood || 0) + 1
+      }));
+      addLog('Gained 1 blood token (Vampire Level 2)');
+    }
+    
     drawCards(cardsToDraw);
     setPlayerBlock(0);
     setGameState('playerTurn');
@@ -182,9 +191,15 @@ function GameBoard({ playerCharacter, onRestart }) {
     let damage = 0;
     let block = 0;
 
+    let bloodTokensGained = 0;
+    
     card.symbols.forEach(symbol => {
       if (symbol === SYMBOLS.ATTACK) {
         damage += 1;
+        // Apply Vampire blood token gain
+        if (playerCharacter.race.id === 'vampire' && raceLevel >= 1) {
+          bloodTokensGained++;
+        }
         // Apply Warrior class bonus
         if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A') {
           if (classLevel >= 2) {
@@ -212,6 +227,14 @@ function GameBoard({ playerCharacter, onRestart }) {
         addLog(`🟣 effect: ${effect}`);
       }
     });
+
+    if (bloodTokensGained > 0) {
+      setPlayerTokens(prev => ({
+        ...prev,
+        blood: (prev.blood || 0) + bloodTokensGained
+      }));
+      addLog(`Gained ${bloodTokensGained} blood token${bloodTokensGained > 1 ? 's' : ''} (Total: ${(playerTokens.blood || 0) + bloodTokensGained})`);
+    }
 
     if (damage > 0) {
       dealDamageToBoss(damage);
@@ -395,6 +418,38 @@ function GameBoard({ playerCharacter, onRestart }) {
     setGameState('ready');
   };
 
+  const spendBloodTokens = () => {
+    if (playerCharacter.race.id !== 'vampire') return;
+    
+    const bloodTokens = playerTokens.blood || 0;
+    const requiredTokens = raceLevel >= 2 ? 2 : 3;
+    
+    if (bloodTokens < requiredTokens) {
+      addLog(`Not enough blood tokens! Need ${requiredTokens}, have ${bloodTokens}`);
+      return;
+    }
+    
+    // Spend tokens
+    setPlayerTokens(prev => ({
+      ...prev,
+      blood: (prev.blood || 0) - requiredTokens
+    }));
+    
+    // Apply effect based on vampire side
+    if (playerCharacter.race.side === 'A') {
+      // Vampire A: Heal
+      const healAmount = 1;
+      const newHP = Math.min(playerMaxHP, playerHP + healAmount);
+      setPlayerHP(newHP);
+      addLog(`Spent ${requiredTokens} blood tokens: Healed 1 HP (${newHP}/${playerMaxHP})`);
+    } else {
+      // Vampire B: Deal damage
+      const damageAmount = raceLevel >= 2 ? 3 : 2;
+      dealDamageToBoss(damageAmount);
+      addLog(`Spent ${requiredTokens} blood tokens: Dealt ${damageAmount} damage to boss`);
+    }
+  };
+
   const handleCardDragStart = (card, e) => {
     if (selectedCardIsMarket) return; // Don't allow dragging market cards
     setDraggingCard(card);
@@ -539,6 +594,9 @@ function GameBoard({ playerCharacter, onRestart }) {
             <div className="stat-item">🛡️ {playerBlock}</div>
             <div className="stat-item">🎴 {deck.length}</div>
             <div className="stat-item">🗑️ {discard.length}</div>
+            {playerCharacter.race.id === 'vampire' && raceLevel >= 1 && (
+              <div className="stat-item">🩸 {playerTokens.blood || 0}</div>
+            )}
           </div>
           <div className="hp-bar player-hp-bar">
             <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
@@ -573,6 +631,15 @@ function GameBoard({ playerCharacter, onRestart }) {
             ))}
           </div>
           <div className="hand-actions">
+            {playerCharacter.race.id === 'vampire' && raceLevel >= 1 && (
+              <button 
+                className="action-btn blood-btn" 
+                onClick={spendBloodTokens}
+                disabled={(playerTokens.blood || 0) < (raceLevel >= 2 ? 2 : 3)}
+              >
+                🩸 Spend ({raceLevel >= 2 ? 2 : 3})
+              </button>
+            )}
             <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
           </div>
         </div>
