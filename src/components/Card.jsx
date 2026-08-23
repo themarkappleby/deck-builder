@@ -10,7 +10,9 @@ export function CardSymbols({ symbols = [] }) {
       data-symbol-count={count}
     >
       {symbols.map((symbol, index) => (
-        <span key={index} className="symbol-large">{symbol}</span>
+        <span key={index} className="symbol-slot">
+          <span className="symbol-large">{symbol}</span>
+        </span>
       ))}
     </div>
   );
