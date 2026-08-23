@@ -16,7 +16,18 @@ export function CardSymbols({ symbols = [] }) {
   );
 }
 
-function Card({ card, onClick, isMarket = false, canAfford = true, className = '', style, ...handlers }) {
+export function CardEffectLabels({ labels }) {
+  if (!labels?.length) return null;
+  return (
+    <div className="card-effect-labels">
+      {labels.map((label, index) => (
+        <span key={index} className="card-effect-label">{label}</span>
+      ))}
+    </div>
+  );
+}
+
+function Card({ card, onClick, isMarket = false, canAfford = true, className = '', style, effectLabels, ...handlers }) {
   const classes = [
     'card',
     isMarket ? 'market-card' : '',
@@ -33,6 +44,7 @@ function Card({ card, onClick, isMarket = false, canAfford = true, className = '
       {...handlers}
     >
       <CardSymbols symbols={card.symbols} />
+      <CardEffectLabels labels={effectLabels} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards, collectPlayEffects, formatLevelLines } from '../abilityActions';
-import Card, { CardSymbols } from './Card';
+import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards, getCardPlayTotals, formatCardEffectLabels, formatLevelLines } from '../abilityActions';
+import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
@@ -359,42 +359,14 @@ function GameBoard({ playerCharacter, onRestart }) {
     const newHand = hand.filter(c => c.id !== card.id);
     setResources(prev => prev - cost);
 
-    let damage = 0;
-    let block = 0;
-    let attackSymbols = 0;
-
-    card.symbols.forEach(symbol => {
-      if (symbol === SYMBOLS.ATTACK) {
-        attackSymbols += 1;
-        damage += 1;
-        // Vampire Level 2: 🔺 symbols deal +1 damage
-        if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'A' && raceLevel >= 2) {
-          damage += 1;
-        }
-        // Warrior A Level 2: 🔺 symbols deal +2 damage
-        if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A' && classLevel >= 2) {
-          damage += 2;
-        }
-      } else if (symbol === SYMBOLS.BLOCK) {
-        block += 1;
-        // Priest Level 2: 🔹 symbols grant +2 block
-        if (playerCharacter.class.id === 'priest' && playerCharacter.class.side === 'A' && classLevel >= 2) {
-          block += 2;
-        }
-        // Dwarf Level 2: all 🔹 symbols grant +1 block
-        if (playerCharacter.race.id === 'dwarf' && raceLevel >= 2) {
-          block += 1;
-        }
-      }
-    });
-
-    const symbolEffects = collectPlayEffects(
+    const symbolEffects = getCardPlayTotals(
       playerCharacter,
       { raceLevel, classLevel, godLevel },
       card.symbols
     );
-    damage += symbolEffects.damage;
-    block += symbolEffects.block;
+    let damage = symbolEffects.damage;
+    let block = symbolEffects.block;
+    const attackSymbols = symbolEffects.attackSymbols;
     symbolEffects.logs.forEach(message => addLog(message));
 
     const bloodTokensGained = symbolEffects.tokens.blood || 0;
@@ -447,6 +419,14 @@ function GameBoard({ playerCharacter, onRestart }) {
 
     addLog(`Played ${card.name} (${cost} resources spent, ${resources - cost} remaining)`);
   };
+
+  const getHandCardLabels = (card) => formatCardEffectLabels(
+    getCardPlayTotals(
+      playerCharacter,
+      { raceLevel, classLevel, godLevel },
+      card.symbols
+    )
+  );
 
   const purchaseCard = (card) => {
     const cost = card.symbols.length;
@@ -1109,6 +1089,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               // Calculate vertical offset for arc effect (cards at edges are slightly lower)
               const verticalOffset = Math.abs(offsetFromCenter) * 3;
               
+              const effectLabels = getHandCardLabels(card);
               return (
                 <Card
                   key={card.id}
@@ -1123,6 +1104,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                   }}
                   onMouseDown={(e) => handleCardDragStart(card, e, 'hand')}
                   onTouchStart={(e) => handleCardDragStart(card, e, 'hand')}
+                  effectLabels={effectLabels}
                 />
               );
             })}
@@ -1193,6 +1175,9 @@ function GameBoard({ playerCharacter, onRestart }) {
           }}
         >
           <CardSymbols symbols={draggingCard.symbols} />
+          {draggingSource === 'hand' && (
+            <CardEffectLabels labels={getHandCardLabels(draggingCard)} />
+          )}
         </div>
       )}
 
