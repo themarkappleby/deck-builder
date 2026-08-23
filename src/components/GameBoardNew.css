@@ -174,18 +174,15 @@
   min-width: calc(80px * 3 + 8px * 2);
 }
 
-.intent-card {
-  width: 80px;
-  height: 110px;
+.card.intent-card {
   background: #3a2a2a;
-  border: 2px solid #6a4a4a;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  overflow: hidden;
-  container-type: size;
+  border-color: #6a4a4a;
+  cursor: default;
+}
+
+.card.intent-card:hover {
+  background: #3a2a2a;
+  border-color: #6a4a4a;
 }
 
 .market-row {
@@ -198,11 +195,6 @@
 .market-slot-empty {
   width: 40px;
   height: 55px;
-}
-
-.market-row .card-symbols-only {
-  padding: 2px;
-  gap: 1px;
 }
 
 .market-slot-empty {
@@ -1016,37 +1008,6 @@
   cursor: pointer;
 }
 
-.card-symbols-only {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
-  gap: 2px;
-  padding: 4px;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.symbol-large {
-  font-size: min(1.8rem, 42cqmin);
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.card-symbols-only:has(> :nth-child(2)) .symbol-large {
-  font-size: min(1.4rem, 34cqmin);
-}
-
-.card-symbols-only:has(> :nth-child(3)) .symbol-large {
-  font-size: min(1.15rem, 28cqmin);
-  flex: 0 0 42%;
-}
-
 .card.dragging {
   opacity: 0.3;
   transform: scale(0.9);
@@ -1070,8 +1031,9 @@
   transform: translate(-50%, -50%);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   animation: float 0.3s ease-out;
-  overflow: hidden;
+  box-sizing: border-box;
   container-type: size;
+  overflow: hidden;
 }
 
 @keyframes float {
@@ -1086,7 +1048,7 @@
 }
 
 @media (max-width: 480px) {
-  .intent-card {
+  .card.intent-card {
     width: 64px;
     height: 88px;
   }
@@ -1096,5 +1058,4 @@
     min-height: 88px;
     gap: 6px;
   }
-
 }
