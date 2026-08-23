@@ -707,20 +707,43 @@ function GameBoard({ playerCharacter, onRestart }) {
           onTouchEnd={handleCardDragEnd}
         >
           <div className="hand-row">
-            {hand.map(card => (
-              <div
-                key={card.id}
-                className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < 1 ? 'unaffordable' : ''}`}
-                onMouseDown={(e) => handleCardDragStart(card, e)}
-                onTouchStart={(e) => handleCardDragStart(card, e)}
-              >
-                <div className="card-symbols-only">
-                  {card.symbols.map((symbol, index) => (
-                    <span key={index} className="symbol-large">{symbol}</span>
-                  ))}
+            {hand.map((card, index) => {
+              const totalCards = hand.length;
+              const middleIndex = (totalCards - 1) / 2;
+              const offsetFromCenter = index - middleIndex;
+              
+              // Calculate rotation: max 5 degrees per card from center
+              const rotation = offsetFromCenter * 5;
+              
+              // Calculate horizontal spacing: cards overlap by 40-60% depending on hand size
+              const baseSpacing = totalCards > 7 ? 30 : totalCards > 5 ? 40 : 50;
+              const horizontalOffset = offsetFromCenter * baseSpacing;
+              
+              // Calculate vertical offset for arc effect (cards at edges are slightly lower)
+              const verticalOffset = Math.abs(offsetFromCenter) * 3;
+              
+              return (
+                <div
+                  key={card.id}
+                  className={`card ${draggingCard?.id === card.id ? 'dragging' : ''} ${resources < 1 ? 'unaffordable' : ''}`}
+                  style={{
+                    transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
+                    zIndex: index,
+                    '--hover-x': `${horizontalOffset}px`,
+                    '--hover-y': `${verticalOffset}px`,
+                    '--hover-rotation': `${rotation}deg`,
+                  }}
+                  onMouseDown={(e) => handleCardDragStart(card, e)}
+                  onTouchStart={(e) => handleCardDragStart(card, e)}
+                >
+                  <div className="card-symbols-only">
+                    {card.symbols.map((symbol, symbolIndex) => (
+                      <span key={symbolIndex} className="symbol-large">{symbol}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="hand-actions">
             {playerCharacter.race.id === 'vampire' && raceLevel >= 1 && (

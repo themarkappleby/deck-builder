@@ -180,11 +180,13 @@
 .hand-row {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  align-items: flex-end;
   margin-bottom: 60px;
-  overflow-x: auto;
   padding: 5px 0;
   pointer-events: all;
+  position: relative;
+  height: 140px;
+  overflow: visible;
 }
 
 .hand-row::-webkit-scrollbar {
@@ -711,6 +713,14 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  position: absolute;
+  transform-origin: center bottom;
+}
+
+.hand-row .card:hover:not(.dragging) {
+  transform: translateX(var(--hover-x, 0)) translateY(calc(var(--hover-y, 0px) - 20px)) rotate(var(--hover-rotation, 0deg)) scale(1.05);
+  z-index: 100 !important;
+  border-color: #888;
 }
 
 .hand-row .card:active {
