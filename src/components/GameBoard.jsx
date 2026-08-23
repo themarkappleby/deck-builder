@@ -6,6 +6,8 @@ import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
 
+const LEVEL_UP_PICK_LIMIT = 2;
+
 function AbilityLines({ level }) {
   return formatLevelLines(level).map((line, index) => (
     <p key={index}>{line}</p>
@@ -43,6 +45,8 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [raceLevel, setRaceLevel] = useState(1);
   const [classLevel, setClassLevel] = useState(0);
   const [godLevel, setGodLevel] = useState(0);
+  const [levelUpPicks, setLevelUpPicks] = useState(0);
+  const levelUpPicksRef = useRef(0);
   
   const [log, setLog] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -471,6 +475,8 @@ function GameBoard({ playerCharacter, onRestart }) {
       setGameState('victory');
       addLog('Victory! You won the game!');
     } else {
+      levelUpPicksRef.current = 0;
+      setLevelUpPicks(0);
       setGameState('levelUp');
       addLog('Choose 2 cards to level up!');
     }
@@ -528,6 +534,11 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const levelUpCharacter = (cardType) => {
+    if (levelUpPicksRef.current >= LEVEL_UP_PICK_LIMIT) {
+      return;
+    }
+
+    let leveled = false;
     if (cardType === 'race' && raceLevel < 2) {
       const newLevel = raceLevel + 1;
       setRaceLevel(newLevel);
@@ -542,14 +553,22 @@ function GameBoard({ playerCharacter, onRestart }) {
           addLog('Max HP increased to 14!');
         }
       }
+      leveled = true;
     } else if (cardType === 'class' && classLevel < 2) {
       const newLevel = classLevel + 1;
       setClassLevel(newLevel);
       addLog(`Class leveled up to ${newLevel}!`);
+      leveled = true;
     } else if (cardType === 'god' && godLevel < 2) {
       const newLevel = godLevel + 1;
       setGodLevel(newLevel);
       addLog(`God leveled up to ${newLevel}!`);
+      leveled = true;
+    }
+
+    if (leveled) {
+      levelUpPicksRef.current += 1;
+      setLevelUpPicks(levelUpPicksRef.current);
     }
   };
 
@@ -905,10 +924,17 @@ function GameBoard({ playerCharacter, onRestart }) {
 
         {gameState === 'levelUp' && (
           <div className="center-content level-up-overlay">
-            <h2>Level Up! Choose 2 cards:</h2>
+            <h2>
+              {levelUpPicks >= LEVEL_UP_PICK_LIMIT
+                ? 'Level Up! 2 cards chosen'
+                : `Level Up! Choose 2 cards (${LEVEL_UP_PICK_LIMIT - levelUpPicks} remaining):`}
+            </h2>
             <div className="level-up-options">
               {raceLevel < 2 && (
-                <button onClick={() => levelUpCharacter('race')}>
+                <button
+                  onClick={() => levelUpCharacter('race')}
+                  disabled={levelUpPicks >= LEVEL_UP_PICK_LIMIT}
+                >
                   <strong>{playerCharacter.race.name} - Level {raceLevel} → {raceLevel + 1}</strong>
                   <AbilityLines level={playerCharacter.race.level2} />
                 </button>
@@ -921,7 +947,10 @@ function GameBoard({ playerCharacter, onRestart }) {
               )}
               
               {classLevel < 2 && (
-                <button onClick={() => levelUpCharacter('class')}>
+                <button
+                  onClick={() => levelUpCharacter('class')}
+                  disabled={levelUpPicks >= LEVEL_UP_PICK_LIMIT}
+                >
                   <strong>{playerCharacter.class.name} - Level {classLevel} → {classLevel + 1}</strong>
                   {classLevel === 0 && (
                     <AbilityLines level={playerCharacter.class.level1} />
@@ -939,7 +968,10 @@ function GameBoard({ playerCharacter, onRestart }) {
               )}
               
               {godLevel < 2 && (
-                <button onClick={() => levelUpCharacter('god')}>
+                <button
+                  onClick={() => levelUpCharacter('god')}
+                  disabled={levelUpPicks >= LEVEL_UP_PICK_LIMIT}
+                >
                   <strong>{playerCharacter.god.name} - Level {godLevel} → {godLevel + 1}</strong>
                   {godLevel === 0 && (
                     <AbilityLines level={playerCharacter.god.level1} />
