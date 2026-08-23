@@ -390,12 +390,13 @@ function GameBoard({ playerCharacter, onRestart }) {
     // Detect drop zones
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
+    const canAfford = resources >= draggingCard.symbols.length;
     
     if (x < viewportWidth * 0.25) {
       setDropZone('discard');
-    } else if (x > viewportWidth * 0.75) {
+    } else if (x > viewportWidth * 0.75 && canAfford) {
       setDropZone('play');
-    } else if (y > viewportHeight * 0.75) {
+    } else if (y > viewportHeight * 0.75 && canAfford) {
       setDropZone('trash');
     } else {
       setDropZone(null);
@@ -530,15 +531,24 @@ function GameBoard({ playerCharacter, onRestart }) {
       {/* Drop Zones - Show when dragging */}
       {draggingCard && (
         <>
+          {/* Discard zone - always available */}
           <div className={`drop-zone drop-zone-left ${dropZone === 'discard' ? 'active' : ''}`}>
             <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
           </div>
-          <div className={`drop-zone drop-zone-right ${dropZone === 'play' ? 'active' : ''}`}>
-            <div className="drop-zone-label">PLAY<br/>{draggingCard.symbols.length} 💎</div>
-          </div>
-          <div className={`drop-zone drop-zone-bottom ${dropZone === 'trash' ? 'active' : ''}`}>
-            <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
-          </div>
+          
+          {/* Play zone - only if player can afford */}
+          {resources >= draggingCard.symbols.length && (
+            <div className={`drop-zone drop-zone-right ${dropZone === 'play' ? 'active' : ''}`}>
+              <div className="drop-zone-label">PLAY<br/>{draggingCard.symbols.length} 💎</div>
+            </div>
+          )}
+          
+          {/* Trash zone - only if player can afford */}
+          {resources >= draggingCard.symbols.length && (
+            <div className={`drop-zone drop-zone-bottom ${dropZone === 'trash' ? 'active' : ''}`}>
+              <div className="drop-zone-label">TRASH<br/>{draggingCard.symbols.length} 💎</div>
+            </div>
+          )}
           
           {/* Floating card that follows cursor/finger */}
           <div 
