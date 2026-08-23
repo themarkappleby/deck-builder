@@ -1,7 +1,9 @@
 .boss-status {
   width: 100%;
-  max-width: calc(80px * 3 + 8px * 2);
-  min-width: calc(80px * 3 + 8px * 2);
+  max-width: 100%;
+  min-width: 0;
+  padding: 0 12px;
+  box-sizing: border-box;
 }
 
 .boss-name {
@@ -150,7 +152,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   width: 100%;
   flex: 0 0 auto;
 }
@@ -1105,10 +1107,5 @@
     min-width: calc(64px * 3 + 6px * 2);
     min-height: 88px;
     gap: 6px;
-  }
-
-  .boss-status {
-    max-width: calc(64px * 3 + 6px * 2);
-    min-width: calc(64px * 3 + 6px * 2);
   }
 }
