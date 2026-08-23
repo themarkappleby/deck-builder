@@ -44,7 +44,8 @@
   font-size: 1.8rem;
 }
 
-.card.unaffordable {
+/* Only market cards fade when unaffordable; hand cards stay opaque */
+.card.market-card.unaffordable {
   opacity: 0.4;
   border-color: #333;
 }
