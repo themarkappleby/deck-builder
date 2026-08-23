@@ -814,15 +814,15 @@ function GameBoard({ playerCharacter, onRestart }) {
             </div>
             {bossAttack > 0 && (
               <div className="enemy-attack-slot">
-                <div className="boss-stat-bar boss-attack-bar">
+                <div className="attack-bar boss-attack-bar">
                   <div
-                    className="boss-stat-fill"
+                    className="attack-fill"
                     style={{
                       width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
                     }}
                   ></div>
-                  <span className="boss-stat-text">
-                    Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
+                  <span className="attack-text">
+                    {Math.max(0, bossAttack - playerBlock)} attack
                   </span>
                 </div>
               </div>
