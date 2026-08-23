@@ -156,16 +156,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlock(action.block || 0);
     setBossBlockMax(action.block || 0);
     
-    // Determine how many cards to draw based on race
-    let cardsToDraw = 5;
-    if (playerCharacter.race.id === 'elf') {
-      if (raceLevel >= 2) {
-        cardsToDraw = 7;
-      } else if (raceLevel >= 1) {
-        cardsToDraw = 6;
-      }
-    }
-    
     // Vampire B Level 2: Start each round with +1 blood token
     if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'B' && raceLevel >= 2) {
       setPlayerTokens(prev => ({
@@ -179,7 +169,19 @@ function GameBoard({ playerCharacter, onRestart }) {
     setGodAbilityUsesThisRound(0);
     setPendingDiscardAbility(null);
 
-    const drawnCards = drawCards(cardsToDraw);
+    // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
+    // must be discarded before drawing a fresh opening hand. Otherwise the
+    // new draw would sit on top of the old hand.
+    const leftoverHand = [...hand];
+    if (leftoverHand.length > 0) {
+      addLog(
+        leftoverHand.length === 1
+          ? 'Discarded leftover card from previous encounter'
+          : `Discarded ${leftoverHand.length} leftover cards from previous encounter`
+      );
+    }
+
+    const drawnCards = drawOpeningHand(getOpeningHandSize(), leftoverHand);
     const currentGodLevel = godLevelRef.current;
     const aresDamage = getAresStartOfRoundDamage(
       playerCharacter,
@@ -232,11 +234,20 @@ function GameBoard({ playerCharacter, onRestart }) {
     };
   };
 
-  const drawCards = (count) => {
-    let currentDeck = [...deck];
-    let currentDiscard = [...discard];
-    let drawnCards = [];
+  const getOpeningHandSize = () => {
+    let cardsToDraw = 5;
+    if (playerCharacter.race.id === 'elf') {
+      if (raceLevel >= 2) {
+        cardsToDraw = 7;
+      } else if (raceLevel >= 1) {
+        cardsToDraw = 6;
+      }
+    }
+    return cardsToDraw;
+  };
 
+  const drawFromPiles = (count, currentDeck, currentDiscard) => {
+    const drawnCards = [];
     for (let i = 0; i < count; i++) {
       if (currentDeck.length === 0) {
         if (currentDiscard.length === 0) break;
@@ -246,11 +257,15 @@ function GameBoard({ playerCharacter, onRestart }) {
       }
       drawnCards.push(currentDeck.pop());
     }
+    return { drawnCards, currentDeck, currentDiscard };
+  };
 
-    setDeck(currentDeck);
-    setDiscard(currentDiscard);
-    setHand(prev => [...prev, ...drawnCards]);
-    return drawnCards;
+  const drawOpeningHand = (count, leftoverHand = []) => {
+    const result = drawFromPiles(count, [...deck], [...discard, ...leftoverHand]);
+    setDeck(result.currentDeck);
+    setDiscard(result.currentDiscard);
+    setHand(result.drawnCards);
+    return result.drawnCards;
   };
 
   const shuffleArray = (array) => {
