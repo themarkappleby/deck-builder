@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getGodAbilityUsesPerRound } from '../abilityActions';
+import { getActiveAbilityUI, getGodAbilityUsesPerRound, getAresStartOfRoundDamage, countAttackCards } from '../abilityActions';
 import Card from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -23,7 +23,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [playerBlock, setPlayerBlock] = useState(0);
   const [playerTokens, setPlayerTokens] = useState({});
   const [nextAttackDoubled, setNextAttackDoubled] = useState(false);
-  const [godUsesRemaining, setGodUsesRemaining] = useState(0);
+  const [godAbilityUsesThisRound, setGodAbilityUsesThisRound] = useState(0);
   const [pendingDiscardAbility, setPendingDiscardAbility] = useState(null); // 'aresDiscard' | 'athenaDiscard'
   
   const [deck, setDeck] = useState([]);
@@ -51,6 +51,15 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [dropZone, setDropZone] = useState(null); // 'play', 'discard', 'trash', or null
   
   const logContentRef = useRef(null);
+  const godLevelRef = useRef(godLevel);
+  godLevelRef.current = godLevel;
+
+  // Derive remaining uses from the unlocked god level so unlocking Ares/Athena
+  // mid-setup (or after a stale startRound closure) still enables the button.
+  const godUsesRemaining = Math.max(
+    0,
+    getGodAbilityUsesPerRound(playerCharacter, godLevel) - godAbilityUsesThisRound
+  );
 
   const abilityUI = getActiveAbilityUI(
     playerCharacter,
@@ -168,13 +177,30 @@ function GameBoard({ playerCharacter, onRestart }) {
       addLog('Gained 1 blood token (Vampire Level 2)');
     }
 
-    // Refresh once-per-round god ability uses
-    setGodUsesRemaining(getGodAbilityUsesPerRound(playerCharacter, godLevel));
+    // Refresh once-per-round activated god ability uses (Ares A / Athena)
+    setGodAbilityUsesThisRound(0);
     setPendingDiscardAbility(null);
-    
-    drawCards(cardsToDraw);
+
+    const drawnCards = drawCards(cardsToDraw);
+    const currentGodLevel = godLevelRef.current;
+    const aresDamage = getAresStartOfRoundDamage(
+      playerCharacter,
+      currentGodLevel,
+      drawnCards
+    );
+    let bossDefeatedThisRoundStart = false;
+    if (aresDamage > 0) {
+      const attackCards = countAttackCards(drawnCards);
+      bossDefeatedThisRoundStart = dealDamageToBoss(aresDamage, { block: action.block || 0 });
+      addLog(
+        `Ares: ${attackCards} 🔺 in hand, dealt ${aresDamage} damage to boss`
+      );
+    }
+
     setPlayerBlock(0);
-    setGameState('playerTurn');
+    if (!bossDefeatedThisRoundStart) {
+      setGameState('playerTurn');
+    }
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
 
@@ -226,6 +252,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setDeck(currentDeck);
     setDiscard(currentDiscard);
     setHand(prev => [...prev, ...drawnCards]);
+    return drawnCards;
   };
 
   const shuffleArray = (array) => {
@@ -400,10 +427,11 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarket(currentMarket);
   };
 
-  const dealDamageToBoss = (damage) => {
-    const absorbed = Math.min(damage, bossBlock);
+  const dealDamageToBoss = (damage, options = {}) => {
+    const currentBlock = options.block ?? bossBlock;
+    const absorbed = Math.min(damage, currentBlock);
     const remainingDamage = damage - absorbed;
-    const newBlock = bossBlock - absorbed;
+    const newBlock = currentBlock - absorbed;
 
     if (absorbed > 0) {
       setBossBlock(newBlock);
@@ -421,10 +449,12 @@ function GameBoard({ playerCharacter, onRestart }) {
 
       if (newHP === 0) {
         handleBossDefeated();
+        return true;
       }
     } else if (absorbed > 0) {
       addLog(`Boss blocked all ${damage} damage (${newBlock} block remaining)`);
     }
+    return false;
   };
 
   const handleBossDefeated = () => {
@@ -651,7 +681,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
     const ability = pendingDiscardAbility;
     const newHand = hand.filter(c => c.id !== card.id);
-    setGodUsesRemaining(prev => prev - 1);
+    setGodAbilityUsesThisRound(prev => prev + 1);
     setPendingDiscardAbility(null);
 
     if (ability === 'aresDiscard') {
