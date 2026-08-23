@@ -745,11 +745,41 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   return (
     <div className="game-board">
-      {/* Top HUD - Boss HP */}
+      {/* Top HUD - Boss combat bars & HP */}
       {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="top-hud">
           <div className="boss-hp-container">
             <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+            {(bossAttack > 0 || bossBlockMax > 0) && (
+              <div className="boss-combat-bars">
+                {bossAttack > 0 && (
+                  <div className="boss-stat-bar boss-attack-bar">
+                    <div
+                      className="boss-stat-fill"
+                      style={{
+                        width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
+                      }}
+                    ></div>
+                    <span className="boss-stat-text">
+                      Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
+                    </span>
+                  </div>
+                )}
+                {bossBlockMax > 0 && (
+                  <div className="boss-stat-bar boss-block-bar">
+                    <div
+                      className="boss-stat-fill"
+                      style={{
+                        width: `${(bossBlock / bossBlockMax) * 100}%`
+                      }}
+                    ></div>
+                    <span className="boss-stat-text">
+                      Block {bossBlock} / {bossBlockMax}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="hp-bar boss-hp-bar">
               <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
               <span className="hp-text">{bossHP} / {bossMaxHP}</span>
@@ -787,46 +817,16 @@ function GameBoard({ playerCharacter, onRestart }) {
           <div className="center-content">
             <div className="boss-display">
               <div className="boss-placeholder">🐉</div>
-              {bossAction && (
+              {bossAction && bossCards.length > 0 && (
                 <div className="boss-intent">
-                  {bossCards.length > 0 && (
-                    <div className="boss-cards">
-                      {bossCards.map(card => (
-                        <div key={card.id} className="boss-card">
-                          {card.symbols.map((symbol, index) => (
-                            <span key={index} className="boss-card-symbol">{symbol}</span>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="boss-combat-bars">
-                    {bossAttack > 0 && (
-                      <div className="boss-stat-bar boss-attack-bar">
-                        <div
-                          className="boss-stat-fill"
-                          style={{
-                            width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
-                          }}
-                        ></div>
-                        <span className="boss-stat-text">
-                          Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
-                        </span>
+                  <div className="boss-cards">
+                    {bossCards.map(card => (
+                      <div key={card.id} className="boss-card">
+                        {card.symbols.map((symbol, index) => (
+                          <span key={index} className="boss-card-symbol">{symbol}</span>
+                        ))}
                       </div>
-                    )}
-                    {bossBlockMax > 0 && (
-                      <div className="boss-stat-bar boss-block-bar">
-                        <div
-                          className="boss-stat-fill"
-                          style={{
-                            width: `${(bossBlock / bossBlockMax) * 100}%`
-                          }}
-                        ></div>
-                        <span className="boss-stat-text">
-                          Block {bossBlock} / {bossBlockMax}
-                        </span>
-                      </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               )}
