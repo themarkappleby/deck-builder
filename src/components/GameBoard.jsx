@@ -14,6 +14,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [bossMaxHP, setBossMaxHP] = useState(0);
   const [bossAction, setBossAction] = useState(null);
   const [bossCards, setBossCards] = useState([]);
+  const [bossAttack, setBossAttack] = useState(0);
   const [bossBlock, setBossBlock] = useState(0);
   const [bossBlockMax, setBossBlockMax] = useState(0);
   
@@ -144,6 +145,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     // Calculate boss action from drawn cards
     const action = calculateBossActionFromCards(drawnBossCards);
     setBossAction(action);
+    setBossAttack(action.value);
     setBossBlock(action.block || 0);
     setBossBlockMax(action.block || 0);
     
@@ -478,6 +480,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
     setMarket(bossCards);
     setBossCards([]);
+    setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
     addLog('Boss cards moved to market!');
@@ -522,6 +525,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setCurrentBoss(boss);
     setBossHP(bossData.hp);
     setBossMaxHP(bossData.hp);
+    setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
     setRoundNumber(1);
@@ -791,7 +795,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         )}
 
         {gameState === 'playerTurn' && (
-          <div className="center-content">
+          <div className="center-content player-turn-layout">
             <div className="boss-display">
               <div className="boss-placeholder">🐉</div>
               {bossAction && bossCards.length > 0 && (
@@ -808,6 +812,21 @@ function GameBoard({ playerCharacter, onRestart }) {
                 </div>
               )}
             </div>
+            {bossAttack > 0 && (
+              <div className="enemy-attack-slot">
+                <div className="boss-stat-bar boss-attack-bar">
+                  <div
+                    className="boss-stat-fill"
+                    style={{
+                      width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
+                    }}
+                  ></div>
+                  <span className="boss-stat-text">
+                    Attack {Math.max(0, bossAttack - playerBlock)} / {bossAttack}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -898,7 +917,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         )}
       </div>
 
-      {/* Bottom HUD - Player stats, Block bar, then HP */}
+      {/* Bottom HUD - Player stats then HP */}
       {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
         <div className="bottom-hud">
           <div className="player-stats-bar">
@@ -911,13 +930,6 @@ function GameBoard({ playerCharacter, onRestart }) {
             {nextAttackDoubled && (
               <div className="stat-item rage-active" title="Next attack doubled">💢×2</div>
             )}
-          </div>
-          <div className="block-bar player-block-bar">
-            <div
-              className="block-fill"
-              style={{ width: `${playerBlock > 0 ? 100 : 0}%` }}
-            ></div>
-            <span className="block-text">{playerBlock} Block</span>
           </div>
           <div className="hp-bar player-hp-bar">
             <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
