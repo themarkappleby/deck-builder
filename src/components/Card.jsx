@@ -1,7 +1,18 @@
 import React from 'react';
 import './Card.css';
 
-function Card({ card, onClick, isMarket = false, canAfford = true, className = '', ...handlers }) {
+export function CardEffectLabels({ labels }) {
+  if (!labels?.length) return null;
+  return (
+    <div className="card-effect-labels">
+      {labels.map((label, index) => (
+        <span key={index} className="card-effect-label">{label}</span>
+      ))}
+    </div>
+  );
+}
+
+function Card({ card, onClick, isMarket = false, canAfford = true, className = '', effectLabels, ...handlers }) {
   const classes = [
     'card',
     isMarket ? 'market-card' : '',
@@ -21,6 +32,7 @@ function Card({ card, onClick, isMarket = false, canAfford = true, className = '
           <span key={index} className="symbol-large">{symbol}</span>
         ))}
       </div>
+      <CardEffectLabels labels={effectLabels} />
     </div>
   );
 }

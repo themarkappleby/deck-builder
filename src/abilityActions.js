@@ -233,3 +233,67 @@ export function collectPlayEffects(playerCharacter, levels, symbols) {
 
   return totals;
 }
+
+export function getAttackPerSymbol(playerCharacter, levels) {
+  let perSymbol = 1;
+  if (playerCharacter.race.id === 'vampire' && playerCharacter.race.side === 'A' && levels.raceLevel >= 2) {
+    perSymbol += 1;
+  }
+  if (playerCharacter.class.id === 'warrior' && playerCharacter.class.side === 'A' && levels.classLevel >= 2) {
+    perSymbol += 2;
+  }
+  return perSymbol;
+}
+
+export function getBlockPerSymbol(playerCharacter, levels) {
+  let perSymbol = 1;
+  if (playerCharacter.class.id === 'priest' && playerCharacter.class.side === 'A' && levels.classLevel >= 2) {
+    perSymbol += 2;
+  }
+  if (playerCharacter.race.id === 'dwarf' && levels.raceLevel >= 2) {
+    perSymbol += 1;
+  }
+  return perSymbol;
+}
+
+/**
+ * Full play totals for a card: base 🔺/🔹 plus race/class/god symbol abilities.
+ */
+export function getCardPlayTotals(playerCharacter, levels, symbols) {
+  const cardSymbols = symbols || [];
+  const attackSymbols = cardSymbols.filter(symbol => symbol === SYMBOLS.ATTACK).length;
+  const blockSymbols = cardSymbols.filter(symbol => symbol === SYMBOLS.BLOCK).length;
+  const ability = collectPlayEffects(playerCharacter, levels, cardSymbols);
+
+  return {
+    damage: attackSymbols * getAttackPerSymbol(playerCharacter, levels) + ability.damage,
+    block: blockSymbols * getBlockPerSymbol(playerCharacter, levels) + ability.block,
+    heal: ability.heal,
+    draw: ability.draw,
+    tokens: ability.tokens,
+    attackSymbols,
+    logs: ability.logs,
+  };
+}
+
+const TOKEN_LABELS = {
+  rage: 'Rage',
+  blood: 'Blood',
+};
+
+/**
+ * Concise labels for a card's play effects, e.g. ["1 ATK", "1 DEF", "1 Rage"].
+ */
+export function formatCardEffectLabels(totals) {
+  const labels = [];
+  if (totals.damage > 0) labels.push(`${totals.damage} ATK`);
+  if (totals.block > 0) labels.push(`${totals.block} DEF`);
+  if (totals.heal > 0) labels.push(`${totals.heal} HP`);
+  if (totals.draw > 0) labels.push(`Draw ${totals.draw}`);
+  for (const [token, amount] of Object.entries(totals.tokens || {})) {
+    if (amount > 0) {
+      labels.push(`${amount} ${TOKEN_LABELS[token] || token}`);
+    }
+  }
+  return labels;
+}
