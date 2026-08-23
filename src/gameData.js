@@ -59,13 +59,13 @@ export const races = [
     name: 'Elf',
     side: 'A',
     level1: {
-      effect: 'Draw 6 cards at start of round instead of 5',
+      effect: 'Draw 7 cards at start of round instead of 6',
       symbol: SYMBOLS.PURPLE,
       symbolEffect: 'Draw 2 cards',
       onSymbol: [{ type: 'draw', amount: 2 }]
     },
     level2: {
-      effect: 'Draw 7 cards at start of round',
+      effect: 'Draw 8 cards at start of round',
       additionalEffect: '🟩 symbols: Draw 1 card',
       extraTriggers: [
         {

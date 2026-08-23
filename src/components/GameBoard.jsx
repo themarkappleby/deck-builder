@@ -163,12 +163,12 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlockMax(action.block || 0);
     
     // Determine how many cards to draw based on race
-    let cardsToDraw = 5;
+    let cardsToDraw = 6;
     if (playerCharacter.race.id === 'elf') {
       if (raceLevel >= 2) {
-        cardsToDraw = 7;
+        cardsToDraw = 8;
       } else if (raceLevel >= 1) {
-        cardsToDraw = 6;
+        cardsToDraw = 7;
       }
     }
     
