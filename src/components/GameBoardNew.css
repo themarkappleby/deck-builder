@@ -35,12 +35,9 @@
   transition: width 0.5s ease;
 }
 
-.boss-hp-bar .hp-fill {
-  background: #c0392b;
-}
-
+.boss-hp-bar .hp-fill,
 .player-hp-bar .hp-fill {
-  background: #27ae60;
+  background: #c0392b;
 }
 
 .hp-text {
@@ -59,6 +56,45 @@
 }
 
 .player-hp-bar .hp-text {
+  line-height: 18px;
+}
+
+.block-bar {
+  height: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
+  margin: 6px auto 0;
+}
+
+.block-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #3498db;
+  transition: width 0.35s ease;
+}
+
+.block-text {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  line-height: 18px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  z-index: 1;
+  font-size: 0.85rem;
+}
+
+.boss-block-bar {
+  height: 18px;
+}
+
+.boss-block-bar .block-text {
   line-height: 18px;
 }
 
@@ -132,88 +168,16 @@
   line-height: 1.2;
 }
 
-.boss-combat-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.boss-stat-bar {
-  position: relative;
-  height: 22px;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.boss-stat-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  transition: width 0.35s ease;
-}
-
-.boss-attack-bar .boss-stat-fill {
-  background: #e67e22;
-}
-
-.boss-block-bar .boss-stat-fill {
-  background: #3498db;
-}
-
-.boss-stat-text {
-  position: absolute;
-  width: 100%;
-  text-align: center;
-  line-height: 22px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
-  z-index: 1;
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-}
-
-/* Lower HUD: enemy attack above player stats, below drawn cards */
-.lower-hud-stack {
+/* Bottom HUD - Player Stats, Block & HP */
+.bottom-hud {
   position: fixed;
   bottom: 180px;
   left: 0;
   right: 0;
-  z-index: 110;
-  display: flex;
-  flex-direction: column;
+  padding: 6px 12px 8px;
   background: #1a1a1a;
   border-top: 2px solid #333;
-}
-
-.enemy-combat-hud {
-  padding: 6px 12px 4px;
-  background: transparent;
-  border-top: none;
-}
-
-.enemy-combat-hud .boss-combat-bars {
-  margin-bottom: 0;
-}
-
-/* Bottom HUD - Player Stats & HP */
-.bottom-hud {
-  position: relative;
-  bottom: auto;
-  left: auto;
-  right: auto;
-  padding: 6px 12px 8px;
-  background: transparent;
-  border-top: none;
-  z-index: auto;
-}
-
-.enemy-combat-hud + .bottom-hud {
-  padding-top: 4px;
+  z-index: 110;
 }
 
 .player-stats-bar {
@@ -227,6 +191,11 @@
   font-size: 0.85rem;
   font-weight: bold;
   color: #ddd;
+}
+
+.player-block-bar {
+  margin-top: 0;
+  margin-bottom: 6px;
 }
 
 .player-hp-bar {
