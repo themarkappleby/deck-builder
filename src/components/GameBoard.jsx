@@ -446,15 +446,17 @@ function GameBoard({ playerCharacter, onRestart }) {
   return (
     <div className="game-board">
       {/* Top HUD - Boss HP */}
-      <div className="top-hud">
-        <div className="boss-hp-container">
-          <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
-          <div className="hp-bar boss-hp-bar">
-            <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
-            <span className="hp-text">{bossHP} / {bossMaxHP}</span>
+      {gameState !== 'abilityChoice' && (
+        <div className="top-hud">
+          <div className="boss-hp-container">
+            <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+            <div className="hp-bar boss-hp-bar">
+              <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
+              <span className="hp-text">{bossHP} / {bossMaxHP}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Center Area - Boss Display */}
       <div className="center-area">
@@ -530,18 +532,20 @@ function GameBoard({ playerCharacter, onRestart }) {
       </div>
 
       {/* Bottom HUD - Player Stats & HP */}
-      <div className="bottom-hud">
-        <div className="player-stats-bar">
-          <div className="stat-item">💎 {resources}</div>
-          <div className="stat-item">🛡️ {playerBlock}</div>
-          <div className="stat-item">🎴 {deck.length}</div>
-          <div className="stat-item">🗑️ {discard.length}</div>
+      {gameState !== 'abilityChoice' && (
+        <div className="bottom-hud">
+          <div className="player-stats-bar">
+            <div className="stat-item">💎 {resources}</div>
+            <div className="stat-item">🛡️ {playerBlock}</div>
+            <div className="stat-item">🎴 {deck.length}</div>
+            <div className="stat-item">🗑️ {discard.length}</div>
+          </div>
+          <div className="hp-bar player-hp-bar">
+            <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
+            <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
+          </div>
         </div>
-        <div className="hp-bar player-hp-bar">
-          <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
-          <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
-        </div>
-      </div>
+      )}
 
       {/* Hand - Fixed at bottom */}
       {gameState === 'playerTurn' && (
@@ -697,10 +701,12 @@ function GameBoard({ playerCharacter, onRestart }) {
       )}
 
       {/* Menu button */}
-      <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
+      {gameState !== 'abilityChoice' && (
+        <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
+      )}
       
       {/* Menu popover */}
-      {showMenu && (
+      {showMenu && gameState !== 'abilityChoice' && (
         <div className="menu-popover">
           <button 
             className="menu-item" 
