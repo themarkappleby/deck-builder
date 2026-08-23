@@ -924,6 +924,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 onClick={() => {
                   purchaseCard(selectedCard);
                   setSelectedCard(null);
+                  setSelectedCardIsMarket(false);
                   setShowMarket(false);
                 }}
                 disabled={resources < selectedCard.symbols.length}
