@@ -265,6 +265,61 @@
   cursor: not-allowed;
 }
 
+.action-btn.rage-btn {
+  background: #4a3520;
+  border-color: #6a4a2a;
+  min-width: 120px;
+}
+
+.action-btn.rage-btn:hover:not(:disabled) {
+  background: #5a4530;
+}
+
+.action-btn.rage-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.action-btn.god-btn {
+  background: #2a2a4a;
+  border-color: #3a3a6a;
+  min-width: 120px;
+}
+
+.action-btn.god-btn:hover:not(:disabled) {
+  background: #33335a;
+}
+
+.action-btn.god-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.action-btn.ability-armed {
+  outline: 2px solid #c9a227;
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.5);
+}
+
+.ability-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e8d5a3;
+  font-size: 0.85rem;
+}
+
+.action-btn.cancel-ability-btn {
+  background: #3a3a3a;
+  border-color: #555;
+  min-width: auto;
+  padding: 8px 12px;
+}
+
+.stat-item.rage-active {
+  color: #e8a050;
+  font-weight: 600;
+}
+
 /* Market Overlay */
 .market-overlay {
   position: fixed;
@@ -733,6 +788,12 @@
 
 .hand-row .card:active {
   cursor: grabbing;
+}
+
+.hand-row .card.ability-target {
+  border-color: #c9a227;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.45);
+  cursor: pointer;
 }
 
 .card-symbols-only {
