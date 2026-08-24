@@ -144,6 +144,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         showDebug={game.showDebug}
         debugBossCardsPerTurn={game.debugBossCardsPerTurn}
         debugPlayerCardsPerTurn={game.debugPlayerCardsPerTurn}
+        debugBossStartingHealth={game.debugBossStartingHealth}
         onToggleMenu={() => game.setShowMenu(!game.showMenu)}
         onCloseMenu={() => game.setShowMenu(false)}
         onViewStats={() => {
@@ -161,6 +162,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         onCloseDebug={() => game.setShowDebug(false)}
         onDebugBossCardsChange={game.setDebugBossCardsPerTurn}
         onDebugPlayerCardsChange={game.setDebugPlayerCardsPerTurn}
+        onDebugBossStartingHealthChange={game.applyDebugBossStartingHealth}
       />
     </div>
   );
