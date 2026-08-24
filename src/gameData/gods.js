@@ -9,7 +9,7 @@ export const gods = [
       symbol: SYMBOLS.STAR,
       symbolEffect: 'Double the number of tokens in your play area',
       onSymbol: [{ type: 'doubleTokens' }],
-      effect: 'Max tokens: 12.'
+      effect: 'Max tokens: 10.'
     },
     level2: {
       symbol: SYMBOLS.STAR,

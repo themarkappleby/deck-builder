@@ -26,7 +26,7 @@ function PlayerHud({
         <div className="stat-item">🗑️ {discardLength}</div>
         <div className="stat-item">🔹 {playerBlock}</div>
         {playTokens.length > 0 && (
-          <div className="stat-item">🪙 {playTokens.length}{Number.isFinite(getMaxTokens(playerCharacter, levels)) ? `/${getMaxTokens(playerCharacter, levels)}` : ''}</div>
+          <div className="stat-item">🪙 {playTokens.length}/{getMaxTokens(playerCharacter, levels)}</div>
         )}
         {ignoreIncomingDamage && (
           <div className="stat-item" title="Ignore incoming damage">✨ Guard</div>
