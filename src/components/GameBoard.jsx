@@ -186,10 +186,10 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const startRound = () => {
-    // Draw cards for boss action (3 for the first boss), reshuffling
+    // Draw cards for boss action (2 cards), reshuffling
     // the market into a new draw pile when the market deck runs out —
     // same pattern as the player's discard reshuffle.
-    const bossCardsToDraw = 3;
+    const bossCardsToDraw = 2;
     let currentMarketDeck = [...marketDeck];
     let currentMarket = [...market];
     const drawnBossCards = [];
