@@ -1192,3 +1192,65 @@
   background: #335533;
 }
 
+.boss-abilities {
+  margin: 0 0 4px;
+  max-width: 280px;
+}
+
+.boss-abilities p {
+  margin: 0 0 2px;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  color: #c8bdd4;
+}
+
+.boss-brew {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.boss-brew-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ad27a;
+}
+
+.boss-brew-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.boss-brew-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #4a7a3a;
+  background: #1a2418;
+}
+
+.boss-brew-pip.filled {
+  background: #6bc24a;
+  box-shadow: 0 0 6px rgba(107, 194, 74, 0.6);
+}
+
+.curse-banner {
+  padding: 8px 14px;
+  border: 1px solid #7a4a8a;
+  border-radius: 6px;
+  background: #3a2048;
+  color: #f0d8ff;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.card.curse-target {
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(186, 85, 211, 0.45);
+  border-color: #a45cc0;
+}
+
