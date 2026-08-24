@@ -1,7 +1,8 @@
 export {
   createPlayToken,
   tokenCanHarvest,
-  harvestRightmostEligibleToken,
+  harvestEligibleTokens,
+  clearHarvestableFlags,
   tokenHasCombatStats,
   tokenCanAttack,
   discardToken,

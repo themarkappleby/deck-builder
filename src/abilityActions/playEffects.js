@@ -138,7 +138,7 @@ export function collectPlayEffects(playerCharacter, levels, symbols, context = {
           totals.damageEqualBlock = true;
         } else if (effect.type === 'spawnToken') {
           totals.spawn.push({ ...effect });
-          if (effect.kind === 'gardener') {
+          if (effect.harvestable) {
             totals.gardenerHarvest = true;
           }
         } else if (effect.type === 'doubleTokens') {

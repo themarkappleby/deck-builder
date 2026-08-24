@@ -1,6 +1,6 @@
 let tokenSeq = 0;
 
-export function createPlayToken({ attack, defense, kind } = {}) {
+export function createPlayToken({ attack, defense, kind, harvestable } = {}) {
   tokenSeq += 1;
   const token = {
     id: `token_${tokenSeq}_${Date.now()}`,
@@ -9,23 +9,31 @@ export function createPlayToken({ attack, defense, kind } = {}) {
   };
   if (attack != null) token.attack = attack;
   if (defense != null) token.defense = defense;
+  if (harvestable) token.harvestable = true;
   return token;
 }
 
 export function tokenCanHarvest(token) {
-  return !token.spawnedThisTurn;
+  return Boolean(token.harvestable) && !token.spawnedThisTurn;
 }
 
-export function harvestRightmostEligibleToken(tokens) {
-  for (let i = tokens.length - 1; i >= 0; i -= 1) {
-    if (tokenCanHarvest(tokens[i])) {
-      return {
-        tokens: [...tokens.slice(0, i), ...tokens.slice(i + 1)],
-        harvested: tokens[i],
-      };
-    }
+export function harvestEligibleTokens(tokens) {
+  const harvested = [];
+  const remaining = [];
+  for (const token of tokens) {
+    if (tokenCanHarvest(token)) harvested.push(token);
+    else remaining.push(token);
   }
-  return { tokens, harvested: null };
+  return { tokens: remaining, harvested };
+}
+
+export function clearHarvestableFlags(tokens) {
+  return tokens.map(token => {
+    if (!token.harvestable) return token;
+    const next = { ...token };
+    delete next.harvestable;
+    return next;
+  });
 }
 
 export function tokenHasCombatStats(token) {

@@ -12,7 +12,8 @@ import {
   discardToken,
   tokenCanAttack,
   tokenCanBlock,
-  harvestRightmostEligibleToken,
+  harvestEligibleTokens,
+  clearHarvestableFlags,
   getMaxTokens,
   getBossRoundAction,
   applyBrewTokens,
@@ -246,16 +247,17 @@ export function useGameBoard(playerCharacter) {
     setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
-    const remainingTokens = playTokensRef.current;
-    setPlayTokens(remainingTokens.map(token => ({
+    let remainingTokens = playTokensRef.current.map(token => ({
       ...token,
       spawnedThisTurn: false,
-    })));
-    if (harvestNextTurn && remainingTokens.length > 0) {
-      setCanHarvestThisTurn(true);
-    } else {
-      setCanHarvestThisTurn(false);
+    }));
+    const canHarvestLeftovers = harvestNextTurn && remainingTokens.some(token => token.harvestable);
+    if (!canHarvestLeftovers) {
+      remainingTokens = clearHarvestableFlags(remainingTokens);
     }
+    setPlayTokens(remainingTokens);
+    playTokensRef.current = remainingTokens;
+    setCanHarvestThisTurn(canHarvestLeftovers);
     setHarvestNextTurn(false);
 
     // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
@@ -695,24 +697,27 @@ export function useGameBoard(playerCharacter) {
     setGameState('ready');
   };
 
-  const harvestRightmostToken = () => {
+  const harvestLeftoverTokens = () => {
     if (!canHarvestThisTurn) {
       return;
     }
 
-    const result = harvestRightmostEligibleToken(playTokens);
-    if (!result.harvested) {
+    const result = harvestEligibleTokens(playTokens);
+    if (result.harvested.length === 0) {
       return;
     }
 
+    const gained = result.harvested.length;
     setPlayTokens(result.tokens);
-    setResources(prev => prev + 2);
-    addLog(`Harvested the rightmost leftover token (+2 resources)`);
+    playTokensRef.current = result.tokens;
+    setResources(prev => prev + gained);
+    setCanHarvestThisTurn(false);
+    addLog(`Discarded ${gained} leftover token${gained === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
   };
 
   const handleAbilityButton = (button) => {
     if (button.action === 'harvestTokens') {
-      harvestRightmostToken();
+      harvestLeftoverTokens();
     } else if (button.action === 'vampieraHeal') {
       if (playTokens.length < 3) {
         addLog('Need 3 tokens to heal');
