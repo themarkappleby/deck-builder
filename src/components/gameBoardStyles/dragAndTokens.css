@@ -1,0 +1,326 @@
+/* Drop Zones for Card Dragging */
+.drop-zone {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  opacity: 0.3;
+}
+
+.drop-zone.active {
+  opacity: 1;
+}
+
+.drop-zone-center {
+  top: 25%;
+  left: 30%;
+  right: 30%;
+  bottom: 35%;
+  background: radial-gradient(ellipse at center, rgba(90, 150, 42, 0.5), transparent 70%);
+  border: 4px solid rgba(90, 150, 42, 0.8);
+  border-radius: 20px;
+}
+
+.drop-zone-center.active {
+  background: radial-gradient(ellipse at center, rgba(90, 150, 42, 0.8), transparent 70%);
+  border: 4px solid rgb(90, 150, 42);
+  box-shadow: inset 0 0 60px rgba(90, 150, 42, 0.5);
+}
+
+.drop-zone-right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 25%;
+  background: linear-gradient(to left, rgba(42, 90, 150, 0.5), transparent);
+  border-left: 4px solid rgba(42, 90, 150, 0.8);
+}
+
+.drop-zone-right.active {
+  background: linear-gradient(to left, rgba(42, 90, 150, 0.8), transparent);
+  border-left: 4px solid rgb(42, 90, 150);
+  box-shadow: inset 0 0 40px rgba(42, 90, 150, 0.5);
+}
+
+.drop-zone-top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: linear-gradient(to bottom, rgba(150, 42, 42, 0.5), transparent);
+  border-bottom: 4px solid rgba(150, 42, 42, 0.8);
+}
+
+.drop-zone-top.active {
+  background: linear-gradient(to bottom, rgba(150, 42, 42, 0.8), transparent);
+  border-bottom: 4px solid rgb(150, 42, 42);
+  box-shadow: inset 0 0 40px rgba(150, 42, 42, 0.5);
+}
+
+.drop-zone-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32%;
+  background: linear-gradient(to top, rgba(201, 162, 39, 0.5), transparent);
+  border-top: 4px solid rgba(201, 162, 39, 0.8);
+}
+
+.drop-zone-bottom.active {
+  background: linear-gradient(to top, rgba(201, 162, 39, 0.8), transparent);
+  border-top: 4px solid rgb(201, 162, 39);
+  box-shadow: inset 0 0 40px rgba(201, 162, 39, 0.5);
+}
+
+.drop-zone-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+.drop-zone.active .drop-zone-label {
+  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Hand cards stay fully opaque regardless of resources */
+.hand-row .card {
+  width: 80px;
+  height: 110px;
+  background: #2a2a2a;
+  border: 2px solid #555;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  position: absolute;
+  transform-origin: center bottom;
+  opacity: 1;
+  overflow: hidden;
+  container-type: size;
+}
+
+.hand-row .card.unaffordable {
+  opacity: 1;
+  border-color: #555;
+}
+
+.hand-row .card:hover:not(.dragging) {
+  transform: translateX(var(--hover-x, 0)) translateY(calc(var(--hover-y, 0px) - 20px)) rotate(var(--hover-rotation, 0deg)) scale(1.05);
+  z-index: 100 !important;
+  border-color: #888;
+}
+
+.hand-row .card:active {
+  cursor: grabbing;
+}
+
+.hand-row .card.ability-target {
+  border-color: #c9a227;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.45);
+  cursor: pointer;
+}
+
+.card.dragging {
+  opacity: 0.3;
+  transform: scale(0.9);
+  cursor: grabbing;
+}
+
+/* Floating card that follows cursor */
+.floating-card {
+  position: fixed;
+  width: 100px;
+  height: 130px;
+  background: #2a2a2a;
+  border: 3px solid #888;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  animation: float 0.3s ease-out;
+  box-sizing: border-box;
+  container-type: size;
+  overflow: hidden;
+}
+
+@keyframes float {
+  from {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .card.intent-card,
+  .market-row .card,
+  .market-slot-empty {
+    width: 64px;
+    height: 88px;
+  }
+
+  .intent-card-row {
+    min-width: calc(64px * 3 + 6px * 2);
+    min-height: 88px;
+    gap: 6px;
+  }
+}
+
+.play-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.play-field-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c9a227;
+}
+
+.play-token-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 320px;
+}
+
+.play-token {
+  width: 52px;
+  height: 52px;
+  border: 2px solid #6a5a3a;
+  border-radius: 8px;
+  background: #2a2418;
+  color: #eee;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  pointer-events: all;
+}
+
+.play-token.no-stats {
+  border-style: dashed;
+  opacity: 0.9;
+}
+
+.play-token.can-attack {
+  border-color: #c0392b;
+  box-shadow: 0 0 8px rgba(192, 57, 43, 0.45);
+}
+
+.play-token-kind {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.play-token-stats {
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.action-btn.harvest-btn {
+  background: #2a4a2a;
+  border-color: #3a6a3a;
+}
+
+.action-btn.harvest-btn:hover:not(:disabled) {
+  background: #335533;
+}
+
+.boss-abilities {
+  margin: 0 0 4px;
+  max-width: 280px;
+}
+
+.boss-abilities p {
+  margin: 0 0 2px;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  color: #c8bdd4;
+}
+
+.boss-brew {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.boss-brew-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ad27a;
+}
+
+.boss-brew-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.boss-brew-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #4a7a3a;
+  background: #1a2418;
+}
+
+.boss-brew-pip.filled {
+  background: #6bc24a;
+  box-shadow: 0 0 6px rgba(107, 194, 74, 0.6);
+}
+
+.curse-banner {
+  padding: 8px 14px;
+  border: 1px solid #7a4a8a;
+  border-radius: 6px;
+  background: #3a2048;
+  color: #f0d8ff;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.card.curse-target {
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(186, 85, 211, 0.45);
+  border-color: #a45cc0;
+}
+
