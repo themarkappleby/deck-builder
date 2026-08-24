@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens } from '../abilityActions';
+import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, discardToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens } from '../abilityActions';
 import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -213,7 +213,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     const remainingTokens = playTokensRef.current;
     setPlayTokens(remainingTokens.map(token => ({
       ...token,
-      hasAttacked: false,
       spawnedThisTurn: false,
     })));
     if (harvestNextTurn && remainingTokens.length > 0) {
@@ -705,8 +704,10 @@ function GameBoard({ playerCharacter, onRestart }) {
 
     if (tokenCanAttack(token)) {
       dealDamageToBoss(token.attack);
-      setPlayTokens(prev => prev.map(t => t.id === token.id ? { ...t, hasAttacked: true } : t));
-      addLog(`Token attacked for ${token.attack}`);
+      const nextTokens = discardToken(playTokensRef.current, token.id);
+      setPlayTokens(nextTokens);
+      playTokensRef.current = nextTokens;
+      addLog(`Token attacked for ${token.attack} and was discarded`);
     }
   };
 
@@ -910,7 +911,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                       <button
                         key={token.id}
                         type="button"
-                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${token.hasAttacked ? ' has-attacked' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
+                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
                         onClick={() => handleTokenClick(token)}
                       >
                         <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : '🪙'}</span>
