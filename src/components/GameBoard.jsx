@@ -125,6 +125,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         draggingSource={game.draggingSource}
         dropZone={game.dropZone}
         resources={game.resources}
+        trashCost={game.trashCost}
         cannotDiscardForResources={game.cannotDiscardForResources}
         dragPosition={game.dragPosition}
         getHandCardLabels={game.getHandCardLabels}

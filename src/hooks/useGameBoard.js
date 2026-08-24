@@ -20,7 +20,7 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getTrashCost } from '../game/constants';
 import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
@@ -52,6 +52,7 @@ export function useGameBoard(playerCharacter) {
   const [hand, setHand] = useState([]);
   const [discard, setDiscard] = useState([]);
   const [resources, setResources] = useState(0);
+  const [cardsTrashed, setCardsTrashed] = useState(0);
 
   const [market, setMarket] = useState([]);
   const [marketDeck, setMarketDeck] = useState([]);
@@ -319,6 +320,7 @@ export function useGameBoard(playerCharacter) {
     hand: cloneValue(hand),
     discard: cloneValue(discard),
     resources,
+    cardsTrashed,
     market: cloneValue(market),
     marketDeck: cloneValue(marketDeck),
     marketDiscard: cloneValue(marketDiscard),
@@ -342,6 +344,7 @@ export function useGameBoard(playerCharacter) {
     setHand(snapshot.hand);
     setDiscard(snapshot.discard);
     setResources(snapshot.resources);
+    setCardsTrashed(snapshot.cardsTrashed ?? 0);
     setMarket(snapshot.market);
     marketRef.current = snapshot.market;
     setMarketDeck(snapshot.marketDeck);
@@ -520,7 +523,7 @@ export function useGameBoard(playerCharacter) {
   };
 
   const trashCard = (card) => {
-    const cost = card.symbols.length;
+    const cost = getTrashCost(cardsTrashed);
     if (resources < cost) {
       addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
@@ -530,8 +533,9 @@ export function useGameBoard(playerCharacter) {
     const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
     setResources(prev => prev - cost);
+    setCardsTrashed(prev => prev + 1);
 
-    addLog(`Trashed ${card.name} permanently (${cost} resources spent)`);
+    addLog(`Trashed ${card.name} permanently (${cost} resources spent, next trash costs ${cost + 1})`);
   };
 
   const refreshMarket = (currentMarket) => {
@@ -875,7 +879,7 @@ export function useGameBoard(playerCharacter) {
     }
 
     const canAffordPlay = resources >= 1; // Playing costs 1
-    const canAffordTrash = resources >= draggingCard.symbols.length; // Trashing costs symbol count
+    const canAffordTrash = resources >= getTrashCost(cardsTrashed);
 
     // Top zone for trash (highest priority)
     if (y < viewportHeight * 0.25 && canAffordTrash) {
@@ -939,6 +943,8 @@ export function useGameBoard(playerCharacter) {
     hand,
     discard,
     resources,
+    cardsTrashed,
+    trashCost: getTrashCost(cardsTrashed),
     market,
     marketSlotCount,
     bossNumber,
