@@ -63,7 +63,7 @@ Make sure GitHub Pages is enabled in your repository settings:
 
 ### Gameplay
 - **Round Start**: Boss telegraphs their action, players draw 6 cards
-- **Player Turn**: Play/purchase/trash cards by paying their cost (discard cards equal to symbol count)
+- **Player Turn**: Discard cards from your hand for 💎, then play (1 💎), purchase (symbol count 💎), or trash (1 💎 for the first trash, then 2, 3, and so on)
 - **Round End**: Boss executes their action, dealing damage or using special abilities
 
 ### Card Symbols
