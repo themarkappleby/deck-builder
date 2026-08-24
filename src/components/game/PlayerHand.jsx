@@ -1,4 +1,8 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import Card from '../Card';
+
+const HAND_CARD_WIDTH = 80;
+const HAND_EDGE_INSET = 12;
 
 function PlayerHand({
   gameState,
@@ -12,27 +16,47 @@ function PlayerHand({
   onAbilityButton,
   onEndTurn,
 }) {
+  const rowRef = useRef(null);
+  const [rowWidth, setRowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 0
+  );
+
+  useLayoutEffect(() => {
+    const el = rowRef.current;
+    if (!el) return undefined;
+
+    const updateWidth = () => setRowWidth(el.clientWidth);
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [gameState]);
+
   if (!(gameState === 'playerTurn' || gameState === 'curseDiscard')) {
     return null;
   }
 
+  const totalCards = hand.length;
+  const usableWidth = Math.max(0, rowWidth - HAND_EDGE_INSET * 2);
+  const spacing = totalCards > 1
+    ? (usableWidth - HAND_CARD_WIDTH) / (totalCards - 1)
+    : 0;
+
   return (
     <div className="hand-container">
-      <div className="hand-row">
+      <div className="hand-row" ref={rowRef}>
         {hand.map((card, index) => {
-          const totalCards = hand.length;
           const middleIndex = (totalCards - 1) / 2;
           const offsetFromCenter = index - middleIndex;
 
           // Calculate rotation: max 5 degrees per card from center
           const rotation = offsetFromCenter * 5;
 
-          // Calculate horizontal spacing: cards overlap by 40-60% depending on hand size
-          const baseSpacing = totalCards > 7 ? 30 : totalCards > 5 ? 40 : 50;
-          const horizontalOffset = offsetFromCenter * baseSpacing;
+          const horizontalOffset = offsetFromCenter * spacing;
 
-          // Calculate vertical offset for arc effect (cards at edges are slightly lower)
-          const verticalOffset = Math.abs(offsetFromCenter) * 3;
+          // Gentle arc so outer cards sit slightly lower across the wider fan
+          const verticalOffset = Math.abs(horizontalOffset) * 0.06;
 
           const effectLabels = getHandCardLabels(card);
           const cursing = gameState === 'curseDiscard';
