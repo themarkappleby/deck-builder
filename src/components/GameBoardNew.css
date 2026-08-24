@@ -1173,10 +1173,6 @@
   box-shadow: 0 0 8px rgba(192, 57, 43, 0.45);
 }
 
-.play-token.has-attacked {
-  opacity: 0.45;
-}
-
 .play-token-kind {
   font-size: 1rem;
   line-height: 1;

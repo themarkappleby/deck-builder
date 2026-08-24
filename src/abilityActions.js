@@ -12,7 +12,6 @@ export function createPlayToken({ attack, defense, kind } = {}) {
   const token = {
     id: `token_${tokenSeq}_${Date.now()}`,
     kind: kind || 'generic',
-    hasAttacked: false,
     spawnedThisTurn: true,
   };
   if (attack != null) token.attack = attack;
@@ -41,7 +40,12 @@ export function tokenHasCombatStats(token) {
 }
 
 export function tokenCanAttack(token) {
-  return token.attack != null && token.attack > 0 && !token.hasAttacked;
+  return token.attack != null && token.attack > 0;
+}
+
+/** Remove a token from the play field after it attacks. */
+export function discardToken(tokens, tokenId) {
+  return tokens.filter(token => token.id !== tokenId);
 }
 
 export function tokenCanBlock(token) {
