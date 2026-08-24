@@ -8,6 +8,7 @@ import './CardActionMenu.css';
 
 const LEVEL_UP_PICK_LIMIT = 2;
 const BOSS_CARDS_TO_DRAW = 2;
+const PLAYER_CARDS_TO_DRAW = 6;
 
 function AbilityLines({ level }) {
   return formatLevelLines(level).map((line, index) => (
@@ -101,6 +102,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugBossCardsPerTurn, setDebugBossCardsPerTurn] = useState(BOSS_CARDS_TO_DRAW);
+  const [debugPlayerCardsPerTurn, setDebugPlayerCardsPerTurn] = useState(PLAYER_CARDS_TO_DRAW);
   const [draggingCard, setDraggingCard] = useState(null);
   const [draggingSource, setDraggingSource] = useState(null); // 'hand' | 'market'
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -123,6 +127,10 @@ function GameBoard({ playerCharacter, onRestart }) {
   currentBossRef.current = currentBoss;
   const bossTokensRef = useRef(bossTokens);
   bossTokensRef.current = bossTokens;
+  const debugBossCardsPerTurnRef = useRef(debugBossCardsPerTurn);
+  debugBossCardsPerTurnRef.current = debugBossCardsPerTurn;
+  const debugPlayerCardsPerTurnRef = useRef(debugPlayerCardsPerTurn);
+  debugPlayerCardsPerTurnRef.current = debugPlayerCardsPerTurn;
 
   const levels = { raceLevel, classLevel, godLevel };
 
@@ -192,7 +200,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     // of slots as the number of boss cards drawn this round. Reshuffle
     // leftover market cards into a new draw pile when the market deck
     // runs out — same pattern as the player's discard reshuffle.
-    const bossCardsToDraw = BOSS_CARDS_TO_DRAW;
+    const bossCardsToDraw = debugBossCardsPerTurnRef.current;
     let currentMarketDeck = [...marketDeck];
     let currentMarket = [...market];
     const drawnBossCards = [];
@@ -286,7 +294,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
 
-  const getOpeningHandSize = () => 6;
+  const getOpeningHandSize = () => debugPlayerCardsPerTurnRef.current;
 
   const drawFromPiles = (count, currentDeck, currentDiscard) => {
     const drawnCards = [];
@@ -1275,6 +1283,55 @@ function GameBoard({ playerCharacter, onRestart }) {
           >
             🔄 New Game
           </button>
+          <button 
+            className="menu-item" 
+            onClick={() => {
+              setShowDebug(true);
+              setShowMenu(false);
+            }}
+          >
+            🛠 Debug
+          </button>
+        </div>
+      )}
+
+      {showDebug && (
+        <div className="debug-overlay">
+          <div className="debug-content">
+            <h3>Debug</h3>
+            <p className="debug-hint">Changes apply at the start of the next turn.</p>
+            <label className="debug-field">
+              <span>Boss / market cards each turn</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={debugBossCardsPerTurn}
+                onChange={(e) => {
+                  const next = Number.parseInt(e.target.value, 10);
+                  if (Number.isFinite(next) && next >= 0) {
+                    setDebugBossCardsPerTurn(next);
+                  }
+                }}
+              />
+            </label>
+            <label className="debug-field">
+              <span>Player cards drawn each turn</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={debugPlayerCardsPerTurn}
+                onChange={(e) => {
+                  const next = Number.parseInt(e.target.value, 10);
+                  if (Number.isFinite(next) && next >= 0) {
+                    setDebugPlayerCardsPerTurn(next);
+                  }
+                }}
+              />
+            </label>
+            <button className="close-stats-btn" onClick={() => setShowDebug(false)}>Close</button>
+          </div>
         </div>
       )}
       
