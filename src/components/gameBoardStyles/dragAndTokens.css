@@ -237,6 +237,15 @@
   pointer-events: all;
 }
 
+.play-token.energy {
+  border-color: #6a3a5a;
+  background: #241018;
+}
+
+.play-token.unit {
+  border-color: #6a5a3a;
+}
+
 .play-token.no-stats {
   border-style: dashed;
   opacity: 0.9;

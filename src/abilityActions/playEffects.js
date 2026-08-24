@@ -1,4 +1,5 @@
 import { SYMBOLS } from '../gameData';
+import { PLAY_TOKEN_TYPE, playTokenType } from './tokens';
 
 function formatSymbolLine(symbol, symbolEffect, starsRequired) {
   if (!symbol || !symbolEffect) return null;
@@ -85,8 +86,8 @@ function emptyPlayTotals() {
     draw: 0,
     tokens: {},
     spawn: [],
-    doubleTokens: false,
-    buffTokens: { attack: 0, defense: 0 },
+    doubleUnits: false,
+    buffUnits: { attack: 0, defense: 0 },
     starsPlayed: 0,
     ignoreDamage: false,
     lockCardDiscardForResources: false,
@@ -137,11 +138,11 @@ export function collectPlayEffects(playerCharacter, levels, symbols, context = {
           totals.damageEqualBlock = true;
         } else if (effect.type === 'spawnToken') {
           totals.spawn.push({ ...effect });
-        } else if (effect.type === 'doubleTokens') {
-          totals.doubleTokens = true;
-        } else if (effect.type === 'buffTokens') {
-          totals.buffTokens.attack += effect.attack || 0;
-          totals.buffTokens.defense += effect.defense || 0;
+        } else if (effect.type === 'doubleUnits' || effect.type === 'doubleTokens') {
+          totals.doubleUnits = true;
+        } else if (effect.type === 'buffUnits' || effect.type === 'buffTokens') {
+          totals.buffUnits.attack += effect.attack || 0;
+          totals.buffUnits.defense += effect.defense || 0;
         } else if (effect.type === 'lockCardDiscardForResources') {
           totals.lockCardDiscardForResources = true;
         } else if (effect.type === 'starComboIgnoreDamage') {
@@ -193,8 +194,8 @@ export function getCardPlayTotals(playerCharacter, levels, symbols, context = {}
     draw: ability.draw,
     tokens: ability.tokens,
     spawn: ability.spawn,
-    doubleTokens: ability.doubleTokens,
-    buffTokens: ability.buffTokens,
+    doubleUnits: ability.doubleUnits,
+    buffUnits: ability.buffUnits,
     starsPlayed: ability.starsPlayed,
     ignoreDamage: ability.ignoreDamage,
     lockCardDiscardForResources: ability.lockCardDiscardForResources,
@@ -209,10 +210,13 @@ export function getCardPlayTotals(playerCharacter, levels, symbols, context = {}
 
 function spawnLabel(template) {
   const count = template.count || 1;
+  const noun = playTokenType(template) === PLAY_TOKEN_TYPE.UNIT
+    ? (count > 1 ? 'units' : 'unit')
+    : 'energy';
   if (template.attack != null || template.defense != null) {
-    return `+${count} ${template.attack ?? 0}/${template.defense ?? 0}`;
+    return `+${count} ${template.attack ?? 0}/${template.defense ?? 0} ${noun}`;
   }
-  return `+${count} token${count > 1 ? 's' : ''}`;
+  return `+${count} ${noun}`;
 }
 
 /**
@@ -232,9 +236,9 @@ export function formatCardEffectLabels(totals) {
   for (const template of totals.spawn || []) {
     labels.push(spawnLabel(template));
   }
-  if (totals.doubleTokens) labels.push('Double tokens');
-  if ((totals.buffTokens?.attack || 0) > 0 || (totals.buffTokens?.defense || 0) > 0) {
-    labels.push(`+${totals.buffTokens.attack}/+${totals.buffTokens.defense}`);
+  if (totals.doubleUnits) labels.push('Double units');
+  if ((totals.buffUnits?.attack || 0) > 0 || (totals.buffUnits?.defense || 0) > 0) {
+    labels.push(`+${totals.buffUnits.attack}/+${totals.buffUnits.defense} units`);
   }
   if (totals.ignoreDamage) labels.push('Ignore dmg');
   for (const [token, amount] of Object.entries(totals.tokens || {})) {

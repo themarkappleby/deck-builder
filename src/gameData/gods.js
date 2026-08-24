@@ -7,14 +7,14 @@ export const gods = [
     side: 'A',
     level1: {
       symbol: SYMBOLS.STAR,
-      symbolEffect: 'Double the number of tokens in your play area',
-      onSymbol: [{ type: 'doubleTokens' }],
-      effect: 'Max tokens: 12.'
+      symbolEffect: 'Double the number of units in your play area',
+      onSymbol: [{ type: 'doubleUnits' }],
+      effect: 'Max units: 12.'
     },
     level2: {
       symbol: SYMBOLS.STAR,
-      symbolEffect: '+1/+1 to all tokens in your play area',
-      onSymbol: [{ type: 'buffTokens', attack: 1, defense: 1 }],
+      symbolEffect: '+1/+1 to all units in your play area',
+      onSymbol: [{ type: 'buffUnits', attack: 1, defense: 1 }],
       replaceLevel1: false
     }
   },
