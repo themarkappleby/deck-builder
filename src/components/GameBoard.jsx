@@ -7,6 +7,7 @@ import './GameBoardNew.css';
 import './CardActionMenu.css';
 
 const LEVEL_UP_PICK_LIMIT = 2;
+const BOSS_CARDS_TO_DRAW = 2;
 
 function AbilityLines({ level }) {
   return formatLevelLines(level).map((line, index) => (
@@ -88,6 +89,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   
   const [market, setMarket] = useState([]);
   const [marketDeck, setMarketDeck] = useState([]);
+  const [marketSlotCount, setMarketSlotCount] = useState(BOSS_CARDS_TO_DRAW);
   
   const [raceLevel, setRaceLevel] = useState(1);
   const [classLevel, setClassLevel] = useState(0);
@@ -161,6 +163,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setDeck(shuffled);
     setMarketDeck(marketDeckShuffled);
     setMarket([]); // Start with empty market
+    setMarketSlotCount(BOSS_CARDS_TO_DRAW);
     
     setPlayerHP(10);
     setPlayerMaxHP(10);
@@ -186,10 +189,11 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const startRound = () => {
-    // Draw cards for boss action (3 for the first boss), reshuffling
-    // the market into a new draw pile when the market deck runs out —
-    // same pattern as the player's discard reshuffle.
-    const bossCardsToDraw = 3;
+    // Draw cards for boss action. The market always has the same number
+    // of slots as the number of boss cards drawn this round. Reshuffle
+    // leftover market cards into a new draw pile when the market deck
+    // runs out — same pattern as the player's discard reshuffle.
+    const bossCardsToDraw = BOSS_CARDS_TO_DRAW;
     let currentMarketDeck = [...marketDeck];
     let currentMarket = [...market];
     const drawnBossCards = [];
@@ -211,6 +215,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarketDeck(currentMarketDeck);
     setMarket(currentMarket);
     setBossCards(drawnBossCards);
+    setMarketSlotCount(drawnBossCards.length);
     
     const action = getBossRoundAction(currentBossRef.current, drawnBossCards);
     setBossAction(action);
@@ -548,6 +553,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
 
     setMarket(bossCards);
+    setMarketSlotCount(bossCards.length);
     setBossCards([]);
     addLog('Boss cards moved to market!');
     setRoundNumber(prev => prev + 1);
@@ -841,7 +847,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   const showBattlefield = gameState === 'playerTurn' || gameState === 'ready' || gameState === 'assignDamage' || gameState === 'curseDiscard';
   const bossAbilityLines = formatBossAbilityLines(currentBoss);
-  const marketSlots = [0, 1, 2].map(index => market[index] || null);
+  const marketSlots = Array.from({ length: marketSlotCount }, (_, index) => market[index] || null);
 
   return (
     <div
@@ -878,7 +884,7 @@ function GameBoard({ playerCharacter, onRestart }) {
             <div className="battlefield">
               <div className="market-column">
                 <div className="market-label">Market</div>
-                <div className="intent-card-row market-row">
+                <div className="intent-card-row market-row" style={{ '--slot-count': marketSlotCount }}>
                   {marketSlots.map((card, index) => (
                     card ? (
                       <Card
@@ -939,7 +945,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                     </div>
                     <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
                   </div>
-                  <div className="intent-card-row boss-cards-row">
+                  <div className="intent-card-row boss-cards-row" style={{ '--slot-count': bossCards.length || marketSlotCount }}>
                     {bossCards.map(card => (
                       <Card
                         key={card.id}
