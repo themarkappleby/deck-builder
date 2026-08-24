@@ -2,11 +2,23 @@ import Card from '../Card';
 import { SYMBOLS } from '../../gameData';
 import { formatBossCardEffectLabels, getBossAbility, WITCH_BREW_THRESHOLD } from '../../abilityActions';
 
+function BrewPips({ tokens }) {
+  return (
+    <div className="boss-brew-pips" aria-hidden="true">
+      {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
+        <span
+          key={index}
+          className={`boss-brew-pip${index < tokens ? ' filled' : ''}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 function BossStage({
   currentBoss,
   bossNumber,
   roundNumber,
-  bossAbilityLines,
   bossHP,
   bossMaxHP,
   bossBlock,
@@ -17,16 +29,21 @@ function BossStage({
   bossAttack,
   playerBlock,
 }) {
+  const bossAbilities = Object.entries(currentBoss?.abilities || {});
+
   return (
     <div className="boss-stage">
       <div className="boss-cluster">
         <div className="boss-identity">
           <div className="boss-status">
             <div className="boss-name">{currentBoss?.name} (Level {bossNumber}) - Round {roundNumber}</div>
-            {bossAbilityLines.length > 0 && (
+            {bossAbilities.length > 0 && (
               <div className="boss-abilities">
-                {bossAbilityLines.map(line => (
-                  <p key={line}>{line}</p>
+                {bossAbilities.map(([symbol, ability]) => (
+                  <div key={symbol} className="boss-ability-row">
+                    <p>{`${symbol} ${ability.name}: ${ability.symbolEffect}`}</p>
+                    {ability.type === 'brew' && <BrewPips tokens={bossTokens} />}
+                  </div>
                 ))}
               </div>
             )}
@@ -48,14 +65,6 @@ function BossStage({
             {getBossAbility(currentBoss, SYMBOLS.GREEN)?.type === 'brew' && (
               <div className="boss-brew">
                 <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
-                <div className="boss-brew-pips" aria-hidden="true">
-                  {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
-                    <span
-                      key={index}
-                      className={`boss-brew-pip${index < bossTokens ? ' filled' : ''}`}
-                    />
-                  ))}
-                </div>
               </div>
             )}
           </div>

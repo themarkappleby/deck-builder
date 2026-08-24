@@ -294,24 +294,33 @@
 
 .boss-abilities {
   margin: 0 auto 4px;
-  max-width: 280px;
+  max-width: 100%;
   width: 100%;
-  text-align: center;
+}
+
+.boss-ability-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 2px;
 }
 
 .boss-abilities p {
-  margin: 0 auto 2px;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
   font-size: 0.68rem;
   line-height: 1.25;
   color: #c8bdd4;
-  text-align: center;
+  text-align: left;
 }
 
 .boss-brew {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   margin-top: 6px;
 }
 
@@ -325,7 +334,9 @@
 
 .boss-brew-pips {
   display: flex;
+  flex-shrink: 0;
   gap: 4px;
+  margin-top: 2px;
 }
 
 .boss-brew-pip {
