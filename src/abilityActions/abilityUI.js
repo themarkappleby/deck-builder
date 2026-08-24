@@ -10,16 +10,17 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
   const tokens = context.tokens || [];
   const buttons = [];
 
+  const harvestableCount = tokens.filter(tokenCanHarvest).length;
   if (
     playerCharacter.class.id === 'gardener' &&
     levels.classLevel >= 1 &&
     context.canHarvest &&
-    tokens.some(tokenCanHarvest)
+    harvestableCount > 0
   ) {
     buttons.push({
       id: 'harvest-tokens',
       source: 'class',
-      label: 'Harvest (2💎)',
+      label: `Harvest ${harvestableCount}`,
       className: 'harvest-btn',
       disabled: false,
       action: 'harvestTokens',

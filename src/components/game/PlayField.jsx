@@ -1,4 +1,4 @@
-import { tokenCanAttack, tokenCanBlock, formatTokenStats } from '../../abilityActions';
+import { tokenCanAttack, tokenCanBlock, tokenCanHarvest, formatTokenStats } from '../../abilityActions';
 
 function PlayField({
   playTokens,
@@ -23,7 +23,7 @@ function PlayField({
           <button
             key={token.id}
             type="button"
-            className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
+            className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}${token.kind === 'gardener' && !tokenCanHarvest(token) ? ' unharvestable' : ''}`}
             onClick={() => onTokenClick(token)}
           >
             <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : '🪙'}</span>
