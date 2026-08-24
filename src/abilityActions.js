@@ -293,6 +293,7 @@ function emptyPlayTotals() {
     starsPlayed: 0,
     ignoreDamage: false,
     gardenerHarvest: false,
+    lockCardDiscardForResources: false,
     logs: [],
   };
 }
@@ -338,6 +339,8 @@ export function collectPlayEffects(playerCharacter, levels, symbols, context = {
         } else if (effect.type === 'buffTokens') {
           totals.buffTokens.attack += effect.attack || 0;
           totals.buffTokens.defense += effect.defense || 0;
+        } else if (effect.type === 'lockCardDiscardForResources') {
+          totals.lockCardDiscardForResources = true;
         } else if (effect.type === 'starComboIgnoreDamage') {
           totals.starsPlayed += 1;
           const already = context.starsThisRound || 0;
@@ -382,6 +385,7 @@ export function getCardPlayTotals(playerCharacter, levels, symbols, context = {}
     starsPlayed: ability.starsPlayed,
     ignoreDamage: ability.ignoreDamage,
     gardenerHarvest: ability.gardenerHarvest,
+    lockCardDiscardForResources: ability.lockCardDiscardForResources,
     attackSymbols,
     logs: ability.logs,
   };
@@ -404,6 +408,7 @@ export function formatCardEffectLabels(totals) {
   if (totals.block > 0) labels.push(`${totals.block} DEF`);
   if (totals.heal > 0) labels.push(`${totals.heal} HP`);
   if (totals.draw > 0) labels.push(`Draw ${totals.draw}`);
+  if (totals.lockCardDiscardForResources) labels.push('No discard 💎');
   for (const template of totals.spawn || []) {
     labels.push(spawnLabel(template));
   }
