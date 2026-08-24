@@ -71,11 +71,9 @@ export function useGameBoard(playerCharacter) {
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
-  const [debugBossCardsPerTurn, setDebugBossCardsPerTurn] = useState(BOSS_CARDS_TO_DRAW);
+  const [debugBossCardsPerTurn, setDebugBossCardsPerTurn] = useState(null);
   const [debugPlayerCardsPerTurn, setDebugPlayerCardsPerTurn] = useState(PLAYER_CARDS_TO_DRAW);
-  const [debugBossStartingHealth, setDebugBossStartingHealth] = useState(
-    () => resolveBossEncounter(1).hp
-  );
+  const [debugBossStartingHealth, setDebugBossStartingHealth] = useState(null);
   const [draggingCard, setDraggingCard] = useState(null);
   const [draggingSource, setDraggingSource] = useState(null); // 'hand' | 'market'
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -114,6 +112,11 @@ export function useGameBoard(playerCharacter) {
   const getBossStartingHealth = (encounterHp) => {
     const override = debugBossStartingHealthRef.current;
     return Number.isFinite(override) && override > 0 ? override : encounterHp;
+  };
+
+  const getBossCardsToDraw = (encounterCards) => {
+    const override = debugBossCardsPerTurnRef.current;
+    return Number.isFinite(override) && override >= 0 ? override : encounterCards;
   };
 
   const levels = { raceLevel, classLevel, godLevel };
@@ -157,8 +160,6 @@ export function useGameBoard(playerCharacter) {
     setMarket([]); // Start with empty market
     setMarketDiscard([]);
     marketDiscardRef.current = [];
-    setMarketSlotCount(BOSS_CARDS_TO_DRAW);
-
     setPlayerHP(10);
     setPlayerMaxHP(10);
     setPlayTokens([]);
@@ -177,6 +178,7 @@ export function useGameBoard(playerCharacter) {
     const startingHp = getBossStartingHealth(encounter.hp);
     setBossHP(startingHp);
     setBossMaxHP(startingHp);
+    setMarketSlotCount(getBossCardsToDraw(encounter.cards));
 
     addLog('Game started! Face the boss: ' + boss.name);
     setUndoStack([]);
@@ -191,7 +193,8 @@ export function useGameBoard(playerCharacter) {
     // pile only when the market deck runs out — same pattern as the
     // player's discard reshuffle. Putting them on top of the draw pile
     // would make the boss re-draw the same handful every other round.
-    const bossCardsToDraw = debugBossCardsPerTurnRef.current;
+    const encounter = resolveBossEncounter(bossNumber);
+    const bossCardsToDraw = getBossCardsToDraw(encounter.cards);
     let drawPile = marketDeckRef.current;
     let discardPile = marketDiscardRef.current;
     // Last remaining unpurchased cards may still be sitting in the shop.
@@ -960,11 +963,11 @@ export function useGameBoard(playerCharacter) {
     setShowPlayerStats,
     showDebug,
     setShowDebug,
-    debugBossCardsPerTurn,
+    debugBossCardsPerTurn: getBossCardsToDraw(resolveBossEncounter(bossNumber).cards),
     setDebugBossCardsPerTurn,
     debugPlayerCardsPerTurn,
     setDebugPlayerCardsPerTurn,
-    debugBossStartingHealth,
+    debugBossStartingHealth: getBossStartingHealth(resolveBossEncounter(bossNumber).hp),
     applyDebugBossStartingHealth,
     draggingCard,
     draggingSource,
