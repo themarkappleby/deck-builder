@@ -148,6 +148,18 @@ export const bosses = [
   {
     id: 'witch',
     name: 'The Witch',
+    abilities: {
+      [SYMBOLS.GREEN]: {
+        type: 'brew',
+        name: 'Brew',
+        symbolEffect: '+1 token. If the witch has 5 tokens, discard the 5 tokens and the witch heals 5 HP.'
+      },
+      [SYMBOLS.STAR]: {
+        type: 'curse',
+        name: 'Curse',
+        symbolEffect: 'The player must discard 1 card.'
+      }
+    },
     level1: {
       hp: 20,
       actions: [

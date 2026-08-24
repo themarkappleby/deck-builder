@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens } from '../abilityActions';
+import { getStartingDeck, marketCards, bosses } from '../gameData';
+import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens, getBossRoundAction, formatBossCardEffectLabels, formatBossAbilityLines, applyBrewTokens, WITCH_BREW_THRESHOLD } from '../abilityActions';
 import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -67,6 +67,8 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [bossAttack, setBossAttack] = useState(0);
   const [bossBlock, setBossBlock] = useState(0);
   const [bossBlockMax, setBossBlockMax] = useState(0);
+  const [bossTokens, setBossTokens] = useState(0);
+  const [pendingCurse, setPendingCurse] = useState(0);
   
   const [playerHP, setPlayerHP] = useState(10);
   const [playerMaxHP, setPlayerMaxHP] = useState(10);
@@ -114,6 +116,10 @@ function GameBoard({ playerCharacter, onRestart }) {
   playTokensRef.current = playTokens;
   const incomingDamageRef = useRef(incomingDamage);
   incomingDamageRef.current = incomingDamage;
+  const currentBossRef = useRef(currentBoss);
+  currentBossRef.current = currentBoss;
+  const bossTokensRef = useRef(bossTokens);
+  bossTokensRef.current = bossTokens;
 
   const levels = { raceLevel, classLevel, godLevel };
 
@@ -160,12 +166,16 @@ function GameBoard({ playerCharacter, onRestart }) {
     setPlayTokens([]);
     setIgnoreIncomingDamage(false);
     setStarsThisRound(0);
+    setBossTokens(0);
+    bossTokensRef.current = 0;
+    setPendingCurse(0);
     
     const boss = bosses[0];
     const bossLevel = bossNumber === 1 ? 'level1' : bossNumber === 2 ? 'level2' : 'level3';
     const bossData = boss[bossLevel];
     
     setCurrentBoss(boss);
+    currentBossRef.current = boss;
     setBossHP(bossData.hp);
     setBossMaxHP(bossData.hp);
     
@@ -200,12 +210,29 @@ function GameBoard({ playerCharacter, onRestart }) {
     setMarket(currentMarket);
     setBossCards(drawnBossCards);
     
-    // Calculate boss action from drawn cards
-    const action = calculateBossActionFromCards(drawnBossCards);
+    const action = getBossRoundAction(currentBossRef.current, drawnBossCards);
     setBossAction(action);
     setBossAttack(action.value);
     setBossBlock(action.block || 0);
     setBossBlockMax(action.block || 0);
+
+    if (action.brew > 0) {
+      const brew = applyBrewTokens(bossTokensRef.current, action.brew);
+      bossTokensRef.current = brew.tokens;
+      setBossTokens(brew.tokens);
+      addLog(`Witch Brew: +${action.brew} token${action.brew === 1 ? '' : 's'} (${brew.tokens}/${WITCH_BREW_THRESHOLD})`);
+      if (brew.heal > 0) {
+        setBossHP(prev => {
+          const healed = Math.min(bossMaxHP, prev + brew.heal);
+          addLog(`Witch discarded ${WITCH_BREW_THRESHOLD} tokens and healed ${brew.heal} HP (${healed}/${bossMaxHP} HP)`);
+          return healed;
+        });
+      }
+    }
+
+    if (action.curse > 0) {
+      addLog(`Witch Curse: discard ${action.curse} card${action.curse === 1 ? '' : 's'}`);
+    }
     
     setIgnoreIncomingDamage(false);
     setStarsThisRound(0);
@@ -235,44 +262,22 @@ function GameBoard({ playerCharacter, onRestart }) {
       );
     }
 
-    drawOpeningHand(getOpeningHandSize(), leftoverHand);
+    const openingHand = drawOpeningHand(getOpeningHandSize(), leftoverHand);
 
     const keepBlock = playerCharacter.race.id === 'mountain-dwarf' && raceLevelRef.current >= 2;
     if (!keepBlock) {
       setPlayerBlock(0);
     }
-    setGameState('playerTurn');
-    addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
-  };
 
-  const calculateBossActionFromCards = (cards) => {
-    let attackCount = 0;
-    let blockCount = 0;
-    
-    cards.forEach(card => {
-      card.symbols.forEach(symbol => {
-        if (symbol === SYMBOLS.ATTACK) {
-          attackCount++;
-        } else if (symbol === SYMBOLS.BLOCK) {
-          blockCount++;
-        }
-      });
-    });
-    
-    // Boss attacks for damage equal to attack symbols.
-    // Witch (and card-drawn bosses) accumulate block from 🔹 for this round only.
-    const damage = attackCount;
-    const parts = [`Attacks for ${damage} damage`];
-    if (blockCount > 0) {
-      parts.push(`gains ${blockCount} block`);
+    const curseCount = Math.min(action.curse || 0, openingHand.length);
+    if (curseCount > 0) {
+      setPendingCurse(curseCount);
+      setGameState('curseDiscard');
+    } else {
+      setPendingCurse(0);
+      setGameState('playerTurn');
     }
-    
-    return {
-      type: 'attack',
-      value: damage,
-      block: blockCount,
-      description: parts.join(', ')
-    };
+    addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
 
   const getOpeningHandSize = () => 6;
@@ -316,6 +321,25 @@ function GameBoard({ playerCharacter, onRestart }) {
     setDiscard(newDiscard);
     setResources(prev => prev + 1);
     addLog(`Discarded ${card.name} (+1 resource, total: ${resources + 1})`);
+  };
+
+  const discardCursedCard = (card) => {
+    if (gameState !== 'curseDiscard' || pendingCurse <= 0) {
+      return;
+    }
+
+    const newHand = hand.filter(c => c.id !== card.id);
+    setHand(newHand);
+    setDiscard(prev => [...prev, card]);
+    const remaining = pendingCurse - 1;
+    addLog(`Cursed: discarded ${card.name}${remaining > 0 ? ` (${remaining} left)` : ''}`);
+
+    if (remaining <= 0 || newHand.length === 0) {
+      setPendingCurse(0);
+      setGameState('playerTurn');
+    } else {
+      setPendingCurse(remaining);
+    }
   };
 
   const playContext = () => ({
@@ -620,11 +644,15 @@ function GameBoard({ playerCharacter, onRestart }) {
     const bossData = boss[bossLevel];
     
     setCurrentBoss(boss);
+    currentBossRef.current = boss;
     setBossHP(bossData.hp);
     setBossMaxHP(bossData.hp);
     setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
+    setBossTokens(0);
+    bossTokensRef.current = 0;
+    setPendingCurse(0);
     setRoundNumber(1);
     levelUpPicksRemainingRef.current = 0;
     setLevelUpPicksRemaining(0);
@@ -797,7 +825,8 @@ function GameBoard({ playerCharacter, onRestart }) {
     setDropZone(null);
   };
 
-  const showBattlefield = gameState === 'playerTurn' || gameState === 'ready' || gameState === 'assignDamage';
+  const showBattlefield = gameState === 'playerTurn' || gameState === 'ready' || gameState === 'assignDamage' || gameState === 'curseDiscard';
+  const bossAbilityLines = formatBossAbilityLines(currentBoss);
   const marketSlots = [0, 1, 2].map(index => market[index] || null);
 
   return (
@@ -858,6 +887,13 @@ function GameBoard({ playerCharacter, onRestart }) {
                   <div className="boss-identity">
                     <div className="boss-status">
                       <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+                      {bossAbilityLines.length > 0 && (
+                        <div className="boss-abilities">
+                          {bossAbilityLines.map(line => (
+                            <p key={line}>{line}</p>
+                          ))}
+                        </div>
+                      )}
                       <div className="hp-bar boss-hp-bar">
                         <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
                         <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
@@ -873,12 +909,30 @@ function GameBoard({ playerCharacter, onRestart }) {
                           {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
                         </span>
                       </div>
+                      {currentBoss?.id === 'witch' && (
+                        <div className="boss-brew">
+                          <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
+                          <div className="boss-brew-pips" aria-hidden="true">
+                            {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
+                              <span
+                                key={index}
+                                className={`boss-brew-pip${index < bossTokens ? ' filled' : ''}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="boss-placeholder">🐉</div>
+                    <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
                   </div>
                   <div className="intent-card-row boss-cards-row">
                     {bossCards.map(card => (
-                      <Card key={card.id} card={card} className="intent-card" />
+                      <Card
+                        key={card.id}
+                        card={card}
+                        className="intent-card"
+                        effectLabels={formatBossCardEffectLabels(currentBoss, card.symbols)}
+                      />
                     ))}
                   </div>
                   {bossAttack > 0 && (
@@ -1046,7 +1100,7 @@ function GameBoard({ playerCharacter, onRestart }) {
       )}
 
       {/* Hand - Fixed at bottom */}
-      {gameState === 'playerTurn' && (
+      {gameState === 'playerTurn' || gameState === 'curseDiscard' ? (
         <div className="hand-container">
           <div className="hand-row">
             {hand.map((card, index) => {
@@ -1065,11 +1119,12 @@ function GameBoard({ playerCharacter, onRestart }) {
               const verticalOffset = Math.abs(offsetFromCenter) * 3;
               
               const effectLabels = getHandCardLabels(card);
+              const cursing = gameState === 'curseDiscard';
               return (
                 <Card
                   key={card.id}
                   card={card}
-                  className={`${draggingCard?.id === card.id ? 'dragging' : ''}`}
+                  className={`${draggingCard?.id === card.id ? 'dragging' : ''}${cursing ? ' curse-target' : ''}`}
                   style={{
                     transform: `translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${rotation}deg)`,
                     zIndex: index,
@@ -1077,29 +1132,38 @@ function GameBoard({ playerCharacter, onRestart }) {
                     '--hover-y': `${verticalOffset}px`,
                     '--hover-rotation': `${rotation}deg`,
                   }}
-                  onMouseDown={(e) => handleCardDragStart(card, e, 'hand')}
-                  onTouchStart={(e) => handleCardDragStart(card, e, 'hand')}
+                  onClick={cursing ? () => discardCursedCard(card) : undefined}
+                  onMouseDown={cursing ? undefined : (e) => handleCardDragStart(card, e, 'hand')}
+                  onTouchStart={cursing ? undefined : (e) => handleCardDragStart(card, e, 'hand')}
                   effectLabels={effectLabels}
                 />
               );
             })}
           </div>
           <div className="hand-actions">
-            {abilityUI.buttons.map(button => (
-              <button
-                key={button.id}
-                className={`action-btn ${button.className}`}
-                onClick={() => handleAbilityButton(button)}
-                disabled={button.disabled}
-              >
-                {button.label}
-                {button.usesRemaining != null ? ` (${button.usesRemaining})` : ''}
-              </button>
-            ))}
-            <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
+            {gameState === 'curseDiscard' ? (
+              <div className="curse-banner">
+                ⭐️ Curse: discard {pendingCurse} card{pendingCurse === 1 ? '' : 's'}
+              </div>
+            ) : (
+              <>
+                {abilityUI.buttons.map(button => (
+                  <button
+                    key={button.id}
+                    className={`action-btn ${button.className}`}
+                    onClick={() => handleAbilityButton(button)}
+                    disabled={button.disabled}
+                  >
+                    {button.label}
+                    {button.usesRemaining != null ? ` (${button.usesRemaining})` : ''}
+                  </button>
+                ))}
+                <button className="action-btn end-turn" onClick={endTurn}>End Turn</button>
+              </>
+            )}
           </div>
         </div>
-      )}
+      ) : null}
 
       {draggingCard && draggingSource === 'hand' && (
         <>
