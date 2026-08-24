@@ -12,13 +12,15 @@ import {
   discardToken,
   tokenCanAttack,
   tokenCanBlock,
-  harvestRightmostEligibleToken,
+  harvestEligibleTokens,
+  clearHarvestableFlags,
   getMaxTokens,
   getBossRoundAction,
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
 import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW } from '../game/constants';
+import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
@@ -249,16 +251,17 @@ export function useGameBoard(playerCharacter) {
     setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
-    const remainingTokens = playTokensRef.current;
-    setPlayTokens(remainingTokens.map(token => ({
+    let remainingTokens = playTokensRef.current.map(token => ({
       ...token,
       spawnedThisTurn: false,
-    })));
-    if (harvestNextTurn && remainingTokens.length > 0) {
-      setCanHarvestThisTurn(true);
-    } else {
-      setCanHarvestThisTurn(false);
+    }));
+    const canHarvestLeftovers = harvestNextTurn && remainingTokens.some(token => token.harvestable);
+    if (!canHarvestLeftovers) {
+      remainingTokens = clearHarvestableFlags(remainingTokens);
     }
+    setPlayTokens(remainingTokens);
+    playTokensRef.current = remainingTokens;
+    setCanHarvestThisTurn(canHarvestLeftovers);
     setHarvestNextTurn(false);
 
     // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
@@ -739,6 +742,24 @@ export function useGameBoard(playerCharacter) {
     setRoundNumber(1);
     levelUpPicksRemainingRef.current = 0;
     setLevelUpPicksRemaining(0);
+
+    const reset = nextBossPlayerState({ playerHP, playerMaxHP });
+    setResources(reset.resources);
+    setPlayerBlock(reset.playerBlock);
+    setPlayerHP(reset.playerHP);
+    setPlayTokens(reset.playTokens);
+    playTokensRef.current = reset.playTokens;
+    setHarvestNextTurn(false);
+    setCanHarvestThisTurn(false);
+
+    const healed = reset.playerHP - playerHP;
+    if (healed > 0) {
+      addLog(`Recovered ${healed} HP between bosses (${reset.playerHP}/${playerMaxHP} HP)`);
+    } else {
+      addLog(`Health is already at max (${reset.playerHP}/${playerMaxHP} HP)`);
+    }
+    addLog('Resources, block, and tokens do not carry over to the next boss');
+
     setGameState('ready');
     addLog(`Next boss: ${boss.name} (Level ${nextBossNumber})`);
   };
@@ -771,25 +792,28 @@ export function useGameBoard(playerCharacter) {
     setGameState('ready');
   };
 
-  const harvestRightmostToken = () => {
+  const harvestLeftoverTokens = () => {
     if (!canHarvestThisTurn) {
       return;
     }
 
-    const result = harvestRightmostEligibleToken(playTokens);
-    if (!result.harvested) {
+    const result = harvestEligibleTokens(playTokens);
+    if (result.harvested.length === 0) {
       return;
     }
 
+    const gained = result.harvested.length;
     pushUndoSnapshot();
     setPlayTokens(result.tokens);
-    setResources(prev => prev + 2);
-    addLog(`Harvested the rightmost leftover token (+2 resources)`);
+    playTokensRef.current = result.tokens;
+    setResources(prev => prev + gained);
+    setCanHarvestThisTurn(false);
+    addLog(`Discarded ${gained} leftover token${gained === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
   };
 
   const handleAbilityButton = (button) => {
     if (button.action === 'harvestTokens') {
-      harvestRightmostToken();
+      harvestLeftoverTokens();
     } else if (button.action === 'vampieraHeal') {
       if (playTokens.length < 3) {
         addLog('Need 3 tokens to heal');
