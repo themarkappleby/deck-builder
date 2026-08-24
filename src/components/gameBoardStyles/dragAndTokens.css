@@ -110,6 +110,9 @@
   -moz-user-select: none;
   -ms-user-select: none;
   position: absolute;
+  left: 50%;
+  bottom: 0;
+  margin-left: -40px;
   transform-origin: center bottom;
   opacity: 1;
   overflow: hidden;
