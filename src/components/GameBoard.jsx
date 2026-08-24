@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses } from '../gameData';
-import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens, getBossRoundAction, formatBossCardEffectLabels, formatBossAbilityLines, applyBrewTokens, WITCH_BREW_THRESHOLD } from '../abilityActions';
+import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, discardToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens, getBossRoundAction, formatBossCardEffectLabels, formatBossAbilityLines, applyBrewTokens, WITCH_BREW_THRESHOLD } from '../abilityActions';
 import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -79,6 +79,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [starsThisRound, setStarsThisRound] = useState(0);
   const [harvestNextTurn, setHarvestNextTurn] = useState(false);
   const [canHarvestThisTurn, setCanHarvestThisTurn] = useState(false);
+  const [cannotDiscardForResources, setCannotDiscardForResources] = useState(false);
   
   const [deck, setDeck] = useState([]);
   const [hand, setHand] = useState([]);
@@ -165,6 +166,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setPlayerMaxHP(10);
     setPlayTokens([]);
     setIgnoreIncomingDamage(false);
+    setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setBossTokens(0);
     bossTokensRef.current = 0;
@@ -235,12 +237,12 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
     
     setIgnoreIncomingDamage(false);
+    setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
     const remainingTokens = playTokensRef.current;
     setPlayTokens(remainingTokens.map(token => ({
       ...token,
-      hasAttacked: false,
       spawnedThisTurn: false,
     })));
     if (harvestNextTurn && remainingTokens.length > 0) {
@@ -314,6 +316,11 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const discardForResource = (card) => {
+    if (cannotDiscardForResources) {
+      addLog('Forest elf: cards cannot be discarded for resources this turn');
+      return;
+    }
+
     const newHand = hand.filter(c => c.id !== card.id);
     const newDiscard = [...discard, card];
     
@@ -401,6 +408,11 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (symbolEffects.ignoreDamage) {
       setIgnoreIncomingDamage(true);
       addLog('Angels of Elandor: ignore all incoming damage this round');
+    }
+
+    if (symbolEffects.lockCardDiscardForResources) {
+      setCannotDiscardForResources(true);
+      addLog('Forest elf: cards can no longer be discarded for resources this turn');
     }
 
     if (damage > 0) {
@@ -733,8 +745,10 @@ function GameBoard({ playerCharacter, onRestart }) {
 
     if (tokenCanAttack(token)) {
       dealDamageToBoss(token.attack);
-      setPlayTokens(prev => prev.map(t => t.id === token.id ? { ...t, hasAttacked: true } : t));
-      addLog(`Token attacked for ${token.attack}`);
+      const nextTokens = discardToken(playTokensRef.current, token.id);
+      setPlayTokens(nextTokens);
+      playTokensRef.current = nextTokens;
+      addLog(`Token attacked for ${token.attack} and was discarded`);
     }
   };
 
@@ -793,7 +807,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
     // Right zone for discard
-    } else if (x > viewportWidth * 0.75) {
+    } else if (x > viewportWidth * 0.75 && !cannotDiscardForResources) {
       setDropZone('discard');
     // Middle/center zone for play (where the boss is)
     } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
@@ -964,7 +978,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                       <button
                         key={token.id}
                         type="button"
-                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${token.hasAttacked ? ' has-attacked' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
+                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
                         onClick={() => handleTokenClick(token)}
                       >
                         <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : '🪙'}</span>
@@ -1091,6 +1105,9 @@ function GameBoard({ playerCharacter, onRestart }) {
             {ignoreIncomingDamage && (
               <div className="stat-item" title="Ignore incoming damage">✨ Guard</div>
             )}
+            {cannotDiscardForResources && (
+              <div className="stat-item" title="Cannot discard cards for resources this turn">🚫 Discard</div>
+            )}
           </div>
           <div className="hp-bar player-hp-bar">
             <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
@@ -1174,10 +1191,12 @@ function GameBoard({ playerCharacter, onRestart }) {
             </div>
           )}
           
-          {/* Discard zone - right side - always available */}
-          <div className={`drop-zone drop-zone-right ${dropZone === 'discard' ? 'active' : ''}`}>
-            <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
-          </div>
+          {/* Discard zone - right side - unavailable after Forest elf 🟣 */}
+          {!cannotDiscardForResources && (
+            <div className={`drop-zone drop-zone-right ${dropZone === 'discard' ? 'active' : ''}`}>
+              <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
+            </div>
+          )}
           
           {/* Trash zone - top - only if player can afford */}
           {resources >= draggingCard.symbols.length && (

@@ -28,8 +28,11 @@ export const races = [
     side: 'A',
     level1: {
       symbol: SYMBOLS.PURPLE,
-      symbolEffect: '+3 cards',
-      onSymbol: [{ type: 'draw', amount: 3 }]
+      symbolEffect: '+3 cards, however, cards can no longer be discarded for resources for the rest of the turn',
+      onSymbol: [
+        { type: 'draw', amount: 3 },
+        { type: 'lockCardDiscardForResources' }
+      ]
     },
     level2: {
       additionalEffect: '🟩 +1 card',
