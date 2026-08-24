@@ -1,3 +1,4 @@
+import { getBossLevelStats } from '../game/constants';
 import { SYMBOLS } from './symbols';
 
 const WITCH_BREW_ABILITY = {
@@ -20,6 +21,7 @@ export function getEncounterLevelKey(encounterNumber) {
 
 export function resolveBossEncounter(encounterNumber) {
   const levelKey = getEncounterLevelKey(encounterNumber);
+  const stats = getBossLevelStats(encounterNumber);
   const template = encounterNumber <= 2
     ? bosses.find(boss => boss.id === 'witch')
     : (bosses.find(boss => boss.id === 'dragon') || bosses[bosses.length - 1]);
@@ -29,7 +31,8 @@ export function resolveBossEncounter(encounterNumber) {
       ...template,
       abilities: levelData.abilities || {}
     },
-    hp: levelData.hp,
+    hp: stats.hp,
+    cards: stats.cards,
     levelKey
   };
 }
@@ -68,7 +71,7 @@ export const bosses = [
       ]
     },
     level3: {
-      hp: 25,
+      hp: 60,
       abilities: {
         [SYMBOLS.GREEN]: WITCH_BREW_ABILITY,
         [SYMBOLS.STAR]: WITCH_CURSE_ABILITY
@@ -98,7 +101,7 @@ export const bosses = [
       ]
     },
     level2: {
-      hp: 20,
+      hp: 40,
       actions: [
         { type: 'attack', value: 4, description: 'Attacks for 4 damage' },
         { type: 'attack', value: 6, description: 'Attacks for 6 damage' },

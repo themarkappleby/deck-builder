@@ -53,7 +53,7 @@ function GameMenu({
         <div className="debug-overlay">
           <div className="debug-content">
             <h3>Debug</h3>
-            <p className="debug-hint">Card draws apply at the start of each turn. Boss starting health applies now and to later bosses.</p>
+            <p className="debug-hint">Overrides apply until changed. Leave these as-is to use encounter stats: level 1 is 20 HP and 3 cards, level 2 is 40 HP and 4 cards, level 3 is 60 HP and 5 cards. Card draws apply at the start of each turn. Boss starting health applies now and to later bosses.</p>
             <label className="debug-field">
               <span>Boss / market cards each turn</span>
               <input
