@@ -104,6 +104,13 @@
   line-height: 18px;
 }
 
+.boss-attack-bar {
+  height: 18px;
+  margin: 3px 0 0;
+  background: rgba(20, 30, 45, 0.9);
+  border: 1px solid #3a3a3a;
+}
+
 /* Center Area - Boss Display */
 .center-area {
   flex: 1;
@@ -302,21 +309,6 @@
 .boss-card-symbol {
   font-size: 1.2rem;
   line-height: 1.2;
-}
-
-/* Enemy attack bar — below the battlefield, full HUD width. */
-.enemy-attack-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  max-width: 100vw;
-  margin-left: calc(50% - 50vw);
-  box-sizing: border-box;
-  padding: 8px 12px;
-  min-height: 36px;
-  align-self: stretch;
-  justify-self: stretch;
 }
 
 .attack-bar {
