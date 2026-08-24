@@ -1,4 +1,4 @@
-import { GARDENER_HARVEST_RESOURCES, tokenCanHarvest } from './tokens';
+import { tokenCanHarvest } from './tokens';
 
 /**
  * @param {object} playerCharacter
@@ -16,11 +16,10 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
     levels.classLevel >= 1 &&
     ripeCount > 0
   ) {
-    const gained = ripeCount * GARDENER_HARVEST_RESOURCES;
     buttons.push({
       id: 'harvest-tokens',
       source: 'class',
-      label: `Harvest ${ripeCount} plant${ripeCount === 1 ? '' : 's'} (${gained}💎)`,
+      label: `Harvest ${ripeCount}`,
       className: 'harvest-btn',
       disabled: false,
       action: 'harvestTokens',

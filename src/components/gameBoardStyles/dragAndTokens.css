@@ -239,6 +239,10 @@
   opacity: 0.9;
 }
 
+.play-token.unharvestable {
+  opacity: 0.5;
+}
+
 .play-token.can-attack {
   border-color: #c0392b;
   box-shadow: 0 0 8px rgba(192, 57, 43, 0.45);

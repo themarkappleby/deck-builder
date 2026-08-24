@@ -23,7 +23,7 @@ function PlayField({
           <button
             key={token.id}
             type="button"
-            className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${tokenCanHarvest(token) ? ' can-harvest' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
+            className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${tokenCanHarvest(token) ? ' can-harvest' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}${token.kind === 'gardener' && !tokenCanHarvest(token) ? ' unharvestable' : ''}`}
             onClick={() => onTokenClick(token)}
           >
             {token.kind === 'gardener' && (
