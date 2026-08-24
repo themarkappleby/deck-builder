@@ -72,7 +72,6 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [playerMaxHP, setPlayerMaxHP] = useState(10);
   const [playerBlock, setPlayerBlock] = useState(0);
   const [playTokens, setPlayTokens] = useState([]);
-  const [pendingTokenAction, setPendingTokenAction] = useState(null); // 'harvest' | null
   const [incomingDamage, setIncomingDamage] = useState(0);
   const [ignoreIncomingDamage, setIgnoreIncomingDamage] = useState(false);
   const [starsThisRound, setStarsThisRound] = useState(0);
@@ -210,7 +209,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     
     setIgnoreIncomingDamage(false);
     setStarsThisRound(0);
-    setPendingTokenAction(null);
     setIncomingDamage(0);
     setPlayTokens(prev => prev.map(token => ({ ...token, hasAttacked: false })));
     if (harvestNextTurn) {
@@ -326,10 +324,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (resources < cost) {
       addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
-    }
-
-    if (pendingTokenAction === 'harvest') {
-      setPendingTokenAction(null);
     }
 
     const newHand = hand.filter(c => c.id !== card.id);
@@ -496,7 +490,6 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const endTurn = () => {
-    setPendingTokenAction(null);
     setDiscard(prev => [...prev, ...hand]);
     setHand([]);
     executeBossAction();
@@ -654,15 +647,19 @@ function GameBoard({ playerCharacter, onRestart }) {
     setGameState('ready');
   };
 
+  const harvestRightmostToken = () => {
+    if (!canHarvestThisTurn || playTokens.length === 0) {
+      return;
+    }
+
+    setPlayTokens(prev => prev.slice(0, -1));
+    setResources(prev => prev + 2);
+    addLog(`Harvested the rightmost token (+2 resources)`);
+  };
+
   const handleAbilityButton = (button) => {
     if (button.action === 'harvestTokens') {
-      if (pendingTokenAction === 'harvest') {
-        setPendingTokenAction(null);
-        addLog('Cancelled harvest');
-      } else {
-        setPendingTokenAction('harvest');
-        addLog('Select tokens to discard for 2 resources each');
-      }
+      harvestRightmostToken();
     } else if (button.action === 'vampieraHeal') {
       if (playTokens.length < 3) {
         addLog('Need 3 tokens to heal');
@@ -695,13 +692,6 @@ function GameBoard({ playerCharacter, onRestart }) {
     }
 
     if (gameState !== 'playerTurn') return;
-
-    if (pendingTokenAction === 'harvest') {
-      setPlayTokens(prev => prev.filter(t => t.id !== token.id));
-      setResources(prev => prev + 2);
-      addLog(`Harvested a token (+2 resources)`);
-      return;
-    }
 
     if (tokenCanAttack(token)) {
       dealDamageToBoss(token.attack);
@@ -903,16 +893,14 @@ function GameBoard({ playerCharacter, onRestart }) {
                   <div className="play-field-label">
                     {gameState === 'assignDamage'
                       ? `Assign ${incomingDamage} damage`
-                      : pendingTokenAction === 'harvest'
-                        ? 'Harvest tokens'
-                        : 'Play field'}
+                      : 'Play field'}
                   </div>
                   <div className="play-token-row">
                     {playTokens.map(token => (
                       <button
                         key={token.id}
                         type="button"
-                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' && pendingTokenAction !== 'harvest' ? ' can-attack' : ''}${token.hasAttacked ? ' has-attacked' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
+                        className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${token.hasAttacked ? ' has-attacked' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}`}
                         onClick={() => handleTokenClick(token)}
                       >
                         <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : '🪙'}</span>
@@ -1087,21 +1075,10 @@ function GameBoard({ playerCharacter, onRestart }) {
             })}
           </div>
           <div className="hand-actions">
-            {pendingTokenAction === 'harvest' && (
-              <div className="ability-prompt">
-                Tap tokens to harvest
-                <button
-                  className="action-btn cancel-ability-btn"
-                  onClick={() => setPendingTokenAction(null)}
-                >
-                  Done
-                </button>
-              </div>
-            )}
             {abilityUI.buttons.map(button => (
               <button
                 key={button.id}
-                className={`action-btn ${button.className}${pendingTokenAction === 'harvest' && button.action === 'harvestTokens' ? ' ability-armed' : ''}`}
+                className={`action-btn ${button.className}`}
                 onClick={() => handleAbilityButton(button)}
                 disabled={button.disabled}
               >
