@@ -18,7 +18,7 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW } from '../game/constants';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
@@ -67,6 +67,9 @@ export function useGameBoard(playerCharacter) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugBossCardsPerTurn, setDebugBossCardsPerTurn] = useState(BOSS_CARDS_TO_DRAW);
+  const [debugPlayerCardsPerTurn, setDebugPlayerCardsPerTurn] = useState(PLAYER_CARDS_TO_DRAW);
   const [draggingCard, setDraggingCard] = useState(null);
   const [draggingSource, setDraggingSource] = useState(null); // 'hand' | 'market'
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -95,6 +98,10 @@ export function useGameBoard(playerCharacter) {
   marketDiscardRef.current = marketDiscard;
   const marketRef = useRef(market);
   marketRef.current = market;
+  const debugBossCardsPerTurnRef = useRef(debugBossCardsPerTurn);
+  debugBossCardsPerTurnRef.current = debugBossCardsPerTurn;
+  const debugPlayerCardsPerTurnRef = useRef(debugPlayerCardsPerTurn);
+  debugPlayerCardsPerTurnRef.current = debugPlayerCardsPerTurn;
 
   const levels = { raceLevel, classLevel, godLevel };
 
@@ -169,7 +176,7 @@ export function useGameBoard(playerCharacter) {
     // pile only when the market deck runs out — same pattern as the
     // player's discard reshuffle. Putting them on top of the draw pile
     // would make the boss re-draw the same handful every other round.
-    const bossCardsToDraw = BOSS_CARDS_TO_DRAW;
+    const bossCardsToDraw = debugBossCardsPerTurnRef.current;
     let drawPile = marketDeckRef.current;
     let discardPile = marketDiscardRef.current;
     // Last remaining unpurchased cards may still be sitting in the shop.
@@ -270,7 +277,7 @@ export function useGameBoard(playerCharacter) {
     addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
   };
 
-  const getOpeningHandSize = () => 6;
+  const getOpeningHandSize = () => debugPlayerCardsPerTurnRef.current;
 
   const drawFromPiles = (count, currentDeck, currentDiscard) => {
     const result = drawFromCardPiles(count, currentDeck, currentDiscard, shuffleArray);
@@ -844,6 +851,12 @@ export function useGameBoard(playerCharacter) {
     setShowMenu,
     showPlayerStats,
     setShowPlayerStats,
+    showDebug,
+    setShowDebug,
+    debugBossCardsPerTurn,
+    setDebugBossCardsPerTurn,
+    debugPlayerCardsPerTurn,
+    setDebugPlayerCardsPerTurn,
     draggingCard,
     draggingSource,
     dragPosition,

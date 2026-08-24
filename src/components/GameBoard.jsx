@@ -140,8 +140,10 @@ function GameBoard({ playerCharacter, onRestart }) {
       />
 
       <GameMenu
-        gameState={game.gameState}
         showMenu={game.showMenu}
+        showDebug={game.showDebug}
+        debugBossCardsPerTurn={game.debugBossCardsPerTurn}
+        debugPlayerCardsPerTurn={game.debugPlayerCardsPerTurn}
         onToggleMenu={() => game.setShowMenu(!game.showMenu)}
         onCloseMenu={() => game.setShowMenu(false)}
         onViewStats={() => {
@@ -152,6 +154,13 @@ function GameBoard({ playerCharacter, onRestart }) {
           game.setShowMenu(false);
           onRestart();
         }}
+        onOpenDebug={() => {
+          game.setShowDebug(true);
+          game.setShowMenu(false);
+        }}
+        onCloseDebug={() => game.setShowDebug(false)}
+        onDebugBossCardsChange={game.setDebugBossCardsPerTurn}
+        onDebugPlayerCardsChange={game.setDebugPlayerCardsPerTurn}
       />
     </div>
   );
