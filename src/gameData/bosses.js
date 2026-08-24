@@ -53,7 +53,7 @@ export const bosses = [
       ]
     },
     level2: {
-      hp: 20,
+      hp: 40,
       abilities: {
         [SYMBOLS.GREEN]: WITCH_BREW_ABILITY,
         [SYMBOLS.STAR]: WITCH_CURSE_ABILITY
@@ -109,7 +109,7 @@ export const bosses = [
       ]
     },
     level3: {
-      hp: 25,
+      hp: 60,
       actions: [
         { type: 'attack', value: 5, description: 'Attacks for 5 damage' },
         { type: 'attack', value: 7, description: 'Attacks for 7 damage' },
