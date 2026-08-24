@@ -3,6 +3,9 @@ import Card from '../Card';
 
 const HAND_CARD_WIDTH = 80;
 const HAND_EDGE_INSET = 12;
+// Cap how far apart card centers can sit so a 2-card hand stays clustered
+// near the middle. Larger hands still use the full width when they need it.
+const HAND_MAX_SPACING = 100;
 
 function PlayerHand({
   gameState,
@@ -39,9 +42,10 @@ function PlayerHand({
 
   const totalCards = hand.length;
   const usableWidth = Math.max(0, rowWidth - HAND_EDGE_INSET * 2);
-  const spacing = totalCards > 1
+  const fullSpreadSpacing = totalCards > 1
     ? (usableWidth - HAND_CARD_WIDTH) / (totalCards - 1)
     : 0;
+  const spacing = Math.min(HAND_MAX_SPACING, Math.max(0, fullSpreadSpacing));
 
   return (
     <div className="hand-container">
