@@ -63,6 +63,7 @@ export function useGameBoard(playerCharacter) {
   const [levelUpPicksRemaining, setLevelUpPicksRemaining] = useState(0);
 
   const [log, setLog] = useState([]);
+  const [undoStack, setUndoStack] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
 
   const [showMenu, setShowMenu] = useState(false);
@@ -177,10 +178,12 @@ export function useGameBoard(playerCharacter) {
     setBossMaxHP(startingHp);
 
     addLog('Game started! Face the boss: ' + boss.name);
+    setUndoStack([]);
     setGameState('abilityChoice');
   };
 
   const startRound = () => {
+    setUndoStack([]);
     // Draw cards for boss action. The market always has the same number
     // of slots as the number of boss cards drawn this round. Unpurchased
     // market cards go to a discard pile and are shuffled into a new draw
@@ -306,12 +309,80 @@ export function useGameBoard(playerCharacter) {
     return result.drawnCards;
   };
 
+  const cloneValue = (value) => structuredClone(value);
+
+  const captureTurnSnapshot = () => ({
+    gameState,
+    pendingCurse,
+    playerHP,
+    playerBlock,
+    playTokens: cloneValue(playTokens),
+    ignoreIncomingDamage,
+    starsThisRound,
+    harvestNextTurn,
+    canHarvestThisTurn,
+    cannotDiscardForResources,
+    deck: cloneValue(deck),
+    hand: cloneValue(hand),
+    discard: cloneValue(discard),
+    resources,
+    market: cloneValue(market),
+    marketDeck: cloneValue(marketDeck),
+    marketDiscard: cloneValue(marketDiscard),
+    marketSlotCount,
+    bossHP,
+    bossBlock,
+    log: cloneValue(log),
+  });
+
+  const restoreTurnSnapshot = (snapshot) => {
+    setGameState(snapshot.gameState);
+    setPendingCurse(snapshot.pendingCurse);
+    setPlayerHP(snapshot.playerHP);
+    setPlayerBlock(snapshot.playerBlock);
+    setPlayTokens(snapshot.playTokens);
+    playTokensRef.current = snapshot.playTokens;
+    setIgnoreIncomingDamage(snapshot.ignoreIncomingDamage);
+    setStarsThisRound(snapshot.starsThisRound);
+    setHarvestNextTurn(snapshot.harvestNextTurn);
+    setCanHarvestThisTurn(snapshot.canHarvestThisTurn);
+    setCannotDiscardForResources(snapshot.cannotDiscardForResources);
+    setDeck(snapshot.deck);
+    setHand(snapshot.hand);
+    setDiscard(snapshot.discard);
+    setResources(snapshot.resources);
+    setMarket(snapshot.market);
+    marketRef.current = snapshot.market;
+    setMarketDeck(snapshot.marketDeck);
+    marketDeckRef.current = snapshot.marketDeck;
+    setMarketDiscard(snapshot.marketDiscard);
+    marketDiscardRef.current = snapshot.marketDiscard;
+    setMarketSlotCount(snapshot.marketSlotCount);
+    setBossHP(snapshot.bossHP);
+    setBossBlock(snapshot.bossBlock);
+    setLog(snapshot.log);
+  };
+
+  const pushUndoSnapshot = () => {
+    const snapshot = captureTurnSnapshot();
+    setUndoStack((prev) => [...prev, snapshot]);
+  };
+
+  const undoLastAction = () => {
+    if (undoStack.length === 0) {
+      return;
+    }
+    restoreTurnSnapshot(undoStack[undoStack.length - 1]);
+    setUndoStack((prev) => prev.slice(0, -1));
+  };
+
   const discardForResource = (card) => {
     if (cannotDiscardForResources) {
       addLog('Forest elf: cards cannot be discarded for resources this turn');
       return;
     }
 
+    pushUndoSnapshot();
     const newHand = hand.filter(c => c.id !== card.id);
     const newDiscard = [...discard, card];
 
@@ -326,6 +397,7 @@ export function useGameBoard(playerCharacter) {
       return;
     }
 
+    pushUndoSnapshot();
     const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
     setDiscard(prev => [...prev, card]);
@@ -353,6 +425,7 @@ export function useGameBoard(playerCharacter) {
       return;
     }
 
+    pushUndoSnapshot();
     const newHand = hand.filter(c => c.id !== card.id);
     setResources(prev => prev - cost);
 
@@ -447,6 +520,7 @@ export function useGameBoard(playerCharacter) {
       return;
     }
 
+    pushUndoSnapshot();
     setResources(prev => prev - cost);
     const newDiscard = [...discard, { ...card, id: `${card.id}_purchased_${Date.now()}` }];
     setDiscard(newDiscard);
@@ -464,6 +538,7 @@ export function useGameBoard(playerCharacter) {
       return;
     }
 
+    pushUndoSnapshot();
     const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
     setResources(prev => prev - cost);
@@ -522,6 +597,7 @@ export function useGameBoard(playerCharacter) {
   };
 
   const endTurn = () => {
+    setUndoStack([]);
     setDiscard(prev => [...prev, ...hand]);
     setHand([]);
     executeBossAction();
@@ -705,6 +781,7 @@ export function useGameBoard(playerCharacter) {
       return;
     }
 
+    pushUndoSnapshot();
     setPlayTokens(result.tokens);
     setResources(prev => prev + 2);
     addLog(`Harvested the rightmost leftover token (+2 resources)`);
@@ -718,6 +795,7 @@ export function useGameBoard(playerCharacter) {
         addLog('Need 3 tokens to heal');
         return;
       }
+      pushUndoSnapshot();
       setPlayTokens(prev => prev.slice(0, -3));
       const newHP = Math.min(playerMaxHP, playerHP + 3);
       setPlayerHP(newHP);
@@ -747,6 +825,7 @@ export function useGameBoard(playerCharacter) {
     if (gameState !== 'playerTurn') return;
 
     if (tokenCanAttack(token)) {
+      pushUndoSnapshot();
       dealDamageToBoss(token.attack);
       const nextTokens = discardToken(playTokensRef.current, token.id);
       setPlayTokens(nextTokens);
@@ -895,5 +974,7 @@ export function useGameBoard(playerCharacter) {
     discardCursedCard,
     handleAbilityButton,
     endTurn,
+    undoLastAction,
+    canUndo: undoStack.length > 0 && (gameState === 'playerTurn' || gameState === 'curseDiscard'),
   };
 }

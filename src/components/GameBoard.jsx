@@ -139,6 +139,17 @@ function GameBoard({ playerCharacter, onRestart }) {
         onClose={() => game.setShowPlayerStats(false)}
       />
 
+      {(game.gameState === 'playerTurn' || game.gameState === 'curseDiscard') && (
+        <button
+          className="undo-btn"
+          onClick={game.undoLastAction}
+          disabled={!game.canUndo}
+          title={game.canUndo ? 'Undo last action this turn' : 'No actions to undo this turn'}
+        >
+          Undo
+        </button>
+      )}
+
       <GameMenu
         showMenu={game.showMenu}
         showDebug={game.showDebug}
