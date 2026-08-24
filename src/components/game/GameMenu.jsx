@@ -1,6 +1,6 @@
-function parseDebugCount(value) {
+function parseDebugCount(value, min = 0) {
   const next = Number.parseInt(value, 10);
-  if (Number.isFinite(next) && next >= 0) {
+  if (Number.isFinite(next) && next >= min) {
     return next;
   }
   return null;
@@ -11,6 +11,7 @@ function GameMenu({
   showDebug,
   debugBossCardsPerTurn,
   debugPlayerCardsPerTurn,
+  debugBossStartingHealth,
   onToggleMenu,
   onCloseMenu,
   onViewStats,
@@ -19,6 +20,7 @@ function GameMenu({
   onCloseDebug,
   onDebugBossCardsChange,
   onDebugPlayerCardsChange,
+  onDebugBossStartingHealthChange,
 }) {
   return (
     <>
@@ -51,7 +53,7 @@ function GameMenu({
         <div className="debug-overlay">
           <div className="debug-content">
             <h3>Debug</h3>
-            <p className="debug-hint">Changes apply at the start of each turn.</p>
+            <p className="debug-hint">Card draws apply at the start of each turn. Boss starting health applies now and to later bosses.</p>
             <label className="debug-field">
               <span>Boss / market cards each turn</span>
               <input
@@ -78,6 +80,21 @@ function GameMenu({
                   const next = parseDebugCount(e.target.value);
                   if (next !== null) {
                     onDebugPlayerCardsChange(next);
+                  }
+                }}
+              />
+            </label>
+            <label className="debug-field">
+              <span>Boss starting health</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={debugBossStartingHealth}
+                onChange={(e) => {
+                  const next = parseDebugCount(e.target.value, 1);
+                  if (next !== null) {
+                    onDebugBossStartingHealthChange(next);
                   }
                 }}
               />

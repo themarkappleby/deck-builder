@@ -70,6 +70,9 @@ export function useGameBoard(playerCharacter) {
   const [showDebug, setShowDebug] = useState(false);
   const [debugBossCardsPerTurn, setDebugBossCardsPerTurn] = useState(BOSS_CARDS_TO_DRAW);
   const [debugPlayerCardsPerTurn, setDebugPlayerCardsPerTurn] = useState(PLAYER_CARDS_TO_DRAW);
+  const [debugBossStartingHealth, setDebugBossStartingHealth] = useState(
+    () => resolveBossEncounter(1).hp
+  );
   const [draggingCard, setDraggingCard] = useState(null);
   const [draggingSource, setDraggingSource] = useState(null); // 'hand' | 'market'
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -102,6 +105,13 @@ export function useGameBoard(playerCharacter) {
   debugBossCardsPerTurnRef.current = debugBossCardsPerTurn;
   const debugPlayerCardsPerTurnRef = useRef(debugPlayerCardsPerTurn);
   debugPlayerCardsPerTurnRef.current = debugPlayerCardsPerTurn;
+  const debugBossStartingHealthRef = useRef(debugBossStartingHealth);
+  debugBossStartingHealthRef.current = debugBossStartingHealth;
+
+  const getBossStartingHealth = (encounterHp) => {
+    const override = debugBossStartingHealthRef.current;
+    return Number.isFinite(override) && override > 0 ? override : encounterHp;
+  };
 
   const levels = { raceLevel, classLevel, godLevel };
 
@@ -162,8 +172,9 @@ export function useGameBoard(playerCharacter) {
 
     setCurrentBoss(boss);
     currentBossRef.current = boss;
-    setBossHP(encounter.hp);
-    setBossMaxHP(encounter.hp);
+    const startingHp = getBossStartingHealth(encounter.hp);
+    setBossHP(startingHp);
+    setBossMaxHP(startingHp);
 
     addLog('Game started! Face the boss: ' + boss.name);
     setGameState('abilityChoice');
@@ -640,8 +651,9 @@ export function useGameBoard(playerCharacter) {
 
     setCurrentBoss(boss);
     currentBossRef.current = boss;
-    setBossHP(encounter.hp);
-    setBossMaxHP(encounter.hp);
+    const startingHp = getBossStartingHealth(encounter.hp);
+    setBossHP(startingHp);
+    setBossMaxHP(startingHp);
     setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
@@ -657,6 +669,14 @@ export function useGameBoard(playerCharacter) {
 
   const addLog = (message) => {
     setLog(prev => [...prev, `${message}`]);
+  };
+
+  const applyDebugBossStartingHealth = (next) => {
+    setDebugBossStartingHealth(next);
+    debugBossStartingHealthRef.current = next;
+    setBossHP(next);
+    setBossMaxHP(next);
+    addLog(`Debug: boss starting health set to ${next}`);
   };
 
   const selectStartingAbility = (abilityType) => {
@@ -857,6 +877,8 @@ export function useGameBoard(playerCharacter) {
     setDebugBossCardsPerTurn,
     debugPlayerCardsPerTurn,
     setDebugPlayerCardsPerTurn,
+    debugBossStartingHealth,
+    applyDebugBossStartingHealth,
     draggingCard,
     draggingSource,
     dragPosition,
