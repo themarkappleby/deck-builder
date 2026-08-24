@@ -1,8 +1,10 @@
 export {
   createPlayToken,
+  GARDENER_START_COUNTER,
+  GARDENER_HARVEST_RESOURCES,
   tokenCanHarvest,
   harvestEligibleTokens,
-  clearHarvestableFlags,
+  tickPlantTokenCounters,
   tokenHasCombatStats,
   tokenCanAttack,
   discardToken,

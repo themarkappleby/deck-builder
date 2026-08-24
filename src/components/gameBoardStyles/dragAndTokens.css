@@ -217,6 +217,7 @@
 }
 
 .play-token {
+  position: relative;
   width: 52px;
   height: 52px;
   border: 2px solid #6a5a3a;
@@ -245,6 +246,28 @@
 .play-token.can-attack {
   border-color: #c0392b;
   box-shadow: 0 0 8px rgba(192, 57, 43, 0.45);
+}
+
+.play-token.can-harvest {
+  border-color: #3a8a4a;
+  box-shadow: 0 0 8px rgba(58, 138, 74, 0.45);
+}
+
+.play-token-counter {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: #1e4a28;
+  border: 1px solid #5aad6a;
+  color: #d8f5dc;
+  font-size: 0.65rem;
+  font-weight: bold;
+  line-height: 16px;
+  text-align: center;
 }
 
 .play-token-kind {

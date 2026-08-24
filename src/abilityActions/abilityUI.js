@@ -3,24 +3,23 @@ import { tokenCanHarvest } from './tokens';
 /**
  * @param {object} playerCharacter
  * @param {{ raceLevel: number, classLevel: number, godLevel: number }} levels
- * @param {{ tokens?: Array, canHarvest?: boolean }} context
+ * @param {{ tokens?: Array }} context
  * @returns {{ tokenDisplays: Array, buttons: Array }}
  */
 export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
   const tokens = context.tokens || [];
   const buttons = [];
+  const ripeCount = tokens.filter(tokenCanHarvest).length;
 
-  const harvestableCount = tokens.filter(tokenCanHarvest).length;
   if (
     playerCharacter.class.id === 'gardener' &&
     levels.classLevel >= 1 &&
-    context.canHarvest &&
-    harvestableCount > 0
+    ripeCount > 0
   ) {
     buttons.push({
       id: 'harvest-tokens',
       source: 'class',
-      label: `Harvest ${harvestableCount}`,
+      label: `Harvest ${ripeCount}`,
       className: 'harvest-btn',
       disabled: false,
       action: 'harvestTokens',

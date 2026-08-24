@@ -1,6 +1,9 @@
 let tokenSeq = 0;
 
-export function createPlayToken({ attack, defense, kind, harvestable } = {}) {
+export const GARDENER_START_COUNTER = 2;
+export const GARDENER_HARVEST_RESOURCES = 2;
+
+export function createPlayToken({ attack, defense, kind, counter } = {}) {
   tokenSeq += 1;
   const token = {
     id: `token_${tokenSeq}_${Date.now()}`,
@@ -9,12 +12,16 @@ export function createPlayToken({ attack, defense, kind, harvestable } = {}) {
   };
   if (attack != null) token.attack = attack;
   if (defense != null) token.defense = defense;
-  if (harvestable) token.harvestable = true;
+  if (kind === 'gardener') {
+    token.counter = counter ?? GARDENER_START_COUNTER;
+  } else if (counter != null) {
+    token.counter = counter;
+  }
   return token;
 }
 
 export function tokenCanHarvest(token) {
-  return Boolean(token.harvestable) && !token.spawnedThisTurn;
+  return token.kind === 'gardener' && (token.counter ?? 0) === 0;
 }
 
 export function harvestEligibleTokens(tokens) {
@@ -27,12 +34,11 @@ export function harvestEligibleTokens(tokens) {
   return { tokens: remaining, harvested };
 }
 
-export function clearHarvestableFlags(tokens) {
+export function tickPlantTokenCounters(tokens) {
   return tokens.map(token => {
-    if (!token.harvestable) return token;
-    const next = { ...token };
-    delete next.harvestable;
-    return next;
+    if (token.kind !== 'gardener') return token;
+    const current = token.counter ?? GARDENER_START_COUNTER;
+    return { ...token, counter: Math.max(0, current - 1) };
   });
 }
 
