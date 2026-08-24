@@ -19,6 +19,7 @@ import {
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
 import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW } from '../game/constants';
+import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
@@ -663,6 +664,24 @@ export function useGameBoard(playerCharacter) {
     setRoundNumber(1);
     levelUpPicksRemainingRef.current = 0;
     setLevelUpPicksRemaining(0);
+
+    const reset = nextBossPlayerState({ playerHP, playerMaxHP });
+    setResources(reset.resources);
+    setPlayerBlock(reset.playerBlock);
+    setPlayerHP(reset.playerHP);
+    setPlayTokens(reset.playTokens);
+    playTokensRef.current = reset.playTokens;
+    setHarvestNextTurn(false);
+    setCanHarvestThisTurn(false);
+
+    const healed = reset.playerHP - playerHP;
+    if (healed > 0) {
+      addLog(`Recovered ${healed} HP between bosses (${reset.playerHP}/${playerMaxHP} HP)`);
+    } else {
+      addLog(`Health is already at max (${reset.playerHP}/${playerMaxHP} HP)`);
+    }
+    addLog('Resources, block, and tokens do not carry over to the next boss');
+
     setGameState('ready');
     addLog(`Next boss: ${boss.name} (Level ${nextBossNumber})`);
   };
