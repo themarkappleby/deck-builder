@@ -1,3 +1,5 @@
+import { MAX_PLAY_TOKENS } from '../game/constants';
+
 let tokenSeq = 0;
 
 export const GARDENER_START_COUNTER = 2;
@@ -69,14 +71,10 @@ export function getGardenerTokenStats(classLevel) {
 }
 
 export function getMaxTokens(playerCharacter, levels) {
-  const caps = [];
-  if (playerCharacter.class?.id === 'vampiera' && levels.classLevel >= 1) {
-    caps.push(levels.classLevel >= 2 ? 12 : 6);
+  if (playerCharacter.class?.id === 'vampiera' && (levels.classLevel ?? 0) < 2) {
+    return 6;
   }
-  if (playerCharacter.god?.id === 'brood-mother' && levels.godLevel >= 1) {
-    caps.push(12);
-  }
-  return caps.length ? Math.max(...caps) : Infinity;
+  return MAX_PLAY_TOKENS;
 }
 
 export function resolveSpawnTemplate(template, playerCharacter, levels) {
