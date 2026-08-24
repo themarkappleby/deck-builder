@@ -13,10 +13,27 @@ export function createPlayToken({ attack, defense, kind } = {}) {
     id: `token_${tokenSeq}_${Date.now()}`,
     kind: kind || 'generic',
     hasAttacked: false,
+    spawnedThisTurn: true,
   };
   if (attack != null) token.attack = attack;
   if (defense != null) token.defense = defense;
   return token;
+}
+
+export function tokenCanHarvest(token) {
+  return !token.spawnedThisTurn;
+}
+
+export function harvestRightmostEligibleToken(tokens) {
+  for (let i = tokens.length - 1; i >= 0; i -= 1) {
+    if (tokenCanHarvest(tokens[i])) {
+      return {
+        tokens: [...tokens.slice(0, i), ...tokens.slice(i + 1)],
+        harvested: tokens[i],
+      };
+    }
+  }
+  return { tokens, harvested: null };
 }
 
 export function tokenHasCombatStats(token) {
@@ -141,7 +158,7 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
     playerCharacter.class.id === 'gardener' &&
     levels.classLevel >= 1 &&
     context.canHarvest &&
-    tokens.length > 0
+    tokens.some(tokenCanHarvest)
   ) {
     buttons.push({
       id: 'harvest-tokens',

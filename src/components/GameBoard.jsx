@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getStartingDeck, marketCards, bosses, SYMBOLS } from '../gameData';
-import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, formatTokenStats, getMaxTokens } from '../abilityActions';
+import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens } from '../abilityActions';
 import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -210,13 +210,18 @@ function GameBoard({ playerCharacter, onRestart }) {
     setIgnoreIncomingDamage(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
-    setPlayTokens(prev => prev.map(token => ({ ...token, hasAttacked: false })));
-    if (harvestNextTurn) {
+    const remainingTokens = playTokensRef.current;
+    setPlayTokens(remainingTokens.map(token => ({
+      ...token,
+      hasAttacked: false,
+      spawnedThisTurn: false,
+    })));
+    if (harvestNextTurn && remainingTokens.length > 0) {
       setCanHarvestThisTurn(true);
-      setHarvestNextTurn(false);
     } else {
       setCanHarvestThisTurn(false);
     }
+    setHarvestNextTurn(false);
 
     // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
     // must be discarded before drawing a fresh opening hand. Otherwise the
@@ -648,13 +653,18 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const harvestRightmostToken = () => {
-    if (!canHarvestThisTurn || playTokens.length === 0) {
+    if (!canHarvestThisTurn) {
       return;
     }
 
-    setPlayTokens(prev => prev.slice(0, -1));
+    const result = harvestRightmostEligibleToken(playTokens);
+    if (!result.harvested) {
+      return;
+    }
+
+    setPlayTokens(result.tokens);
     setResources(prev => prev + 2);
-    addLog(`Harvested the rightmost token (+2 resources)`);
+    addLog(`Harvested the rightmost leftover token (+2 resources)`);
   };
 
   const handleAbilityButton = (button) => {
