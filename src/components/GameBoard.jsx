@@ -1258,12 +1258,10 @@ function GameBoard({ playerCharacter, onRestart }) {
       )}
 
       {/* Menu button */}
-      {gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
-        <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
-      )}
+      <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>⋮</button>
       
       {/* Menu popover */}
-      {showMenu && gameState !== 'abilityChoice' && gameState !== 'levelUp' && (
+      {showMenu && (
         <div className="menu-popover">
           <button 
             className="menu-item" 
@@ -1299,7 +1297,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         <div className="debug-overlay">
           <div className="debug-content">
             <h3>Debug</h3>
-            <p className="debug-hint">Changes apply at the start of the next turn.</p>
+            <p className="debug-hint">Changes apply at the start of each turn.</p>
             <label className="debug-field">
               <span>Boss / market cards each turn</span>
               <input
