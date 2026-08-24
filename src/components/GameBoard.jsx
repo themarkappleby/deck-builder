@@ -77,6 +77,7 @@ function GameBoard({ playerCharacter, onRestart }) {
   const [starsThisRound, setStarsThisRound] = useState(0);
   const [harvestNextTurn, setHarvestNextTurn] = useState(false);
   const [canHarvestThisTurn, setCanHarvestThisTurn] = useState(false);
+  const [cannotDiscardForResources, setCannotDiscardForResources] = useState(false);
   
   const [deck, setDeck] = useState([]);
   const [hand, setHand] = useState([]);
@@ -159,6 +160,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setPlayerMaxHP(10);
     setPlayTokens([]);
     setIgnoreIncomingDamage(false);
+    setCannotDiscardForResources(false);
     setStarsThisRound(0);
     
     const boss = bosses[0];
@@ -208,6 +210,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     setBossBlockMax(action.block || 0);
     
     setIgnoreIncomingDamage(false);
+    setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
     setPlayTokens(prev => prev.map(token => ({ ...token, hasAttacked: false })));
@@ -304,6 +307,11 @@ function GameBoard({ playerCharacter, onRestart }) {
   };
 
   const discardForResource = (card) => {
+    if (cannotDiscardForResources) {
+      addLog('Forest elf: cards cannot be discarded for resources this turn');
+      return;
+    }
+
     const newHand = hand.filter(c => c.id !== card.id);
     const newDiscard = [...discard, card];
     
@@ -372,6 +380,11 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (symbolEffects.ignoreDamage) {
       setIgnoreIncomingDamage(true);
       addLog('Angels of Elandor: ignore all incoming damage this round');
+    }
+
+    if (symbolEffects.lockCardDiscardForResources) {
+      setCannotDiscardForResources(true);
+      addLog('Forest elf: cards can no longer be discarded for resources this turn');
     }
 
     if (damage > 0) {
@@ -755,7 +768,7 @@ function GameBoard({ playerCharacter, onRestart }) {
     if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
     // Right zone for discard
-    } else if (x > viewportWidth * 0.75) {
+    } else if (x > viewportWidth * 0.75 && !cannotDiscardForResources) {
       setDropZone('discard');
     // Middle/center zone for play (where the boss is)
     } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
@@ -1027,6 +1040,9 @@ function GameBoard({ playerCharacter, onRestart }) {
             {ignoreIncomingDamage && (
               <div className="stat-item" title="Ignore incoming damage">✨ Guard</div>
             )}
+            {cannotDiscardForResources && (
+              <div className="stat-item" title="Cannot discard cards for resources this turn">🚫 Discard</div>
+            )}
           </div>
           <div className="hp-bar player-hp-bar">
             <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
@@ -1100,10 +1116,12 @@ function GameBoard({ playerCharacter, onRestart }) {
             </div>
           )}
           
-          {/* Discard zone - right side - always available */}
-          <div className={`drop-zone drop-zone-right ${dropZone === 'discard' ? 'active' : ''}`}>
-            <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
-          </div>
+          {/* Discard zone - right side - unavailable after Forest elf 🟣 */}
+          {!cannotDiscardForResources && (
+            <div className={`drop-zone drop-zone-right ${dropZone === 'discard' ? 'active' : ''}`}>
+              <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
+            </div>
+          )}
           
           {/* Trash zone - top - only if player can afford */}
           {resources >= draggingCard.symbols.length && (
