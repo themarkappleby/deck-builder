@@ -30,7 +30,7 @@ export const classes = [
       effect: 'You may discard 3 energy at any time to heal 3 HP. Max energy: 6.'
     },
     level2: {
-      additionalEffect: '🔺 +1 energy. Max energy: 12.',
+      additionalEffect: '🔺 +1 energy. Max energy: 10.',
       extraTriggers: [
         {
           symbol: SYMBOLS.ATTACK,

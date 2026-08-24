@@ -9,7 +9,7 @@ export const gods = [
       symbol: SYMBOLS.STAR,
       symbolEffect: 'Double the number of units in your play area',
       onSymbol: [{ type: 'doubleUnits' }],
-      effect: 'Max units: 12.'
+      effect: 'Max units: 10.'
     },
     level2: {
       symbol: SYMBOLS.STAR,

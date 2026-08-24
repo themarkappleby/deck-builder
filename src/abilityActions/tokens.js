@@ -1,3 +1,5 @@
+import { MAX_PLAY_TOKENS } from '../game/constants';
+
 let tokenSeq = 0;
 
 export const GARDENER_START_COUNTER = 2;
@@ -116,18 +118,15 @@ export function getGardenerTokenStats(classLevel) {
   return classLevel >= 2 ? { attack: 1, defense: 2 } : { attack: 0, defense: 1 };
 }
 
-export function getMaxUnits(playerCharacter, levels) {
-  if (playerCharacter.god?.id === 'brood-mother' && levels.godLevel >= 1) {
-    return 12;
-  }
-  return Infinity;
+export function getMaxUnits() {
+  return MAX_PLAY_TOKENS;
 }
 
 export function getMaxEnergy(playerCharacter, levels) {
-  if (playerCharacter.class?.id === 'vampiera' && levels.classLevel >= 1) {
-    return levels.classLevel >= 2 ? 12 : 6;
+  if (playerCharacter.class?.id === 'vampiera' && (levels.classLevel ?? 0) < 2) {
+    return 6;
   }
-  return Infinity;
+  return MAX_PLAY_TOKENS;
 }
 
 export function getMaxForType(type, playerCharacter, levels) {
