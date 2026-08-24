@@ -89,7 +89,6 @@ function emptyPlayTotals() {
     buffTokens: { attack: 0, defense: 0 },
     starsPlayed: 0,
     ignoreDamage: false,
-    gardenerHarvest: false,
     lockCardDiscardForResources: false,
     doubleBlock: false,
     damageEqualBlock: false,
@@ -138,9 +137,6 @@ export function collectPlayEffects(playerCharacter, levels, symbols, context = {
           totals.damageEqualBlock = true;
         } else if (effect.type === 'spawnToken') {
           totals.spawn.push({ ...effect });
-          if (effect.harvestable) {
-            totals.gardenerHarvest = true;
-          }
         } else if (effect.type === 'doubleTokens') {
           totals.doubleTokens = true;
         } else if (effect.type === 'buffTokens') {
@@ -201,7 +197,6 @@ export function getCardPlayTotals(playerCharacter, levels, symbols, context = {}
     buffTokens: ability.buffTokens,
     starsPlayed: ability.starsPlayed,
     ignoreDamage: ability.ignoreDamage,
-    gardenerHarvest: ability.gardenerHarvest,
     lockCardDiscardForResources: ability.lockCardDiscardForResources,
     doubleBlock: ability.doubleBlock,
     damageEqualBlock: ability.damageEqualBlock,
