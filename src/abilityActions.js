@@ -294,6 +294,10 @@ function emptyPlayTotals() {
     ignoreDamage: false,
     gardenerHarvest: false,
     lockCardDiscardForResources: false,
+    doubleBlock: false,
+    damageEqualBlock: false,
+    blockFromDouble: 0,
+    damageFromEqualBlock: 0,
     logs: [],
   };
 }
@@ -326,9 +330,15 @@ export function collectPlayEffects(playerCharacter, levels, symbols, context = {
         } else if (effect.type === 'token') {
           totals.tokens[effect.token] = (totals.tokens[effect.token] || 0) + effect.amount;
         } else if (effect.type === 'doubleBlock') {
-          totals.block += playerBlock + totals.block;
+          const gained = playerBlock + totals.block;
+          totals.block += gained;
+          totals.blockFromDouble += gained;
+          totals.doubleBlock = true;
         } else if (effect.type === 'damageEqualBlock') {
-          totals.damage += playerBlock + totals.block;
+          const gained = playerBlock + totals.block;
+          totals.damage += gained;
+          totals.damageFromEqualBlock += gained;
+          totals.damageEqualBlock = true;
         } else if (effect.type === 'spawnToken') {
           totals.spawn.push({ ...effect });
           if (effect.kind === 'gardener') {
@@ -480,6 +490,10 @@ export function getCardPlayTotals(playerCharacter, levels, symbols, context = {}
     ignoreDamage: ability.ignoreDamage,
     gardenerHarvest: ability.gardenerHarvest,
     lockCardDiscardForResources: ability.lockCardDiscardForResources,
+    doubleBlock: ability.doubleBlock,
+    damageEqualBlock: ability.damageEqualBlock,
+    blockFromDouble: ability.blockFromDouble,
+    damageFromEqualBlock: ability.damageFromEqualBlock,
     attackSymbols,
     logs: ability.logs,
   };
@@ -498,8 +512,12 @@ function spawnLabel(template) {
  */
 export function formatCardEffectLabels(totals) {
   const labels = [];
-  if (totals.damage > 0) labels.push(`${totals.damage} ATK`);
-  if (totals.block > 0) labels.push(`${totals.block} DEF`);
+  const damage = (totals.damage || 0) - (totals.damageFromEqualBlock || 0);
+  const block = (totals.block || 0) - (totals.blockFromDouble || 0);
+  if (damage > 0) labels.push(`${damage} ATK`);
+  if (totals.damageEqualBlock) labels.push('ATK = DEF');
+  if (block > 0) labels.push(`${block} DEF`);
+  if (totals.doubleBlock) labels.push('2X DEF');
   if (totals.heal > 0) labels.push(`${totals.heal} HP`);
   if (totals.draw > 0) labels.push(`Draw ${totals.draw}`);
   if (totals.lockCardDiscardForResources) labels.push('No discard 💎');
