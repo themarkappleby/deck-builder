@@ -20,6 +20,7 @@ import {
 } from '../abilityActions';
 import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW } from '../game/constants';
 import { shuffleArray } from '../utils/shuffle';
+import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
 export function useGameBoard(playerCharacter) {
   const [gameState, setGameState] = useState('setup');
@@ -53,6 +54,7 @@ export function useGameBoard(playerCharacter) {
 
   const [market, setMarket] = useState([]);
   const [marketDeck, setMarketDeck] = useState([]);
+  const [marketDiscard, setMarketDiscard] = useState([]);
   const [marketSlotCount, setMarketSlotCount] = useState(BOSS_CARDS_TO_DRAW);
 
   const [raceLevel, setRaceLevel] = useState(1);
@@ -87,6 +89,12 @@ export function useGameBoard(playerCharacter) {
   currentBossRef.current = currentBoss;
   const bossTokensRef = useRef(bossTokens);
   bossTokensRef.current = bossTokens;
+  const marketDeckRef = useRef(marketDeck);
+  marketDeckRef.current = marketDeck;
+  const marketDiscardRef = useRef(marketDiscard);
+  marketDiscardRef.current = marketDiscard;
+  const marketRef = useRef(market);
+  marketRef.current = market;
 
   const levels = { raceLevel, classLevel, godLevel };
 
@@ -126,7 +134,10 @@ export function useGameBoard(playerCharacter) {
 
     setDeck(shuffled);
     setMarketDeck(marketDeckShuffled);
+    marketDeckRef.current = marketDeckShuffled;
     setMarket([]); // Start with empty market
+    setMarketDiscard([]);
+    marketDiscardRef.current = [];
     setMarketSlotCount(BOSS_CARDS_TO_DRAW);
 
     setPlayerHP(10);
@@ -153,30 +164,39 @@ export function useGameBoard(playerCharacter) {
 
   const startRound = () => {
     // Draw cards for boss action. The market always has the same number
-    // of slots as the number of boss cards drawn this round. Reshuffle
-    // leftover market cards into a new draw pile when the market deck
-    // runs out — same pattern as the player's discard reshuffle.
+    // of slots as the number of boss cards drawn this round. Unpurchased
+    // market cards go to a discard pile and are shuffled into a new draw
+    // pile only when the market deck runs out — same pattern as the
+    // player's discard reshuffle. Putting them on top of the draw pile
+    // would make the boss re-draw the same handful every other round.
     const bossCardsToDraw = BOSS_CARDS_TO_DRAW;
-    let currentMarketDeck = [...marketDeck];
-    let currentMarket = [...market];
-    const drawnBossCards = [];
-
-    for (let i = 0; i < bossCardsToDraw; i++) {
-      if (currentMarketDeck.length === 0) {
-        if (currentMarket.length === 0) break;
-        currentMarketDeck = shuffleArray([...currentMarket]);
-        currentMarket = [];
-        addLog('Market reshuffled into boss draw pile!');
-      }
-      const card = currentMarketDeck.pop();
-      drawnBossCards.push({
-        ...card,
-        id: `${card.id}_boss_${Date.now()}_${i}`
-      });
+    let drawPile = marketDeckRef.current;
+    let discardPile = marketDiscardRef.current;
+    // Last remaining unpurchased cards may still be sitting in the shop.
+    if (drawPile.length === 0 && discardPile.length === 0 && marketRef.current.length > 0) {
+      discardPile = [...marketRef.current];
+      setMarket([]);
+      marketRef.current = [];
+    }
+    const drawn = drawFromCardPiles(
+      bossCardsToDraw,
+      drawPile,
+      discardPile,
+      shuffleArray
+    );
+    if (drawn.reshuffled) {
+      addLog('Market reshuffled into boss draw pile!');
     }
 
-    setMarketDeck(currentMarketDeck);
-    setMarket(currentMarket);
+    const drawnBossCards = drawn.drawnCards.map((card, i) => ({
+      ...card,
+      id: `${card.id}_boss_${Date.now()}_${i}`
+    }));
+
+    marketDeckRef.current = drawn.currentDeck;
+    marketDiscardRef.current = drawn.currentDiscard;
+    setMarketDeck(drawn.currentDeck);
+    setMarketDiscard(drawn.currentDiscard);
     setBossCards(drawnBossCards);
     setMarketSlotCount(drawnBossCards.length);
 
@@ -253,17 +273,11 @@ export function useGameBoard(playerCharacter) {
   const getOpeningHandSize = () => 6;
 
   const drawFromPiles = (count, currentDeck, currentDiscard) => {
-    const drawnCards = [];
-    for (let i = 0; i < count; i++) {
-      if (currentDeck.length === 0) {
-        if (currentDiscard.length === 0) break;
-        currentDeck = shuffleArray([...currentDiscard]);
-        currentDiscard = [];
-        addLog('Deck reshuffled!');
-      }
-      drawnCards.push(currentDeck.pop());
+    const result = drawFromCardPiles(count, currentDeck, currentDiscard, shuffleArray);
+    if (result.reshuffled) {
+      addLog('Deck reshuffled!');
     }
-    return { drawnCards, currentDeck, currentDiscard };
+    return result;
   };
 
   const drawOpeningHand = (count, leftoverHand = []) => {
@@ -502,11 +516,14 @@ export function useGameBoard(playerCharacter) {
     setIncomingDamage(0);
 
     if (market.length > 0) {
-      setMarketDeck(prev => [...prev, ...market]);
-      addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the draw pile`);
+      const nextDiscard = [...marketDiscardRef.current, ...market];
+      marketDiscardRef.current = nextDiscard;
+      setMarketDiscard(nextDiscard);
+      addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the discard pile`);
     }
 
     setMarket(bossCards);
+    marketRef.current = bossCards;
     setMarketSlotCount(bossCards.length);
     setBossCards([]);
     addLog('Boss cards moved to market!');
@@ -712,23 +729,13 @@ export function useGameBoard(playerCharacter) {
   };
 
   const drawCardsAfterDiscard = (count, discardedCard, currentHand) => {
-    let currentDeck = [...deck];
-    let currentDiscard = [...discard, discardedCard];
-    let drawnCards = [];
-
-    for (let i = 0; i < count; i++) {
-      if (currentDeck.length === 0) {
-        if (currentDiscard.length === 0) break;
-        currentDeck = shuffleArray([...currentDiscard]);
-        currentDiscard = [];
-        addLog('Deck reshuffled!');
-      }
-      drawnCards.push(currentDeck.pop());
+    const result = drawFromCardPiles(count, deck, [...discard, discardedCard], shuffleArray);
+    if (result.reshuffled) {
+      addLog('Deck reshuffled!');
     }
-
-    setDeck(currentDeck);
-    setDiscard(currentDiscard);
-    setHand([...currentHand, ...drawnCards]);
+    setDeck(result.currentDeck);
+    setDiscard(result.currentDiscard);
+    setHand([...currentHand, ...result.drawnCards]);
   };
 
   const handleCardDragStart = (card, e, source = 'hand') => {
