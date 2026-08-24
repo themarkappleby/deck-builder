@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getStartingDeck, marketCards, bosses } from '../gameData';
-import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, discardToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens, getBossRoundAction, formatBossCardEffectLabels, formatBossAbilityLines, applyBrewTokens, WITCH_BREW_THRESHOLD } from '../abilityActions';
+import { getStartingDeck, marketCards, resolveBossEncounter, SYMBOLS } from '../gameData';
+import { getActiveAbilityUI, getCardPlayTotals, formatCardEffectLabels, formatLevelLines, addTokensToField, doublePlayTokens, buffPlayTokens, upgradeGardenerTokens, assignDamageToToken, discardToken, tokenCanAttack, tokenCanBlock, tokenCanHarvest, harvestRightmostEligibleToken, formatTokenStats, getMaxTokens, getBossRoundAction, formatBossCardEffectLabels, formatBossAbilityLines, getBossAbility, applyBrewTokens, WITCH_BREW_THRESHOLD } from '../abilityActions';
 import Card, { CardSymbols, CardEffectLabels } from './Card';
 import './GameBoard.css';
 import './GameBoardNew.css';
@@ -172,14 +172,13 @@ function GameBoard({ playerCharacter, onRestart }) {
     bossTokensRef.current = 0;
     setPendingCurse(0);
     
-    const boss = bosses[0];
-    const bossLevel = bossNumber === 1 ? 'level1' : bossNumber === 2 ? 'level2' : 'level3';
-    const bossData = boss[bossLevel];
+    const encounter = resolveBossEncounter(bossNumber);
+    const boss = encounter.boss;
     
     setCurrentBoss(boss);
     currentBossRef.current = boss;
-    setBossHP(bossData.hp);
-    setBossMaxHP(bossData.hp);
+    setBossHP(encounter.hp);
+    setBossMaxHP(encounter.hp);
     
     addLog('Game started! Face the boss: ' + boss.name);
     setGameState('abilityChoice');
@@ -651,14 +650,13 @@ function GameBoard({ playerCharacter, onRestart }) {
   const startNextBoss = () => {
     setBossNumber(prev => prev + 1);
     const nextBossNumber = bossNumber + 1;
-    const boss = bosses[Math.min(bossNumber, bosses.length - 1)];
-    const bossLevel = nextBossNumber === 1 ? 'level1' : nextBossNumber === 2 ? 'level2' : 'level3';
-    const bossData = boss[bossLevel];
+    const encounter = resolveBossEncounter(nextBossNumber);
+    const boss = encounter.boss;
     
     setCurrentBoss(boss);
     currentBossRef.current = boss;
-    setBossHP(bossData.hp);
-    setBossMaxHP(bossData.hp);
+    setBossHP(encounter.hp);
+    setBossMaxHP(encounter.hp);
     setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
@@ -900,7 +898,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 <div className="boss-cluster">
                   <div className="boss-identity">
                     <div className="boss-status">
-                      <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+                      <div className="boss-name">{currentBoss?.name} (Level {bossNumber}) - Round {roundNumber}</div>
                       {bossAbilityLines.length > 0 && (
                         <div className="boss-abilities">
                           {bossAbilityLines.map(line => (
@@ -923,7 +921,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                           {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
                         </span>
                       </div>
-                      {currentBoss?.id === 'witch' && (
+                      {getBossAbility(currentBoss, SYMBOLS.GREEN)?.type === 'brew' && (
                         <div className="boss-brew">
                           <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
                           <div className="boss-brew-pips" aria-hidden="true">
