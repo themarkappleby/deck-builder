@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { races, classes, gods } from '../gameData';
-import { formatLevelLines } from '../abilityActions';
+import SelectionStep from './SelectionStep';
 import './CharacterSelect.css';
-
-function AbilityLines({ level }) {
-  return formatLevelLines(level).map((line, index) => (
-    <p key={index}>{line}</p>
-  ));
-}
 
 function CharacterSelect({ onCharacterSelect }) {
   const [currentStep, setCurrentStep] = useState('race'); // 'race', 'class', 'god'
@@ -49,20 +43,20 @@ function CharacterSelect({ onCharacterSelect }) {
 
       {/* Tab Navigation */}
       <div className="tab-navigation">
-        <button 
+        <button
           className={`tab ${currentStep === 'race' ? 'active' : ''} ${selectedRace ? 'completed' : ''}`}
           onClick={() => setCurrentStep('race')}
         >
           1. Race {selectedRace && '✓'}
         </button>
-        <button 
+        <button
           className={`tab ${currentStep === 'class' ? 'active' : ''} ${selectedClass ? 'completed' : ''}`}
           onClick={() => selectedRace && setCurrentStep('class')}
           disabled={!selectedRace}
         >
           2. Class {selectedClass && '✓'}
         </button>
-        <button 
+        <button
           className={`tab ${currentStep === 'god' ? 'active' : ''} ${selectedGod ? 'completed' : ''}`}
           onClick={() => selectedClass && setCurrentStep('god')}
           disabled={!selectedClass}
@@ -71,82 +65,31 @@ function CharacterSelect({ onCharacterSelect }) {
         </button>
       </div>
 
-      {/* Race Selection */}
       {currentStep === 'race' && (
-        <div className="selection-section">
-          <h2>Select Your Race</h2>
-          <div className="card-grid">
-            {races.map((race, index) => (
-              <div
-                key={index}
-                className={`selection-card ${selectedRace === race ? 'selected' : ''}`}
-                onClick={() => handleRaceSelect(race)}
-              >
-                <h3>{race.name}</h3>
-                <div className="card-level">
-                  <strong>Level 1:</strong>
-                  <AbilityLines level={race.level1} />
-                </div>
-                <div className="card-level">
-                  <strong>Level 2:</strong>
-                  <AbilityLines level={race.level2} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SelectionStep
+          title="Select Your Race"
+          options={races}
+          selected={selectedRace}
+          onSelect={handleRaceSelect}
+        />
       )}
 
-      {/* Class Selection */}
       {currentStep === 'class' && (
-        <div className="selection-section">
-          <h2>Select Your Class</h2>
-          <div className="card-grid">
-            {classes.map((cls, index) => (
-              <div
-                key={index}
-                className={`selection-card ${selectedClass === cls ? 'selected' : ''}`}
-                onClick={() => handleClassSelect(cls)}
-              >
-                <h3>{cls.name}</h3>
-                <div className="card-level">
-                  <strong>Level 1:</strong>
-                  <AbilityLines level={cls.level1} />
-                </div>
-                <div className="card-level">
-                  <strong>Level 2:</strong>
-                  <AbilityLines level={cls.level2} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SelectionStep
+          title="Select Your Class"
+          options={classes}
+          selected={selectedClass}
+          onSelect={handleClassSelect}
+        />
       )}
 
-      {/* God Selection */}
       {currentStep === 'god' && (
-        <div className="selection-section">
-          <h2>Select Your God</h2>
-          <div className="card-grid">
-            {gods.map((god, index) => (
-              <div
-                key={index}
-                className={`selection-card ${selectedGod === god ? 'selected' : ''}`}
-                onClick={() => handleGodSelect(god)}
-              >
-                <h3>{god.name}</h3>
-                <div className="card-level">
-                  <strong>Level 1:</strong>
-                  <AbilityLines level={god.level1} />
-                </div>
-                <div className="card-level">
-                  <strong>Level 2:</strong>
-                  <AbilityLines level={god.level2} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SelectionStep
+          title="Select Your God"
+          options={gods}
+          selected={selectedGod}
+          onSelect={handleGodSelect}
+        />
       )}
 
       {/* Navigation Buttons */}
