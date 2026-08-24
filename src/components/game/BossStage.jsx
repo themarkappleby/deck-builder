@@ -21,6 +21,7 @@ function BossStage({
     <div className="boss-stage">
       <div className="boss-cluster">
         <div className="boss-identity">
+          <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
           <div className="boss-status">
             <div className="boss-name">{currentBoss?.name} (Level {bossNumber}) - Round {roundNumber}</div>
             {bossAbilityLines.length > 0 && (
@@ -59,7 +60,6 @@ function BossStage({
               </div>
             )}
           </div>
-          <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
         </div>
         <div className="intent-card-row boss-cards-row" style={{ '--slot-count': bossCards.length || marketSlotCount }}>
           {bossCards.map(card => (
