@@ -884,8 +884,12 @@ export function useGameBoard(playerCharacter) {
     // Top zone for trash (highest priority)
     if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
-    // Right zone for discard
-    } else if (x > viewportWidth * 0.75 && !cannotDiscardForResources) {
+    // Right zone for discard — keep above the player hand and stats HUD
+    } else if (
+      x > viewportWidth * 0.75 &&
+      y <= Math.min(viewportHeight * 0.65, viewportHeight - 240) &&
+      !cannotDiscardForResources
+    ) {
       setDropZone('discard');
     // Middle/center zone for play (where the boss is)
     } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
