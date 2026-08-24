@@ -13,7 +13,8 @@ import {
   tokenCanAttack,
   tokenCanBlock,
   harvestEligibleTokens,
-  clearHarvestableFlags,
+  tickPlantTokenCounters,
+  GARDENER_HARVEST_RESOURCES,
   getMaxTokens,
   getBossRoundAction,
   applyBrewTokens,
@@ -45,8 +46,6 @@ export function useGameBoard(playerCharacter) {
   const [incomingDamage, setIncomingDamage] = useState(0);
   const [ignoreIncomingDamage, setIgnoreIncomingDamage] = useState(false);
   const [starsThisRound, setStarsThisRound] = useState(0);
-  const [harvestNextTurn, setHarvestNextTurn] = useState(false);
-  const [canHarvestThisTurn, setCanHarvestThisTurn] = useState(false);
   const [cannotDiscardForResources, setCannotDiscardForResources] = useState(false);
 
   const [deck, setDeck] = useState([]);
@@ -123,7 +122,6 @@ export function useGameBoard(playerCharacter) {
     levels,
     {
       tokens: playTokens,
-      canHarvest: canHarvestThisTurn,
     }
   );
 
@@ -251,18 +249,12 @@ export function useGameBoard(playerCharacter) {
     setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
-    let remainingTokens = playTokensRef.current.map(token => ({
+    let remainingTokens = tickPlantTokenCounters(playTokensRef.current).map(token => ({
       ...token,
       spawnedThisTurn: false,
     }));
-    const canHarvestLeftovers = harvestNextTurn && remainingTokens.some(token => token.harvestable);
-    if (!canHarvestLeftovers) {
-      remainingTokens = clearHarvestableFlags(remainingTokens);
-    }
     setPlayTokens(remainingTokens);
     playTokensRef.current = remainingTokens;
-    setCanHarvestThisTurn(canHarvestLeftovers);
-    setHarvestNextTurn(false);
 
     // Leftover cards from a previous encounter (e.g. defeating a boss mid-turn)
     // must be discarded before drawing a fresh opening hand. Otherwise the
@@ -322,8 +314,6 @@ export function useGameBoard(playerCharacter) {
     playTokens: cloneValue(playTokens),
     ignoreIncomingDamage,
     starsThisRound,
-    harvestNextTurn,
-    canHarvestThisTurn,
     cannotDiscardForResources,
     deck: cloneValue(deck),
     hand: cloneValue(hand),
@@ -347,8 +337,6 @@ export function useGameBoard(playerCharacter) {
     playTokensRef.current = snapshot.playTokens;
     setIgnoreIncomingDamage(snapshot.ignoreIncomingDamage);
     setStarsThisRound(snapshot.starsThisRound);
-    setHarvestNextTurn(snapshot.harvestNextTurn);
-    setCanHarvestThisTurn(snapshot.canHarvestThisTurn);
     setCannotDiscardForResources(snapshot.cannotDiscardForResources);
     setDeck(snapshot.deck);
     setHand(snapshot.hand);
@@ -451,9 +439,6 @@ export function useGameBoard(playerCharacter) {
       }
       if (result.capped) {
         addLog(`Token limit reached (${getMaxTokens(playerCharacter, { raceLevel, classLevel, godLevel })})`);
-      }
-      if (symbolEffects.gardenerHarvest) {
-        setHarvestNextTurn(true);
       }
     }
     if (symbolEffects.doubleTokens) {
@@ -749,8 +734,6 @@ export function useGameBoard(playerCharacter) {
     setPlayerHP(reset.playerHP);
     setPlayTokens(reset.playTokens);
     playTokensRef.current = reset.playTokens;
-    setHarvestNextTurn(false);
-    setCanHarvestThisTurn(false);
 
     const healed = reset.playerHP - playerHP;
     if (healed > 0) {
@@ -793,22 +776,17 @@ export function useGameBoard(playerCharacter) {
   };
 
   const harvestLeftoverTokens = () => {
-    if (!canHarvestThisTurn) {
-      return;
-    }
-
     const result = harvestEligibleTokens(playTokens);
     if (result.harvested.length === 0) {
       return;
     }
 
-    const gained = result.harvested.length;
+    const gained = result.harvested.length * GARDENER_HARVEST_RESOURCES;
     pushUndoSnapshot();
     setPlayTokens(result.tokens);
     playTokensRef.current = result.tokens;
     setResources(prev => prev + gained);
-    setCanHarvestThisTurn(false);
-    addLog(`Discarded ${gained} leftover token${gained === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
+    addLog(`Harvested ${result.harvested.length} plant token${result.harvested.length === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
   };
 
   const handleAbilityButton = (button) => {

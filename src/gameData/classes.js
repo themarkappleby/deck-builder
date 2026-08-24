@@ -7,9 +7,9 @@ export const classes = [
     side: 'A',
     level1: {
       symbol: SYMBOLS.GREEN,
-      symbolEffect: '+2 0/1 tokens to the play field',
-      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener', harvestable: true }],
-      effect: 'If these tokens are still there at the start of your next turn, you may discard them all to gain 1 resource per token discarded.'
+      symbolEffect: '+2 0/1 plant tokens to the play field',
+      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener' }],
+      effect: 'Each plant token starts with a counter of 2. At the start of each turn, reduce each plant token\'s counter by 1 (min 0). Harvest tokens with a counter of 0 for 2 💎 each.'
     },
     level2: {
       symbol: SYMBOLS.GREEN,
