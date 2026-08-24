@@ -1,21 +1,23 @@
 import { SYMBOLS } from './symbols';
 
+function makeMarketCopies(id, name, symbols, count) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `${id}_${index + 1}`,
+    name,
+    symbols: [...symbols]
+  }));
+}
+
+// Shared market / boss draw pile
 export const marketCards = [
-  { id: 'm1', name: 'Swift Strike', symbols: [SYMBOLS.ATTACK, SYMBOLS.ATTACK] },
-  { id: 'm2', name: 'Power Slash', symbols: [SYMBOLS.ATTACK, SYMBOLS.ATTACK, SYMBOLS.ATTACK] },
-  { id: 'm3', name: 'Shield Wall', symbols: [SYMBOLS.BLOCK, SYMBOLS.BLOCK] },
-  { id: 'm4', name: 'Iron Defense', symbols: [SYMBOLS.BLOCK, SYMBOLS.BLOCK, SYMBOLS.BLOCK] },
-  { id: 'm5', name: 'Mystical Energy', symbols: [SYMBOLS.PURPLE, SYMBOLS.PURPLE] },
-  { id: 'm6', name: 'Balanced Strike', symbols: [SYMBOLS.ATTACK, SYMBOLS.BLOCK] },
-  { id: 'm7', name: 'Versatile', symbols: [SYMBOLS.ATTACK, SYMBOLS.PURPLE] },
-  { id: 'm8', name: 'Nature\'s Gift', symbols: [SYMBOLS.GREEN, SYMBOLS.GREEN] },
-  { id: 'm9', name: 'Stellar Power', symbols: [SYMBOLS.STAR, SYMBOLS.STAR] },
-  { id: 'm10', name: 'Divine Strike', symbols: [SYMBOLS.STAR, SYMBOLS.ATTACK] },
-  { id: 'm11', name: 'Combo Attack', symbols: [SYMBOLS.ATTACK, SYMBOLS.ATTACK, SYMBOLS.STAR] },
-  { id: 'm12', name: 'Healing Block', symbols: [SYMBOLS.BLOCK, SYMBOLS.GREEN] },
-  { id: 'm13', name: 'Wild Magic', symbols: [SYMBOLS.PURPLE, SYMBOLS.GREEN] },
-  { id: 'm14', name: 'Quick Draw', symbols: [SYMBOLS.GREEN] },
-  { id: 'm15', name: 'Simple Strike', symbols: [SYMBOLS.ATTACK] },
+  ...makeMarketCopies('m-atk', 'Strike', [SYMBOLS.ATTACK], 4),
+  ...makeMarketCopies('m-blk', 'Block', [SYMBOLS.BLOCK], 4),
+  ...makeMarketCopies('m-atk2', 'Swift Strike', [SYMBOLS.ATTACK, SYMBOLS.ATTACK], 6),
+  ...makeMarketCopies('m-blk2', 'Shield Wall', [SYMBOLS.BLOCK, SYMBOLS.BLOCK], 6),
+  ...makeMarketCopies('m-mix', 'Balanced Strike', [SYMBOLS.BLOCK, SYMBOLS.ATTACK], 6),
+  ...makeMarketCopies('m-grn', 'Nature', [SYMBOLS.GREEN], 6),
+  ...makeMarketCopies('m-prp', 'Focus', [SYMBOLS.PURPLE], 6),
+  ...makeMarketCopies('m-str', 'Blessing', [SYMBOLS.STAR], 6)
 ];
 
 export const getStartingDeck = () => [
