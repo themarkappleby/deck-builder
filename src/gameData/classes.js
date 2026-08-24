@@ -8,8 +8,8 @@ export const classes = [
     level1: {
       symbol: SYMBOLS.GREEN,
       symbolEffect: '+2 0/1 tokens to the play field',
-      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener' }],
-      effect: 'If any tokens remain at the start of your next turn, you may discard any tokens to gain 2 resources per token discarded.'
+      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener', harvestable: true }],
+      effect: 'If these tokens are still there at the start of your next turn, you may discard them all to gain 1 resource per token discarded.'
     },
     level2: {
       symbol: SYMBOLS.GREEN,

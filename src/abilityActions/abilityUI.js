@@ -19,7 +19,7 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
     buttons.push({
       id: 'harvest-tokens',
       source: 'class',
-      label: 'Harvest (2💎)',
+      label: 'Discard leftover tokens (1💎 each)',
       className: 'harvest-btn',
       disabled: false,
       action: 'harvestTokens',
