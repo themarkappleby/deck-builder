@@ -185,7 +185,7 @@
   }
 
   .intent-card-row {
-    min-width: calc(64px * 3 + 6px * 2);
+    min-width: calc(64px * var(--slot-count, 2) + 6px * (var(--slot-count, 2) - 1));
     min-height: 88px;
     gap: 6px;
   }
@@ -263,15 +263,18 @@
 }
 
 .boss-abilities {
-  margin: 0 0 4px;
+  margin: 0 auto 4px;
   max-width: 280px;
+  width: 100%;
+  text-align: center;
 }
 
 .boss-abilities p {
-  margin: 0 0 2px;
+  margin: 0 auto 2px;
   font-size: 0.68rem;
   line-height: 1.25;
   color: #c8bdd4;
+  text-align: center;
 }
 
 .boss-brew {

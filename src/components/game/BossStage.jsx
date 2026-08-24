@@ -1,8 +1,10 @@
 import Card from '../Card';
-import { formatBossCardEffectLabels, WITCH_BREW_THRESHOLD } from '../../abilityActions';
+import { SYMBOLS } from '../../gameData';
+import { formatBossCardEffectLabels, getBossAbility, WITCH_BREW_THRESHOLD } from '../../abilityActions';
 
 function BossStage({
   currentBoss,
+  bossNumber,
   roundNumber,
   bossAbilityLines,
   bossHP,
@@ -11,6 +13,7 @@ function BossStage({
   bossBlockMax,
   bossTokens,
   bossCards,
+  marketSlotCount,
   bossAttack,
   playerBlock,
 }) {
@@ -19,7 +22,7 @@ function BossStage({
       <div className="boss-cluster">
         <div className="boss-identity">
           <div className="boss-status">
-            <div className="boss-name">{currentBoss?.name} - Round {roundNumber}</div>
+            <div className="boss-name">{currentBoss?.name} (Level {bossNumber}) - Round {roundNumber}</div>
             {bossAbilityLines.length > 0 && (
               <div className="boss-abilities">
                 {bossAbilityLines.map(line => (
@@ -42,7 +45,7 @@ function BossStage({
                 {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
               </span>
             </div>
-            {currentBoss?.id === 'witch' && (
+            {getBossAbility(currentBoss, SYMBOLS.GREEN)?.type === 'brew' && (
               <div className="boss-brew">
                 <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
                 <div className="boss-brew-pips" aria-hidden="true">
@@ -58,7 +61,7 @@ function BossStage({
           </div>
           <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
         </div>
-        <div className="intent-card-row boss-cards-row">
+        <div className="intent-card-row boss-cards-row" style={{ '--slot-count': bossCards.length || marketSlotCount }}>
           {bossCards.map(card => (
             <Card
               key={card.id}

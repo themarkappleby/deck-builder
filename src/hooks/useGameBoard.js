@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getStartingDeck, marketCards, bosses } from '../gameData';
+import { getStartingDeck, marketCards, resolveBossEncounter } from '../gameData';
 import {
   getActiveAbilityUI,
   getCardPlayTotals,
@@ -18,7 +18,7 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW } from '../game/constants';
 import { shuffleArray } from '../utils/shuffle';
 
 export function useGameBoard(playerCharacter) {
@@ -53,6 +53,7 @@ export function useGameBoard(playerCharacter) {
 
   const [market, setMarket] = useState([]);
   const [marketDeck, setMarketDeck] = useState([]);
+  const [marketSlotCount, setMarketSlotCount] = useState(BOSS_CARDS_TO_DRAW);
 
   const [raceLevel, setRaceLevel] = useState(1);
   const [classLevel, setClassLevel] = useState(0);
@@ -126,6 +127,7 @@ export function useGameBoard(playerCharacter) {
     setDeck(shuffled);
     setMarketDeck(marketDeckShuffled);
     setMarket([]); // Start with empty market
+    setMarketSlotCount(BOSS_CARDS_TO_DRAW);
 
     setPlayerHP(10);
     setPlayerMaxHP(10);
@@ -137,24 +139,24 @@ export function useGameBoard(playerCharacter) {
     bossTokensRef.current = 0;
     setPendingCurse(0);
 
-    const boss = bosses[0];
-    const bossLevel = bossNumber === 1 ? 'level1' : bossNumber === 2 ? 'level2' : 'level3';
-    const bossData = boss[bossLevel];
+    const encounter = resolveBossEncounter(bossNumber);
+    const boss = encounter.boss;
 
     setCurrentBoss(boss);
     currentBossRef.current = boss;
-    setBossHP(bossData.hp);
-    setBossMaxHP(bossData.hp);
+    setBossHP(encounter.hp);
+    setBossMaxHP(encounter.hp);
 
     addLog('Game started! Face the boss: ' + boss.name);
     setGameState('abilityChoice');
   };
 
   const startRound = () => {
-    // Draw cards for boss action (2 cards), reshuffling
-    // the market into a new draw pile when the market deck runs out —
-    // same pattern as the player's discard reshuffle.
-    const bossCardsToDraw = 2;
+    // Draw cards for boss action. The market always has the same number
+    // of slots as the number of boss cards drawn this round. Reshuffle
+    // leftover market cards into a new draw pile when the market deck
+    // runs out — same pattern as the player's discard reshuffle.
+    const bossCardsToDraw = BOSS_CARDS_TO_DRAW;
     let currentMarketDeck = [...marketDeck];
     let currentMarket = [...market];
     const drawnBossCards = [];
@@ -176,6 +178,7 @@ export function useGameBoard(playerCharacter) {
     setMarketDeck(currentMarketDeck);
     setMarket(currentMarket);
     setBossCards(drawnBossCards);
+    setMarketSlotCount(drawnBossCards.length);
 
     const action = getBossRoundAction(currentBossRef.current, drawnBossCards);
     setBossAction(action);
@@ -504,6 +507,7 @@ export function useGameBoard(playerCharacter) {
     }
 
     setMarket(bossCards);
+    setMarketSlotCount(bossCards.length);
     setBossCards([]);
     addLog('Boss cards moved to market!');
     setRoundNumber(prev => prev + 1);
@@ -607,14 +611,13 @@ export function useGameBoard(playerCharacter) {
   const startNextBoss = () => {
     setBossNumber(prev => prev + 1);
     const nextBossNumber = bossNumber + 1;
-    const boss = bosses[Math.min(bossNumber, bosses.length - 1)];
-    const bossLevel = nextBossNumber === 1 ? 'level1' : nextBossNumber === 2 ? 'level2' : 'level3';
-    const bossData = boss[bossLevel];
+    const encounter = resolveBossEncounter(nextBossNumber);
+    const boss = encounter.boss;
 
     setCurrentBoss(boss);
     currentBossRef.current = boss;
-    setBossHP(bossData.hp);
-    setBossMaxHP(bossData.hp);
+    setBossHP(encounter.hp);
+    setBossMaxHP(encounter.hp);
     setBossAttack(0);
     setBossBlock(0);
     setBossBlockMax(0);
@@ -822,6 +825,8 @@ export function useGameBoard(playerCharacter) {
     discard,
     resources,
     market,
+    marketSlotCount,
+    bossNumber,
     raceLevel,
     classLevel,
     godLevel,

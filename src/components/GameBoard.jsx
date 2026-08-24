@@ -20,7 +20,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   const showBattlefield = game.gameState === 'playerTurn' || game.gameState === 'ready' || game.gameState === 'assignDamage' || game.gameState === 'curseDiscard';
   const bossAbilityLines = formatBossAbilityLines(game.currentBoss);
-  const marketSlots = [0, 1, 2].map(index => game.market[index] || null);
+  const marketSlots = Array.from({ length: game.marketSlotCount }, (_, index) => game.market[index] || null);
 
   return (
     <div
@@ -43,12 +43,14 @@ function GameBoard({ playerCharacter, onRestart }) {
             <div className="battlefield">
               <MarketColumn
                 marketSlots={marketSlots}
+                marketSlotCount={game.marketSlotCount}
                 resources={game.resources}
                 draggingCard={game.draggingCard}
                 onCardDragStart={game.handleCardDragStart}
               />
               <BossStage
                 currentBoss={game.currentBoss}
+                bossNumber={game.bossNumber}
                 roundNumber={game.roundNumber}
                 bossAbilityLines={bossAbilityLines}
                 bossHP={game.bossHP}
@@ -57,6 +59,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 bossBlockMax={game.bossBlockMax}
                 bossTokens={game.bossTokens}
                 bossCards={game.bossCards}
+                marketSlotCount={game.marketSlotCount}
                 bossAttack={game.bossAttack}
                 playerBlock={game.playerBlock}
               />

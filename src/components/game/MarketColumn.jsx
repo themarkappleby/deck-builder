@@ -1,10 +1,10 @@
 import Card from '../Card';
 
-function MarketColumn({ marketSlots, resources, draggingCard, onCardDragStart }) {
+function MarketColumn({ marketSlots, marketSlotCount, resources, draggingCard, onCardDragStart }) {
   return (
     <div className="market-column">
       <div className="market-label">Market</div>
-      <div className="intent-card-row market-row">
+      <div className="intent-card-row market-row" style={{ '--slot-count': marketSlotCount }}>
         {marketSlots.map((card, index) => (
           card ? (
             <Card
