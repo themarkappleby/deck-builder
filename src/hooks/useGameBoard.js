@@ -33,6 +33,9 @@ import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
 /** Fallback when the stats HUD is not mounted. Keep in sync with --hand-area-height + --bottom-hud-height. */
 const STATS_HUD_BOTTOM_FALLBACK_PX = 236;
+/** Keep in sync with --trash-drop-zone-height / --discard-drop-zone-width in dragAndTokens.css. */
+const TRASH_ZONE_HEIGHT_RATIO = 0.25;
+const DISCARD_ZONE_WIDTH_RATIO = 0.25;
 
 function syncDiscardZoneToStatsHud() {
   const statsHud = document.querySelector('.bottom-hud');
@@ -940,19 +943,27 @@ export function useGameBoard(playerCharacter) {
     const canAffordTrash = resources >= getPurchaseOrTrashCost(purchaseOrTrashCount);
 
     const discardZoneBottomY = syncDiscardZoneToStatsHud();
+    const trashZoneBottomY = viewportHeight * TRASH_ZONE_HEIGHT_RATIO;
+    const discardZoneLeftX = viewportWidth * (1 - DISCARD_ZONE_WIDTH_RATIO);
 
     // Top zone for trash (highest priority)
-    if (y < viewportHeight * 0.25 && canAffordTrash) {
+    if (y < trashZoneBottomY && canAffordTrash) {
       setDropZone('trash');
-    // Right zone for discard — stop at the top of the player stats HUD
+    // Right zone for discard — below trash, stop at the top of the player stats HUD
     } else if (
-      x > viewportWidth * 0.75 &&
+      x > discardZoneLeftX &&
+      y >= trashZoneBottomY &&
       y <= discardZoneBottomY &&
       !cannotDiscardForResources
     ) {
       setDropZone('discard');
-    // Middle/center zone for play (where the boss is)
-    } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {
+    // Play zone — left of discard, below trash, down to the player stats HUD
+    } else if (
+      x <= discardZoneLeftX &&
+      y >= trashZoneBottomY &&
+      y <= discardZoneBottomY &&
+      canAffordPlay
+    ) {
       setDropZone('play');
     } else {
       setDropZone(null);
