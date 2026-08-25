@@ -92,8 +92,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       <PlayerHud
         gameState={game.gameState}
         resources={game.resources}
-        deckLength={game.deck.length}
-        discardLength={game.discard.length}
         playerBlock={game.playerBlock}
         playTokens={game.playTokens}
         playerCharacter={playerCharacter}
