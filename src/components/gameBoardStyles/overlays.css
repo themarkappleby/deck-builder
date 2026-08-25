@@ -256,3 +256,67 @@
 .close-stats-btn:hover {
   background: #333;
 }
+
+/* Current Deck Overlay */
+.current-deck-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+}
+
+.current-deck-content {
+  background: #1a1a1a;
+  border: 2px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 95%;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.current-deck-content h3 {
+  text-align: center;
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
+.current-deck-hint {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.current-deck-empty {
+  text-align: center;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.current-deck-grid {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.current-deck-card {
+  cursor: default;
+}
+
+.current-deck-card:hover {
+  border-color: #555;
+  background: #2a2a2a;
+}
