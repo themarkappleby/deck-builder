@@ -15,6 +15,7 @@ function GameMenu({
   onToggleMenu,
   onCloseMenu,
   onViewStats,
+  onViewCurrentDeck,
   onRestart,
   onOpenDebug,
   onCloseDebug,
@@ -33,6 +34,12 @@ function GameMenu({
             onClick={onViewStats}
           >
             📊 View Stats
+          </button>
+          <button
+            className="menu-item"
+            onClick={onViewCurrentDeck}
+          >
+            🎴 Current deck
           </button>
           <button
             className="menu-item"

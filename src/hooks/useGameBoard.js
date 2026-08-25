@@ -109,6 +109,7 @@ export function useGameBoard(playerCharacter) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
+  const [showCurrentDeck, setShowCurrentDeck] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [debugBossCardsPerTurn, setDebugBossCardsPerTurn] = useState(null);
   const [debugPlayerCardsPerTurn, setDebugPlayerCardsPerTurn] = useState(PLAYER_CARDS_TO_DRAW);
@@ -1020,6 +1021,8 @@ export function useGameBoard(playerCharacter) {
     setShowMenu,
     showPlayerStats,
     setShowPlayerStats,
+    showCurrentDeck,
+    setShowCurrentDeck,
     showDebug,
     setShowDebug,
     debugBossCardsPerTurn: getBossCardsToDraw(resolveBossEncounter(bossNumber).cards),

@@ -10,6 +10,7 @@ import PlayerHand from './game/PlayerHand';
 import DropZones from './game/DropZones';
 import GameMenu from './game/GameMenu';
 import PlayerStatsOverlay from './game/PlayerStatsOverlay';
+import CurrentDeckOverlay from './game/CurrentDeckOverlay';
 import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
@@ -92,8 +93,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       <PlayerHud
         gameState={game.gameState}
         resources={game.resources}
-        deckLength={game.deck.length}
-        discardLength={game.discard.length}
         playerBlock={game.playerBlock}
         playTokens={game.playTokens}
         playerCharacter={playerCharacter}
@@ -137,6 +136,15 @@ function GameBoard({ playerCharacter, onRestart }) {
         onClose={() => game.setShowPlayerStats(false)}
       />
 
+      <CurrentDeckOverlay
+        showCurrentDeck={game.showCurrentDeck}
+        deck={game.deck}
+        hand={game.hand}
+        discard={game.discard}
+        getCardLabels={game.getHandCardLabels}
+        onClose={() => game.setShowCurrentDeck(false)}
+      />
+
       {(game.gameState === 'playerTurn' || game.gameState === 'curseDiscard') && (
         <button
           className="undo-btn"
@@ -158,6 +166,10 @@ function GameBoard({ playerCharacter, onRestart }) {
         onCloseMenu={() => game.setShowMenu(false)}
         onViewStats={() => {
           game.setShowPlayerStats(true);
+          game.setShowMenu(false);
+        }}
+        onViewCurrentDeck={() => {
+          game.setShowCurrentDeck(true);
           game.setShowMenu(false);
         }}
         onRestart={() => {
