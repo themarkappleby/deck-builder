@@ -51,13 +51,17 @@ export function getCardSymbolGradient(symbols = []) {
   const colors = uniqueSymbolColors(symbols);
   if (colors.length === 0) return 'none';
   if (colors.length === 1) {
-    return `linear-gradient(160deg, ${rgba(colors[0], 0.42)} 0%, ${rgba(colors[0], 0.12)} 48%, transparent 78%)`;
+    return `linear-gradient(160deg, ${rgba(colors[0], 0.58)} 0%, ${rgba(colors[0], 0.22)} 55%, ${rgba(colors[0], 0.08)} 100%)`;
   }
   const last = colors.length - 1;
-  const stops = colors.map((rgb, index) => `${rgba(rgb, 0.34)} ${Math.round((index / last) * 100)}%`);
+  const stops = colors.map((rgb, index) => `${rgba(rgb, 0.5)} ${Math.round((index / last) * 100)}%`);
   return `linear-gradient(135deg, ${stops.join(', ')})`;
 }
 
 export function getCardSymbolGradientStyle(symbols = []) {
-  return { '--card-symbol-gradient': getCardSymbolGradient(symbols) };
+  const gradient = getCardSymbolGradient(symbols);
+  return {
+    '--card-symbol-gradient': gradient,
+    ...(gradient === 'none' ? {} : { backgroundImage: gradient }),
+  };
 }
