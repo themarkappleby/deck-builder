@@ -914,13 +914,18 @@ export function useGameBoard(playerCharacter) {
     const canAffordPlay = resources >= 1; // Playing costs 1
     const canAffordTrash = resources >= getTrashCost(cardsTrashed);
 
+    const statsHud = document.querySelector('.bottom-hud');
+    const discardZoneBottomY = statsHud
+      ? statsHud.getBoundingClientRect().top
+      : viewportHeight - 236;
+
     // Top zone for trash (highest priority)
     if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
-    // Right zone for discard — keep above the player hand and stats HUD
+    // Right zone for discard — stop at the top of the player stats HUD
     } else if (
       x > viewportWidth * 0.75 &&
-      y <= Math.min(viewportHeight * 0.65, viewportHeight - 240) &&
+      y <= discardZoneBottomY &&
       !cannotDiscardForResources
     ) {
       setDropZone('discard');

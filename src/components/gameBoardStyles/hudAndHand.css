@@ -1,7 +1,13 @@
 /* Bottom HUD - Player Stats & HP */
+:root {
+  --hand-area-height: 180px;
+  /* border-top 2 + padding 6/8 + stats line ~16 + margin 6 + hp bar 18 */
+  --bottom-hud-height: 56px;
+}
+
 .bottom-hud {
   position: fixed;
-  bottom: 180px;
+  bottom: var(--hand-area-height);
   left: 0;
   right: 0;
   padding: 6px 12px 8px;
