@@ -43,6 +43,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 marketSlots={marketSlots}
                 marketSlotCount={game.marketSlotCount}
                 resources={game.resources}
+                purchaseOrTrashCost={game.purchaseOrTrashCost}
                 draggingCard={game.draggingCard}
                 onCardDragStart={game.handleCardDragStart}
               />
@@ -92,6 +93,7 @@ function GameBoard({ playerCharacter, onRestart }) {
       <PlayerHud
         gameState={game.gameState}
         resources={game.resources}
+        purchaseOrTrashCost={game.purchaseOrTrashCost}
         deckLength={game.deck.length}
         discardLength={game.discard.length}
         playerBlock={game.playerBlock}
@@ -122,7 +124,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         draggingSource={game.draggingSource}
         dropZone={game.dropZone}
         resources={game.resources}
-        trashCost={game.trashCost}
+        purchaseOrTrashCost={game.purchaseOrTrashCost}
         cannotDiscardForResources={game.cannotDiscardForResources}
         dragPosition={game.dragPosition}
         getHandCardLabels={game.getHandCardLabels}

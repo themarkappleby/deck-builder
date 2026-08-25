@@ -5,7 +5,7 @@ function DropZones({
   draggingSource,
   dropZone,
   resources,
-  trashCost,
+  purchaseOrTrashCost,
   cannotDiscardForResources,
   dragPosition,
   getHandCardLabels,
@@ -29,9 +29,9 @@ function DropZones({
           )}
 
           {/* Trash zone - top - only if player can afford */}
-          {resources >= trashCost && (
+          {resources >= purchaseOrTrashCost && (
             <div className={`drop-zone drop-zone-top ${dropZone === 'trash' ? 'active' : ''}`}>
-              <div className="drop-zone-label">TRASH<br/>{trashCost} 💎</div>
+              <div className="drop-zone-label">TRASH<br/>{purchaseOrTrashCost} 💎</div>
             </div>
           )}
         </>
@@ -39,7 +39,7 @@ function DropZones({
 
       {draggingCard && draggingSource === 'market' && (
         <div className={`drop-zone drop-zone-bottom ${dropZone === 'purchase' ? 'active' : ''}`}>
-          <div className="drop-zone-label">BUY<br/>{draggingCard.symbols.length} 💎</div>
+          <div className="drop-zone-label">BUY<br/>{purchaseOrTrashCost} 💎</div>
         </div>
       )}
 

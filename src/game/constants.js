@@ -17,7 +17,7 @@ export const PLAYER_CARDS_TO_DRAW = 6;
 export const BETWEEN_BOSS_HEAL = 3;
 export const MAX_PLAY_TOKENS = 10;
 
-/** Next trash costs 1 more 💎 than the number of cards already trashed this game. */
-export function getTrashCost(cardsTrashed) {
-  return cardsTrashed + 1;
+/** Next purchase or trash costs 1 more 💎 than the number already done this game. */
+export function getPurchaseOrTrashCost(purchaseOrTrashCount) {
+  return purchaseOrTrashCount + 1;
 }
