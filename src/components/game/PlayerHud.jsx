@@ -1,4 +1,4 @@
-import { countTokensOfType, getMaxUnits, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
+import { countTokensOfType, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
 
 function formatCap(count, max) {
   return Number.isFinite(max) ? `${count}/${max}` : `${count}`;
@@ -20,7 +20,6 @@ function PlayerHud({
     return null;
   }
 
-  const unitCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.UNIT);
   const energyCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.ENERGY);
 
   return (
@@ -29,9 +28,6 @@ function PlayerHud({
         <div className="stat-item">💎 {resources}</div>
         {playerBlock > 0 && (
           <div className="stat-item">🔹 {playerBlock}</div>
-        )}
-        {unitCount > 0 && (
-          <div className="stat-item" title="Units">⚔️ {formatCap(unitCount, getMaxUnits(playerCharacter, levels))}</div>
         )}
         {energyCount > 0 && (
           <div className="stat-item" title="Energy">🩸 {formatCap(energyCount, getMaxEnergy(playerCharacter, levels))}</div>
