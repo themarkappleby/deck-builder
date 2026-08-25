@@ -177,31 +177,86 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 20px;
-  overflow: auto;
 }
 
-.player-stats-content {
+.player-stats-sheet {
   background: #1a1a1a;
   border: 2px solid #444;
-  border-radius: 8px;
-  padding: 20px;
-  max-width: 95%;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
   width: 100%;
-  max-height: 90vh;
+  max-width: 720px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(100%);
+  animation: player-stats-sheet-slide-up 0.28s ease-out forwards;
+}
+
+.player-stats-sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: #555;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+@keyframes player-stats-sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.player-stats-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.player-stats-sheet-header h3,
+.player-stats-sheet-section-title {
+  text-align: left;
+  font-size: 1.2rem;
+  margin: 0;
+  color: #ddd;
+}
+
+.player-stats-sheet-close {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  background: #2a2a2a;
+  color: white;
+  border: 2px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.player-stats-sheet-close:hover {
+  background: #333;
+}
+
+.player-stats-sheet-body {
+  padding: 16px 20px 24px;
   overflow-y: auto;
 }
 
-.player-stats-content h3 {
-  text-align: center;
-  font-size: 1.3rem;
-  margin-bottom: 15px;
-  color: #ddd;
+.player-stats-sheet-section-title {
+  margin: 8px 0 8px;
 }
 
 .character-info {
@@ -300,40 +355,6 @@ button.ability-box.selectable.active {
 
 .close-stats-btn:hover {
   background: #333;
-}
-
-/* Current Deck Overlay */
-.current-deck-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  overflow: auto;
-}
-
-.current-deck-content {
-  background: #1a1a1a;
-  border: 2px solid #444;
-  border-radius: 8px;
-  padding: 20px;
-  max-width: 95%;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.current-deck-content h3 {
-  text-align: center;
-  font-size: 1.3rem;
-  margin-bottom: 8px;
-  color: #ddd;
 }
 
 .current-deck-hint {

@@ -10,10 +10,27 @@
   bottom: var(--hand-area-height);
   left: 0;
   right: 0;
+  width: 100%;
   padding: 6px 12px 8px;
   background: #1a1a1a;
+  border: none;
   border-top: 2px solid #333;
   z-index: 110;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.bottom-hud:hover {
+  background: #222;
+}
+
+.bottom-hud:focus-visible {
+  outline: 2px solid #888;
+  outline-offset: -2px;
 }
 
 .player-character-bar {
