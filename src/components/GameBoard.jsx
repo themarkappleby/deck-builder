@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useGameBoard } from '../hooks/useGameBoard';
 import AbilityChoiceOverlay from './game/AbilityChoiceOverlay';
+import EndTurnConfirmOverlay from './game/EndTurnConfirmOverlay';
 import LevelUpOverlay from './game/LevelUpOverlay';
 import GameOverOverlay from './game/GameOverOverlay';
 import MarketColumn from './game/MarketColumn';
@@ -15,8 +17,28 @@ import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
 
+const PLAY_COST = 1;
+
 function GameBoard({ playerCharacter, onRestart }) {
   const game = useGameBoard(playerCharacter);
+  const [showEndTurnConfirm, setShowEndTurnConfirm] = useState(false);
+
+  const hasHandCards = game.hand.length > 0;
+  const canPlayHandCard = hasHandCards && game.resources >= PLAY_COST;
+  const canDiscardHandCard = hasHandCards && !game.cannotDiscardForResources;
+
+  const requestEndTurn = () => {
+    if (canPlayHandCard || canDiscardHandCard) {
+      setShowEndTurnConfirm(true);
+      return;
+    }
+    game.endTurn();
+  };
+
+  const confirmEndTurn = () => {
+    setShowEndTurnConfirm(false);
+    game.endTurn();
+  };
 
   const showBattlefield = game.gameState === 'playerTurn' || game.gameState === 'ready' || game.gameState === 'assignDamage' || game.gameState === 'curseDiscard';
   const marketSlots = Array.from({ length: game.marketSlotCount }, (_, index) => game.market[index] || null);
@@ -115,7 +137,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         onDiscardCursedCard={game.discardCursedCard}
         onCardDragStart={game.handleCardDragStart}
         onAbilityButton={game.handleAbilityButton}
-        onEndTurn={game.endTurn}
+        onEndTurn={requestEndTurn}
       />
 
       <DropZones
@@ -157,6 +179,14 @@ function GameBoard({ playerCharacter, onRestart }) {
           Undo
         </button>
       )}
+
+      <EndTurnConfirmOverlay
+        open={showEndTurnConfirm}
+        canPlay={canPlayHandCard}
+        canDiscard={canDiscardHandCard}
+        onCancel={() => setShowEndTurnConfirm(false)}
+        onConfirm={confirmEndTurn}
+      />
 
       <GameMenu
         showMenu={game.showMenu}
