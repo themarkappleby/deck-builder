@@ -1,10 +1,13 @@
 import Card from '../Card';
-import { SYMBOLS } from '../../gameData';
-import { formatBossCardEffectLabels, getBossAbility, WITCH_BREW_THRESHOLD } from '../../abilityActions';
+import { formatBossCardEffectLabels, WITCH_BREW_THRESHOLD } from '../../abilityActions';
 
 function BrewPips({ tokens }) {
   return (
-    <div className="boss-brew-pips" aria-hidden="true">
+    <div
+      className="boss-brew-pips"
+      role="img"
+      aria-label={`Brew ${tokens} of ${WITCH_BREW_THRESHOLD}`}
+    >
       {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
         <span
           key={index}
@@ -74,11 +77,6 @@ function BossStage({
                 <span className="attack-text">
                   {Math.max(0, bossAttack - playerBlock)} attack
                 </span>
-              </div>
-            )}
-            {getBossAbility(currentBoss, SYMBOLS.GREEN)?.type === 'brew' && (
-              <div className="boss-brew">
-                <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
               </div>
             )}
           </div>

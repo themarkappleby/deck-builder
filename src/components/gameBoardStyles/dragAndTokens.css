@@ -327,21 +327,6 @@
   text-align: left;
 }
 
-.boss-brew {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 6px;
-}
-
-.boss-brew-label {
-  font-size: 0.75rem;
-  font-weight: bold;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #9ad27a;
-}
-
 .boss-brew-pips {
   display: flex;
   flex-shrink: 0;
