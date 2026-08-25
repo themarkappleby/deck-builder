@@ -1,4 +1,4 @@
-import { countTokensOfType, getMaxUnits, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
+import { countTokensOfType, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
 
 function formatCap(count, max) {
   return Number.isFinite(max) ? `${count}/${max}` : `${count}`;
@@ -8,8 +8,6 @@ function PlayerHud({
   gameState,
   resources,
   purchaseOrTrashCost,
-  deckLength,
-  discardLength,
   playerBlock,
   playTokens,
   playerCharacter,
@@ -23,7 +21,6 @@ function PlayerHud({
     return null;
   }
 
-  const unitCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.UNIT);
   const energyCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.ENERGY);
 
   return (
@@ -31,11 +28,8 @@ function PlayerHud({
       <div className="player-stats-bar">
         <div className="stat-item">💎 {resources}</div>
         <div className="stat-item" title="Cost to purchase or trash a card">💰 {purchaseOrTrashCost}</div>
-        <div className="stat-item">🎴 {deckLength}</div>
-        <div className="stat-item">🗑️ {discardLength}</div>
-        <div className="stat-item">🔹 {playerBlock}</div>
-        {unitCount > 0 && (
-          <div className="stat-item" title="Units">⚔️ {formatCap(unitCount, getMaxUnits(playerCharacter, levels))}</div>
+        {playerBlock > 0 && (
+          <div className="stat-item">🔹 {playerBlock}</div>
         )}
         {energyCount > 0 && (
           <div className="stat-item" title="Energy">🩸 {formatCap(energyCount, getMaxEnergy(playerCharacter, levels))}</div>
