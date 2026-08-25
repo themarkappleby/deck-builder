@@ -52,7 +52,7 @@
   margin: 0 auto 15px;
   background-color: #2a2a2a;
   background-image: var(--card-symbol-gradient, none);
-  border: 2px solid #555;
+  border: 2px solid var(--card-symbol-border, #555);
   border-radius: 6px;
   box-sizing: border-box;
   container-type: size;

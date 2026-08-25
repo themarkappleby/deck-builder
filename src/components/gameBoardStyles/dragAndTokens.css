@@ -104,7 +104,7 @@
   height: 110px;
   background-color: #2a2a2a;
   background-image: var(--card-symbol-gradient, none);
-  border: 2px solid #555;
+  border: 2px solid var(--card-symbol-border, #555);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -129,13 +129,13 @@
 
 .hand-row .card.unaffordable {
   opacity: 1;
-  border-color: #555;
+  border-color: var(--card-symbol-border, #555);
 }
 
 .hand-row .card:hover:not(.dragging) {
   transform: translateX(var(--hover-x, 0)) translateY(calc(var(--hover-y, 0px) - 20px)) rotate(var(--hover-rotation, 0deg)) scale(1.05);
   z-index: 100 !important;
-  border-color: #888;
+  border-color: var(--card-symbol-border-hover, #888);
 }
 
 .hand-row .card:active {
@@ -161,7 +161,7 @@
   height: 130px;
   background-color: #2a2a2a;
   background-image: var(--card-symbol-gradient, none);
-  border: 3px solid #888;
+  border: 3px solid var(--card-symbol-border-hover, #888);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
