@@ -25,6 +25,15 @@ function PlayerHud({
 
   return (
     <div className="bottom-hud">
+      {playerCharacter && (
+        <div className="player-character-bar" title="Race, class, and god">
+          <span className="character-identity-item">{playerCharacter.race.name}</span>
+          <span className="character-identity-sep" aria-hidden="true">·</span>
+          <span className="character-identity-item">{playerCharacter.class.name}</span>
+          <span className="character-identity-sep" aria-hidden="true">·</span>
+          <span className="character-identity-item">{playerCharacter.god.name}</span>
+        </div>
+      )}
       <div className="player-stats-bar">
         <div className="stat-item">💎 {resources}</div>
         <div className="stat-item" title="Cost to purchase or trash a card">💰 {purchaseOrTrashCost}</div>
