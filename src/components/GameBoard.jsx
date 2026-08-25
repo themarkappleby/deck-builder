@@ -102,7 +102,7 @@ function GameBoard({ playerCharacter, onRestart }) {
             classLevel={game.classLevel}
             godLevel={game.godLevel}
             levelUpPicksRemaining={game.levelUpPicksRemaining}
-            onLevelUp={game.levelUpCharacter}
+            onConfirmLevelUp={game.confirmLevelUp}
           />
         )}
 

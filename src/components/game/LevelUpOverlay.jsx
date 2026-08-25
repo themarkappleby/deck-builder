@@ -1,4 +1,4 @@
-import AbilityLines from '../AbilityLines';
+import { useState } from 'react';
 import CharacterAbilities from '../CharacterAbilities';
 
 function LevelUpOverlay({
@@ -7,82 +7,88 @@ function LevelUpOverlay({
   classLevel,
   godLevel,
   levelUpPicksRemaining,
-  onLevelUp,
+  onConfirmLevelUp,
 }) {
+  const [pending, setPending] = useState({ race: 0, class: 0, god: 0 });
+  const pendingCount = pending.race + pending.class + pending.god;
+  const canConfirm = pendingCount === levelUpPicksRemaining && levelUpPicksRemaining > 0;
+
+  const previewLevels = {
+    race: raceLevel + pending.race,
+    class: classLevel + pending.class,
+    god: godLevel + pending.god,
+  };
+
+  const owned = { race: raceLevel, class: classLevel, god: godLevel };
+
+  const handleToggleLevel = (type, targetLevel) => {
+    const ownedLevel = owned[type];
+    const extra = pending[type];
+    const displayed = ownedLevel + extra;
+
+    if (targetLevel <= ownedLevel) {
+      return;
+    }
+
+    if (targetLevel <= displayed) {
+      setPending(current => ({
+        ...current,
+        [type]: targetLevel - 1 - ownedLevel,
+      }));
+      return;
+    }
+
+    if (targetLevel === displayed + 1 && pendingCount < levelUpPicksRemaining) {
+      setPending(current => ({
+        ...current,
+        [type]: extra + 1,
+      }));
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!canConfirm) {
+      return;
+    }
+    const picks = [];
+    ['race', 'class', 'god'].forEach(type => {
+      for (let i = 0; i < pending[type]; i += 1) {
+        picks.push(type);
+      }
+    });
+    onConfirmLevelUp(picks);
+  };
+
+  const remaining = levelUpPicksRemaining - pendingCount;
+
   return (
     <div className="center-content level-up-overlay">
       <h2>
-        Level Up! Choose {levelUpPicksRemaining} more{' '}
-        {levelUpPicksRemaining === 1 ? 'option' : 'options'}
+        Level Up! Choose {remaining} more{' '}
+        {remaining === 1 ? 'upgrade' : 'upgrades'}
       </h2>
+      <p className="level-up-hint">
+        Tap a grayed-out ability to select it. Confirm when you have chosen {levelUpPicksRemaining}.
+      </p>
       <div className="level-up-current">
-        <h3>Your current abilities</h3>
         <CharacterAbilities
           playerCharacter={playerCharacter}
           raceLevel={raceLevel}
           classLevel={classLevel}
           godLevel={godLevel}
+          previewLevels={previewLevels}
+          pickLimit={levelUpPicksRemaining}
+          pendingCount={pendingCount}
+          onToggleLevel={handleToggleLevel}
         />
       </div>
-      <div className="level-up-options">
-        {raceLevel < 2 && (
-          <button
-            onClick={() => onLevelUp('race')}
-            disabled={levelUpPicksRemaining <= 0}
-          >
-            <strong>{playerCharacter.race.name} - Level {raceLevel} → {raceLevel + 1}</strong>
-            <AbilityLines level={playerCharacter.race.level2} />
-          </button>
-        )}
-        {raceLevel >= 2 && (
-          <button disabled>
-            <strong>{playerCharacter.race.name} - Max Level</strong>
-            <p>Already at maximum level</p>
-          </button>
-        )}
-
-        {classLevel < 2 && (
-          <button
-            onClick={() => onLevelUp('class')}
-            disabled={levelUpPicksRemaining <= 0}
-          >
-            <strong>{playerCharacter.class.name} - Level {classLevel} → {classLevel + 1}</strong>
-            {classLevel === 0 && (
-              <AbilityLines level={playerCharacter.class.level1} />
-            )}
-            {classLevel === 1 && (
-              <AbilityLines level={playerCharacter.class.level2} />
-            )}
-          </button>
-        )}
-        {classLevel >= 2 && (
-          <button disabled>
-            <strong>{playerCharacter.class.name} - Max Level</strong>
-            <p>Already at maximum level</p>
-          </button>
-        )}
-
-        {godLevel < 2 && (
-          <button
-            onClick={() => onLevelUp('god')}
-            disabled={levelUpPicksRemaining <= 0}
-          >
-            <strong>{playerCharacter.god.name} - Level {godLevel} → {godLevel + 1}</strong>
-            {godLevel === 0 && (
-              <AbilityLines level={playerCharacter.god.level1} />
-            )}
-            {godLevel === 1 && (
-              <AbilityLines level={playerCharacter.god.level2} />
-            )}
-          </button>
-        )}
-        {godLevel >= 2 && (
-          <button disabled>
-            <strong>{playerCharacter.god.name} - Max Level</strong>
-            <p>Already at maximum level</p>
-          </button>
-        )}
-      </div>
+      <button
+        className="big-button level-up-confirm"
+        onClick={handleConfirm}
+        disabled={!canConfirm}
+      >
+        Confirm upgrades
+      </button>
     </div>
   );
 }
