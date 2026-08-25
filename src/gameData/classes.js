@@ -7,15 +7,15 @@ export const classes = [
     side: 'A',
     level1: {
       symbol: SYMBOLS.GREEN,
-      symbolEffect: '+2 0/1 plant tokens to the play field',
-      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener' }],
-      effect: 'Each plant token starts with a counter of 2. At the start of each turn, reduce each plant token\'s counter by 1 (min 0). Harvest tokens with a counter of 0 for 2 💎 each.'
+      symbolEffect: '+2 0/1 plant units to the play field',
+      onSymbol: [{ type: 'spawnToken', count: 2, attack: 0, defense: 1, kind: 'gardener', tokenType: 'unit' }],
+      effect: 'Each plant unit starts with a counter of 2. At the start of each turn, reduce each plant unit\'s counter by 1 (min 0). Harvest units with a counter of 0 for 2 💎 each.'
     },
     level2: {
       symbol: SYMBOLS.GREEN,
-      symbolEffect: '+1 token',
-      onSymbol: [{ type: 'spawnToken', count: 1, kind: 'gardener' }],
-      effect: 'All gardener tokens are 1/2.',
+      symbolEffect: '+1 unit',
+      onSymbol: [{ type: 'spawnToken', count: 1, kind: 'gardener', tokenType: 'unit' }],
+      effect: 'All gardener units are 1/2.',
       replaceLevel1: false
     }
   },
@@ -25,17 +25,17 @@ export const classes = [
     side: 'A',
     level1: {
       symbol: SYMBOLS.GREEN,
-      symbolEffect: '+1 token',
-      onSymbol: [{ type: 'spawnToken', count: 1, kind: 'vampiera' }],
-      effect: 'You may discard 3 tokens at any time to heal 3 HP. Max tokens: 6.'
+      symbolEffect: '+1 energy',
+      onSymbol: [{ type: 'spawnToken', count: 1, kind: 'vampiera', tokenType: 'energy' }],
+      effect: 'You may discard 3 energy at any time to heal 3 HP. Max energy: 6.'
     },
     level2: {
-      additionalEffect: '🔺 +1 token. Max tokens: 10.',
+      additionalEffect: '🔺 +1 energy. Max energy: 10.',
       extraTriggers: [
         {
           symbol: SYMBOLS.ATTACK,
-          symbolEffect: '+1 token',
-          onSymbol: [{ type: 'spawnToken', count: 1, kind: 'vampiera' }]
+          symbolEffect: '+1 energy',
+          onSymbol: [{ type: 'spawnToken', count: 1, kind: 'vampiera', tokenType: 'energy' }]
         }
       ]
     }
