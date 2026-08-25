@@ -1,4 +1,10 @@
-import { tokenCanAttack, tokenCanBlock, tokenCanHarvest, formatTokenStats } from '../../abilityActions';
+import {
+  tokenCanAttack,
+  tokenCanHarvest,
+  formatTokenStats,
+  playTokenType,
+  PLAY_TOKEN_TYPE,
+} from '../../abilityActions';
 
 function PlayField({
   playTokens,
@@ -19,20 +25,25 @@ function PlayField({
           : 'Play field'}
       </div>
       <div className="play-token-row">
-        {playTokens.map(token => (
-          <button
-            key={token.id}
-            type="button"
-            className={`play-token${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${tokenCanHarvest(token) ? ' can-harvest' : ''}${!tokenCanBlock(token) && !tokenCanAttack(token) ? ' no-stats' : ''}${token.kind === 'gardener' && !tokenCanHarvest(token) ? ' unharvestable' : ''}`}
-            onClick={() => onTokenClick(token)}
-          >
-            {token.kind === 'gardener' && (
-              <span className="play-token-counter">{token.counter ?? 0}</span>
-            )}
-            <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : '🪙'}</span>
-            <span className="play-token-stats">{formatTokenStats(token)}</span>
-          </button>
-        ))}
+        {playTokens.map(token => {
+          const type = playTokenType(token);
+          const stats = formatTokenStats(token);
+          return (
+            <button
+              key={token.id}
+              type="button"
+              className={`play-token ${type}${tokenCanAttack(token) && gameState === 'playerTurn' ? ' can-attack' : ''}${tokenCanHarvest(token) ? ' can-harvest' : ''}${type === PLAY_TOKEN_TYPE.ENERGY ? ' no-stats' : ''}${token.kind === 'gardener' && !tokenCanHarvest(token) ? ' unharvestable' : ''}`}
+              onClick={() => onTokenClick(token)}
+              title={type === PLAY_TOKEN_TYPE.UNIT ? 'Unit' : 'Energy'}
+            >
+              {token.kind === 'gardener' && (
+                <span className="play-token-counter">{token.counter ?? 0}</span>
+              )}
+              <span className="play-token-kind">{token.kind === 'gardener' ? '🌱' : token.kind === 'vampiera' ? '🩸' : type === PLAY_TOKEN_TYPE.UNIT ? '⚔️' : '✨'}</span>
+              {stats ? <span className="play-token-stats">{stats}</span> : null}
+            </button>
+          );
+        })}
       </div>
       {gameState === 'assignDamage' && (
         <button className="action-btn" onClick={onTakeRemainingDamage}>

@@ -1,4 +1,4 @@
-import { tokenCanHarvest } from './tokens';
+import { countTokensOfType, PLAY_TOKEN_TYPE, tokenCanHarvest } from './tokens';
 
 /**
  * @param {object} playerCharacter
@@ -10,6 +10,7 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
   const tokens = context.tokens || [];
   const buttons = [];
   const ripeCount = tokens.filter(tokenCanHarvest).length;
+  const energyCount = countTokensOfType(tokens, PLAY_TOKEN_TYPE.ENERGY);
 
   if (
     playerCharacter.class.id === 'gardener' &&
@@ -30,14 +31,14 @@ export function getActiveAbilityUI(playerCharacter, levels, context = {}) {
     buttons.push({
       id: 'vampiera-heal',
       source: 'class',
-      label: 'Discard 3 tokens: heal 3 HP',
+      label: 'Discard 3 energy: heal 3 HP',
       className: 'blood-btn',
-      disabled: tokens.length < 3,
+      disabled: energyCount < 3,
       action: 'vampieraHeal',
     });
   }
 
-  return { tokenDisplays: [], tokenDisplays: [], buttons };
+  return { tokenDisplays: [], buttons };
 }
 
 /** Max god ability uses this round for the active god level. */

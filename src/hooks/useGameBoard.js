@@ -5,17 +5,23 @@ import {
   getCardPlayTotals,
   formatCardEffectLabels,
   addTokensToField,
-  doublePlayTokens,
-  buffPlayTokens,
+  doublePlayUnits,
+  buffPlayUnits,
   upgradeGardenerTokens,
   assignDamageToToken,
   discardToken,
+  discardEnergy,
   tokenCanAttack,
   tokenCanBlock,
   harvestEligibleTokens,
   tickPlantTokenCounters,
   GARDENER_HARVEST_RESOURCES,
-  getMaxTokens,
+  getMaxUnits,
+  getMaxEnergy,
+  isUnit,
+  isEnergy,
+  PLAY_TOKEN_TYPE,
+  countTokensOfType,
   getBossRoundAction,
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
@@ -24,6 +30,39 @@ import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getTrash
 import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
+
+/** Fallback when the stats HUD is not mounted. Keep in sync with --hand-area-height + --bottom-hud-height. */
+const STATS_HUD_BOTTOM_FALLBACK_PX = 236;
+
+function syncDiscardZoneToStatsHud() {
+  const statsHud = document.querySelector('.bottom-hud');
+  const top = statsHud
+    ? statsHud.getBoundingClientRect().top
+    : window.innerHeight - STATS_HUD_BOTTOM_FALLBACK_PX;
+  document.documentElement.style.setProperty(
+    '--discard-zone-bottom',
+    `${window.innerHeight - top}px`
+  );
+  return top;
+}
+
+function describeSpawned(added) {
+  const units = added.filter(isUnit).length;
+  const energy = added.filter(isEnergy).length;
+  const parts = [];
+  if (units > 0) parts.push(`${units} unit${units === 1 ? '' : 's'}`);
+  if (energy > 0) parts.push(`${energy} energy`);
+  return parts.join(' and ') || 'nothing';
+}
+
+function formatFieldCounts(tokens) {
+  const units = countTokensOfType(tokens, PLAY_TOKEN_TYPE.UNIT);
+  const energy = countTokensOfType(tokens, PLAY_TOKEN_TYPE.ENERGY);
+  const parts = [];
+  if (units > 0) parts.push(`${units} unit${units === 1 ? '' : 's'}`);
+  if (energy > 0) parts.push(`${energy} energy`);
+  return parts.join(', ') || '0';
+}
 
 export function useGameBoard(playerCharacter) {
   const [gameState, setGameState] = useState('setup');
@@ -143,6 +182,13 @@ export function useGameBoard(playerCharacter) {
     if (gameState === 'ready') {
       startRound();
     }
+  }, [gameState]);
+
+  useEffect(() => {
+    const updateDiscardZone = () => syncDiscardZoneToStatsHud();
+    updateDiscardZone();
+    window.addEventListener('resize', updateDiscardZone);
+    return () => window.removeEventListener('resize', updateDiscardZone);
   }, [gameState]);
 
   const initializeGame = () => {
@@ -441,20 +487,23 @@ export function useGameBoard(playerCharacter) {
       const result = addTokensToField(nextTokens, symbolEffects.spawn, playerCharacter, { raceLevel, classLevel, godLevel });
       nextTokens = result.tokens;
       if (result.added.length > 0) {
-        addLog(`Spawned ${result.added.length} token${result.added.length > 1 ? 's' : ''} (${nextTokens.length} in play)`);
+        addLog(`Spawned ${describeSpawned(result.added)} (${formatFieldCounts(nextTokens)} in play)`);
       }
-      if (result.capped) {
-        addLog(`Token limit reached (${getMaxTokens(playerCharacter, { raceLevel, classLevel, godLevel })})`);
+      for (const type of result.cappedTypes || []) {
+        const max = type === PLAY_TOKEN_TYPE.UNIT
+          ? getMaxUnits(playerCharacter, { raceLevel, classLevel, godLevel })
+          : getMaxEnergy(playerCharacter, { raceLevel, classLevel, godLevel });
+        addLog(`${type === PLAY_TOKEN_TYPE.UNIT ? 'Unit' : 'Energy'} limit reached (${max})`);
       }
     }
-    if (symbolEffects.doubleTokens) {
-      const result = doublePlayTokens(nextTokens, playerCharacter, { raceLevel, classLevel, godLevel });
+    if (symbolEffects.doubleUnits) {
+      const result = doublePlayUnits(nextTokens, playerCharacter, { raceLevel, classLevel, godLevel });
       nextTokens = result.tokens;
-      addLog(`Doubled tokens (${result.added.length} added, ${nextTokens.length} in play)`);
+      addLog(`Doubled units (${result.added.length} added, ${countTokensOfType(nextTokens, PLAY_TOKEN_TYPE.UNIT)} units in play)`);
     }
-    if ((symbolEffects.buffTokens?.attack || 0) > 0 || (symbolEffects.buffTokens?.defense || 0) > 0) {
-      nextTokens = buffPlayTokens(nextTokens, symbolEffects.buffTokens.attack, symbolEffects.buffTokens.defense);
-      addLog(`Tokens gained +${symbolEffects.buffTokens.attack}/+${symbolEffects.buffTokens.defense}`);
+    if ((symbolEffects.buffUnits?.attack || 0) > 0 || (symbolEffects.buffUnits?.defense || 0) > 0) {
+      nextTokens = buffPlayUnits(nextTokens, symbolEffects.buffUnits.attack, symbolEffects.buffUnits.defense);
+      addLog(`Units gained +${symbolEffects.buffUnits.attack}/+${symbolEffects.buffUnits.defense}`);
     }
     if (nextTokens !== playTokens) {
       setPlayTokens(nextTokens);
@@ -655,7 +704,7 @@ export function useGameBoard(playerCharacter) {
       if (blockable) {
         setIncomingDamage(afterBlock);
         setGameState('assignDamage');
-        addLog(`Boss attacks for ${bossAction.value}. Assign ${afterBlock} remaining damage to tokens or take it.`);
+        addLog(`Boss attacks for ${bossAction.value}. Assign ${afterBlock} remaining damage to units or take it.`);
         return;
       }
       if (applyRemainingPlayerDamage(afterBlock)) {
@@ -691,7 +740,7 @@ export function useGameBoard(playerCharacter) {
       applied = true;
       if (playerCharacter.class.id === 'gardener' && newLevel === 2) {
         setPlayTokens(prev => upgradeGardenerTokens(prev, 2));
-        addLog('Gardener tokens are now 1/2.');
+        addLog('Gardener units are now 1/2.');
       }
     } else if (cardType === 'god' && godLevelRef.current < 2) {
       const newLevel = godLevelRef.current + 1;
@@ -748,7 +797,7 @@ export function useGameBoard(playerCharacter) {
     } else {
       addLog(`Health is already at max (${reset.playerHP}/${playerMaxHP} HP)`);
     }
-    addLog('Resources, block, and tokens do not carry over to the next boss');
+    addLog('Resources, block, units, and energy do not carry over to the next boss');
 
     setGameState('ready');
     addLog(`Next boss: ${boss.name} (Level ${nextBossNumber})`);
@@ -793,29 +842,32 @@ export function useGameBoard(playerCharacter) {
     setPlayTokens(result.tokens);
     playTokensRef.current = result.tokens;
     setResources(prev => prev + gained);
-    addLog(`Harvested ${result.harvested.length} plant token${result.harvested.length === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
+    addLog(`Harvested ${result.harvested.length} plant unit${result.harvested.length === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
   };
 
   const handleAbilityButton = (button) => {
     if (button.action === 'harvestTokens') {
       harvestLeftoverTokens();
     } else if (button.action === 'vampieraHeal') {
-      if (playTokens.length < 3) {
-        addLog('Need 3 tokens to heal');
+      const energyCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.ENERGY);
+      if (energyCount < 3) {
+        addLog('Need 3 energy to heal');
         return;
       }
       pushUndoSnapshot();
-      setPlayTokens(prev => prev.slice(0, -3));
+      const result = discardEnergy(playTokens, 3);
+      setPlayTokens(result.tokens);
+      playTokensRef.current = result.tokens;
       const newHP = Math.min(playerMaxHP, playerHP + 3);
       setPlayerHP(newHP);
-      addLog(`Discarded 3 tokens: Healed 3 HP (${newHP}/${playerMaxHP})`);
+      addLog(`Discarded 3 energy: Healed 3 HP (${newHP}/${playerMaxHP})`);
     }
   };
 
   const handleTokenClick = (token) => {
     if (gameState === 'assignDamage') {
       if (!tokenCanBlock(token)) {
-        addLog('That token cannot block');
+        addLog('That unit cannot block');
         return;
       }
       const result = assignDamageToToken(playTokensRef.current, token.id, incomingDamageRef.current);
@@ -823,9 +875,9 @@ export function useGameBoard(playerCharacter) {
       playTokensRef.current = result.tokens;
       setIncomingDamage(result.remaining);
       incomingDamageRef.current = result.remaining;
-      addLog(`Token blocked ${result.absorbed} damage`);
+      addLog(`Unit blocked ${result.absorbed} damage`);
       if (result.remaining <= 0) {
-        addLog('All remaining damage was assigned to tokens');
+        addLog('All remaining damage was assigned to units');
         finishBossTurn();
       }
       return;
@@ -839,7 +891,7 @@ export function useGameBoard(playerCharacter) {
       const nextTokens = discardToken(playTokensRef.current, token.id);
       setPlayTokens(nextTokens);
       playTokensRef.current = nextTokens;
-      addLog(`Token attacked for ${token.attack} and was discarded`);
+      addLog(`Unit attacked for ${token.attack} and was discarded`);
     }
   };
 
@@ -863,6 +915,7 @@ export function useGameBoard(playerCharacter) {
     setDraggingSource(source);
     const touch = e.touches ? e.touches[0] : e;
     setDragPosition({ x: touch.clientX, y: touch.clientY });
+    syncDiscardZoneToStatsHud();
   };
 
   const handleCardDragMove = (e) => {
@@ -884,11 +937,17 @@ export function useGameBoard(playerCharacter) {
     const canAffordPlay = resources >= 1; // Playing costs 1
     const canAffordTrash = resources >= getTrashCost(cardsTrashed);
 
+    const discardZoneBottomY = syncDiscardZoneToStatsHud();
+
     // Top zone for trash (highest priority)
     if (y < viewportHeight * 0.25 && canAffordTrash) {
       setDropZone('trash');
-    // Right zone for discard
-    } else if (x > viewportWidth * 0.75 && !cannotDiscardForResources) {
+    // Right zone for discard — stop at the top of the player stats HUD
+    } else if (
+      x > viewportWidth * 0.75 &&
+      y <= discardZoneBottomY &&
+      !cannotDiscardForResources
+    ) {
       setDropZone('discard');
     // Middle/center zone for play (where the boss is)
     } else if (x >= viewportWidth * 0.3 && x <= viewportWidth * 0.7 && y >= viewportHeight * 0.25 && y <= viewportHeight * 0.65 && canAffordPlay) {

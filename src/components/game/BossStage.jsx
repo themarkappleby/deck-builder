@@ -1,12 +1,27 @@
 import Card from '../Card';
-import { SYMBOLS } from '../../gameData';
-import { formatBossCardEffectLabels, getBossAbility, WITCH_BREW_THRESHOLD } from '../../abilityActions';
+import { formatBossCardEffectLabels, WITCH_BREW_THRESHOLD } from '../../abilityActions';
+
+function BrewPips({ tokens }) {
+  return (
+    <div
+      className="boss-brew-pips"
+      role="img"
+      aria-label={`Brew ${tokens} of ${WITCH_BREW_THRESHOLD}`}
+    >
+      {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
+        <span
+          key={index}
+          className={`boss-brew-pip${index < tokens ? ' filled' : ''}`}
+        />
+      ))}
+    </div>
+  );
+}
 
 function BossStage({
   currentBoss,
   bossNumber,
   roundNumber,
-  bossAbilityLines,
   bossHP,
   bossMaxHP,
   bossBlock,
@@ -17,16 +32,22 @@ function BossStage({
   bossAttack,
   playerBlock,
 }) {
+  const bossAbilities = Object.entries(currentBoss?.abilities || {});
+
   return (
     <div className="boss-stage">
       <div className="boss-cluster">
         <div className="boss-identity">
+          <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
           <div className="boss-status">
             <div className="boss-name">{currentBoss?.name} (Level {bossNumber}) - Round {roundNumber}</div>
-            {bossAbilityLines.length > 0 && (
+            {bossAbilities.length > 0 && (
               <div className="boss-abilities">
-                {bossAbilityLines.map(line => (
-                  <p key={line}>{line}</p>
+                {bossAbilities.map(([symbol, ability]) => (
+                  <div key={symbol} className="boss-ability-row">
+                    <p>{`${symbol} ${ability.name}: ${ability.symbolEffect}`}</p>
+                    {ability.type === 'brew' && <BrewPips tokens={bossTokens} />}
+                  </div>
                 ))}
               </div>
             )}
@@ -45,21 +66,18 @@ function BossStage({
                 {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
               </span>
             </div>
-            {getBossAbility(currentBoss, SYMBOLS.GREEN)?.type === 'brew' && (
-              <div className="boss-brew">
-                <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
-                <div className="boss-brew-pips" aria-hidden="true">
-                  {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
-                    <span
-                      key={index}
-                      className={`boss-brew-pip${index < bossTokens ? ' filled' : ''}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="attack-bar boss-attack-bar">
+              <div
+                className="attack-fill"
+                style={{
+                  width: `${bossAttack > 0 ? (Math.max(0, bossAttack - playerBlock) / bossAttack) * 100 : 0}%`
+                }}
+              ></div>
+              <span className="attack-text">
+                {Math.max(0, bossAttack - playerBlock)} attack
+              </span>
+            </div>
           </div>
-          <div className="boss-placeholder">{currentBoss?.id === 'witch' ? '🧙' : '🐉'}</div>
         </div>
         <div className="intent-card-row boss-cards-row" style={{ '--slot-count': bossCards.length || marketSlotCount }}>
           {bossCards.map(card => (
@@ -70,19 +88,6 @@ function BossStage({
               effectLabels={formatBossCardEffectLabels(currentBoss, card.symbols)}
             />
           ))}
-        </div>
-        <div className="enemy-attack-slot">
-          <div className="attack-bar boss-attack-bar">
-            <div
-              className="attack-fill"
-              style={{
-                width: `${bossAttack > 0 ? (Math.max(0, bossAttack - playerBlock) / bossAttack) * 100 : 0}%`
-              }}
-            ></div>
-            <span className="attack-text">
-              {Math.max(0, bossAttack - playerBlock)} attack
-            </span>
-          </div>
         </div>
       </div>
     </div>

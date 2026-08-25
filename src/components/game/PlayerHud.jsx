@@ -1,4 +1,8 @@
-import { getMaxTokens } from '../../abilityActions';
+import { countTokensOfType, getMaxUnits, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
+
+function formatCap(count, max) {
+  return Number.isFinite(max) ? `${count}/${max}` : `${count}`;
+}
 
 function PlayerHud({
   gameState,
@@ -18,6 +22,9 @@ function PlayerHud({
     return null;
   }
 
+  const unitCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.UNIT);
+  const energyCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.ENERGY);
+
   return (
     <div className="bottom-hud">
       <div className="player-stats-bar">
@@ -25,8 +32,11 @@ function PlayerHud({
         <div className="stat-item">🎴 {deckLength}</div>
         <div className="stat-item">🗑️ {discardLength}</div>
         <div className="stat-item">🔹 {playerBlock}</div>
-        {playTokens.length > 0 && (
-          <div className="stat-item">🪙 {playTokens.length}/{getMaxTokens(playerCharacter, levels)}</div>
+        {unitCount > 0 && (
+          <div className="stat-item" title="Units">⚔️ {formatCap(unitCount, getMaxUnits(playerCharacter, levels))}</div>
+        )}
+        {energyCount > 0 && (
+          <div className="stat-item" title="Energy">🩸 {formatCap(energyCount, getMaxEnergy(playerCharacter, levels))}</div>
         )}
         {ignoreIncomingDamage && (
           <div className="stat-item" title="Ignore incoming damage">✨ Guard</div>

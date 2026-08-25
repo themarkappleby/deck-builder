@@ -1,4 +1,3 @@
-import { formatBossAbilityLines } from '../abilityActions';
 import { useGameBoard } from '../hooks/useGameBoard';
 import AbilityChoiceOverlay from './game/AbilityChoiceOverlay';
 import LevelUpOverlay from './game/LevelUpOverlay';
@@ -19,7 +18,6 @@ function GameBoard({ playerCharacter, onRestart }) {
   const game = useGameBoard(playerCharacter);
 
   const showBattlefield = game.gameState === 'playerTurn' || game.gameState === 'ready' || game.gameState === 'assignDamage' || game.gameState === 'curseDiscard';
-  const bossAbilityLines = formatBossAbilityLines(game.currentBoss);
   const marketSlots = Array.from({ length: game.marketSlotCount }, (_, index) => game.market[index] || null);
 
   return (
@@ -52,7 +50,6 @@ function GameBoard({ playerCharacter, onRestart }) {
                 currentBoss={game.currentBoss}
                 bossNumber={game.bossNumber}
                 roundNumber={game.roundNumber}
-                bossAbilityLines={bossAbilityLines}
                 bossHP={game.bossHP}
                 bossMaxHP={game.bossMaxHP}
                 bossBlock={game.bossBlock}
