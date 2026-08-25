@@ -1,4 +1,9 @@
 /* Drop Zones for Card Dragging */
+:root {
+  --trash-drop-zone-height: 25%;
+  --discard-drop-zone-width: 25%;
+}
+
 .drop-zone {
   position: fixed;
   display: flex;
@@ -15,13 +20,14 @@
 }
 
 .drop-zone-center {
-  top: 25%;
-  left: 30%;
-  right: 30%;
-  bottom: 35%;
+  top: var(--trash-drop-zone-height);
+  left: 0;
+  right: var(--discard-drop-zone-width);
+  /* Meet the top of the player stats HUD */
+  bottom: var(--discard-zone-bottom, calc(var(--hand-area-height) + var(--bottom-hud-height)));
   background: radial-gradient(ellipse at center, rgba(90, 150, 42, 0.5), transparent 70%);
   border: 4px solid rgba(90, 150, 42, 0.8);
-  border-radius: 20px;
+  border-radius: 0;
 }
 
 .drop-zone-center.active {
@@ -31,11 +37,11 @@
 }
 
 .drop-zone-right {
-  top: 0;
+  top: var(--trash-drop-zone-height);
   right: 0;
   /* Meet the top of the player stats HUD; keep the hand uncovered */
   bottom: var(--discard-zone-bottom, calc(var(--hand-area-height) + var(--bottom-hud-height)));
-  width: 25%;
+  width: var(--discard-drop-zone-width);
   background: linear-gradient(to left, rgba(42, 90, 150, 0.5), transparent);
   border-left: 4px solid rgba(42, 90, 150, 0.8);
 }
@@ -50,7 +56,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 25%;
+  height: var(--trash-drop-zone-height);
   background: linear-gradient(to bottom, rgba(150, 42, 42, 0.5), transparent);
   border-bottom: 4px solid rgba(150, 42, 42, 0.8);
 }
