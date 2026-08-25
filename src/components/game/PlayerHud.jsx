@@ -7,6 +7,7 @@ function formatCap(count, max) {
 function PlayerHud({
   gameState,
   resources,
+  purchaseOrTrashCost,
   playerBlock,
   playTokens,
   playerCharacter,
@@ -26,6 +27,7 @@ function PlayerHud({
     <div className="bottom-hud">
       <div className="player-stats-bar">
         <div className="stat-item">💎 {resources}</div>
+        <div className="stat-item" title="Cost to purchase or trash a card">💰 {purchaseOrTrashCost}</div>
         {playerBlock > 0 && (
           <div className="stat-item">🔹 {playerBlock}</div>
         )}

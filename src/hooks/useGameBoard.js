@@ -26,7 +26,7 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getTrashCost } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getPurchaseOrTrashCost } from '../game/constants';
 import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
@@ -91,7 +91,7 @@ export function useGameBoard(playerCharacter) {
   const [hand, setHand] = useState([]);
   const [discard, setDiscard] = useState([]);
   const [resources, setResources] = useState(0);
-  const [cardsTrashed, setCardsTrashed] = useState(0);
+  const [purchaseOrTrashCount, setPurchaseOrTrashCount] = useState(0);
 
   const [market, setMarket] = useState([]);
   const [marketDeck, setMarketDeck] = useState([]);
@@ -370,7 +370,7 @@ export function useGameBoard(playerCharacter) {
     hand: cloneValue(hand),
     discard: cloneValue(discard),
     resources,
-    cardsTrashed,
+    purchaseOrTrashCount,
     market: cloneValue(market),
     marketDeck: cloneValue(marketDeck),
     marketDiscard: cloneValue(marketDiscard),
@@ -394,7 +394,7 @@ export function useGameBoard(playerCharacter) {
     setHand(snapshot.hand);
     setDiscard(snapshot.discard);
     setResources(snapshot.resources);
-    setCardsTrashed(snapshot.cardsTrashed ?? 0);
+    setPurchaseOrTrashCount(snapshot.purchaseOrTrashCount ?? snapshot.cardsTrashed ?? 0);
     setMarket(snapshot.market);
     marketRef.current = snapshot.market;
     setMarketDeck(snapshot.marketDeck);
@@ -558,7 +558,7 @@ export function useGameBoard(playerCharacter) {
   );
 
   const purchaseCard = (card) => {
-    const cost = card.symbols.length;
+    const cost = getPurchaseOrTrashCost(purchaseOrTrashCount);
     if (resources < cost) {
       addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
@@ -566,17 +566,18 @@ export function useGameBoard(playerCharacter) {
 
     pushUndoSnapshot();
     setResources(prev => prev - cost);
+    setPurchaseOrTrashCount(prev => prev + 1);
     const newDiscard = [...discard, { ...card, id: `${card.id}_purchased_${Date.now()}` }];
     setDiscard(newDiscard);
 
     const newMarket = market.filter(c => c.id !== card.id);
     refreshMarket(newMarket);
 
-    addLog(`Purchased ${card.name} (${cost} resources spent, ${resources - cost} remaining)`);
+    addLog(`Purchased ${card.name} (${cost} resources spent, next purchase/trash costs ${cost + 1})`);
   };
 
   const trashCard = (card) => {
-    const cost = getTrashCost(cardsTrashed);
+    const cost = getPurchaseOrTrashCost(purchaseOrTrashCount);
     if (resources < cost) {
       addLog(`Not enough resources! Need ${cost}, have ${resources}`);
       return;
@@ -586,9 +587,9 @@ export function useGameBoard(playerCharacter) {
     const newHand = hand.filter(c => c.id !== card.id);
     setHand(newHand);
     setResources(prev => prev - cost);
-    setCardsTrashed(prev => prev + 1);
+    setPurchaseOrTrashCount(prev => prev + 1);
 
-    addLog(`Trashed ${card.name} permanently (${cost} resources spent, next trash costs ${cost + 1})`);
+    addLog(`Trashed ${card.name} permanently (${cost} resources spent, next purchase/trash costs ${cost + 1})`);
   };
 
   const refreshMarket = (currentMarket) => {
@@ -909,7 +910,7 @@ export function useGameBoard(playerCharacter) {
   const handleCardDragStart = (card, e, source = 'hand') => {
     if (gameState !== 'playerTurn') return;
     if (source === 'market') {
-      if (resources < card.symbols.length) return;
+      if (resources < getPurchaseOrTrashCost(purchaseOrTrashCount)) return;
       e.preventDefault();
     }
     setDraggingCard(card);
@@ -936,7 +937,7 @@ export function useGameBoard(playerCharacter) {
     }
 
     const canAffordPlay = resources >= 1; // Playing costs 1
-    const canAffordTrash = resources >= getTrashCost(cardsTrashed);
+    const canAffordTrash = resources >= getPurchaseOrTrashCost(purchaseOrTrashCount);
 
     const discardZoneBottomY = syncDiscardZoneToStatsHud();
 
@@ -1006,8 +1007,8 @@ export function useGameBoard(playerCharacter) {
     hand,
     discard,
     resources,
-    cardsTrashed,
-    trashCost: getTrashCost(cardsTrashed),
+    purchaseOrTrashCount,
+    purchaseOrTrashCost: getPurchaseOrTrashCost(purchaseOrTrashCount),
     market,
     marketSlotCount,
     bossNumber,

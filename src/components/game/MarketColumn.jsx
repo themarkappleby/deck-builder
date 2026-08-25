@@ -1,6 +1,6 @@
 import Card from '../Card';
 
-function MarketColumn({ marketSlots, marketSlotCount, resources, draggingCard, onCardDragStart }) {
+function MarketColumn({ marketSlots, marketSlotCount, resources, purchaseOrTrashCost, draggingCard, onCardDragStart }) {
   return (
     <div className="market-column">
       <div className="market-label">Market</div>
@@ -11,7 +11,7 @@ function MarketColumn({ marketSlots, marketSlotCount, resources, draggingCard, o
               key={card.id}
               card={card}
               isMarket={true}
-              canAfford={resources >= card.symbols.length}
+              canAfford={resources >= purchaseOrTrashCost}
               className={draggingCard?.id === card.id ? 'dragging' : ''}
               onMouseDown={(e) => onCardDragStart(card, e, 'market')}
               onTouchStart={(e) => onCardDragStart(card, e, 'market')}
