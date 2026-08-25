@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import CharacterAbilities from '../CharacterAbilities';
 import Card from '../Card';
 import { shuffleArray } from '../../utils/shuffle';
@@ -23,6 +23,18 @@ function PlayerStatsOverlay({
     snapshotRef.current = shuffleArray([...deck, ...hand, ...discard]);
   }
   wasShownRef.current = showPlayerStats;
+
+  useEffect(() => {
+    if (!showPlayerStats) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showPlayerStats, onClose]);
 
   if (!showPlayerStats) return null;
 
