@@ -1,4 +1,5 @@
 import { CardSymbols, CardEffectLabels } from '../Card';
+import { getCardSymbolGradientStyle } from '../../gameData/symbols';
 
 function DropZones({
   draggingCard,
@@ -49,6 +50,7 @@ function DropZones({
           style={{
             left: `${dragPosition.x}px`,
             top: `${dragPosition.y}px`,
+            ...getCardSymbolGradientStyle(draggingCard.symbols),
           }}
         >
           <CardSymbols symbols={draggingCard.symbols} />

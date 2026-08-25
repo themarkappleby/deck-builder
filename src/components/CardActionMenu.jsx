@@ -1,5 +1,6 @@
 import React from 'react';
 import { CardSymbols } from './Card';
+import { getCardSymbolGradientStyle } from '../gameData/symbols';
 import './CardActionMenu.css';
 
 function CardActionMenu({ card, isMarket, canAfford, onPlay, onDiscard, onTrash, onBuy, onClose }) {
@@ -12,7 +13,7 @@ function CardActionMenu({ card, isMarket, canAfford, onPlay, onDiscard, onTrash,
       <div className="action-menu-overlay" onClick={onClose} />
       <div className="action-menu">
         <div className="action-menu-header">
-          <div className="action-menu-card-preview">
+          <div className="action-menu-card-preview" style={getCardSymbolGradientStyle(card.symbols)}>
             <CardSymbols symbols={card.symbols} />
           </div>
           <div className="action-menu-cost">Cost: {cost} 💎</div>

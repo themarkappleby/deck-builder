@@ -1,4 +1,5 @@
 import React from 'react';
+import { getCardSymbolGradientStyle } from '../gameData/symbols';
 import './Card.css';
 
 export function CardSymbols({ symbols = [] }) {
@@ -41,7 +42,7 @@ function Card({ card, onClick, isMarket = false, canAfford = true, className = '
   return (
     <div
       className={classes}
-      style={style}
+      style={{ ...getCardSymbolGradientStyle(card?.symbols), ...style }}
       onClick={onClick}
       {...handlers}
     >

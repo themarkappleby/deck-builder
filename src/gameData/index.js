@@ -1,4 +1,4 @@
-export { SYMBOLS } from './symbols';
+export { SYMBOLS, getCardSymbolGradient, getCardSymbolGradientStyle } from './symbols';
 export { races } from './races';
 export { classes } from './classes';
 export { gods } from './gods';

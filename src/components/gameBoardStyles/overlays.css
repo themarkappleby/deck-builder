@@ -318,7 +318,7 @@
 
 .current-deck-card:hover {
   border-color: #555;
-  background: #2a2a2a;
+  background-color: #2a2a2a;
 }
 
 /* End Turn confirmation */
