@@ -14,8 +14,6 @@ function GameMenu({
   debugBossStartingHealth,
   onToggleMenu,
   onCloseMenu,
-  onViewStats,
-  onViewCurrentDeck,
   onRestart,
   onOpenDebug,
   onCloseDebug,
@@ -29,18 +27,6 @@ function GameMenu({
 
       {showMenu && (
         <div className="menu-popover">
-          <button
-            className="menu-item"
-            onClick={onViewStats}
-          >
-            📊 View Stats
-          </button>
-          <button
-            className="menu-item"
-            onClick={onViewCurrentDeck}
-          >
-            🎴 Current deck
-          </button>
           <button
             className="menu-item"
             onClick={onRestart}

@@ -16,6 +16,7 @@ function PlayerHud({
   cannotDiscardForResources,
   playerHP,
   playerMaxHP,
+  onOpenCharacterSheet,
 }) {
   if (gameState === 'abilityChoice' || gameState === 'levelUp') {
     return null;
@@ -24,7 +25,12 @@ function PlayerHud({
   const energyCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.ENERGY);
 
   return (
-    <div className="bottom-hud">
+    <button
+      type="button"
+      className="bottom-hud"
+      onClick={onOpenCharacterSheet}
+      aria-label="View race, class, god abilities, and your cards"
+    >
       {playerCharacter && (
         <div className="player-character-bar" title="Race, class, and god">
           <span className="character-identity-item">{playerCharacter.race.name}</span>
@@ -54,7 +60,7 @@ function PlayerHud({
         <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
         <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
       </div>
-    </div>
+    </button>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useGameBoard } from '../hooks/useGameBoard';
 import AbilityChoiceOverlay from './game/AbilityChoiceOverlay';
 import EndTurnConfirmOverlay from './game/EndTurnConfirmOverlay';
@@ -12,7 +12,6 @@ import PlayerHand from './game/PlayerHand';
 import DropZones from './game/DropZones';
 import GameMenu from './game/GameMenu';
 import PlayerStatsOverlay from './game/PlayerStatsOverlay';
-import CurrentDeckOverlay from './game/CurrentDeckOverlay';
 import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
@@ -22,6 +21,7 @@ const PLAY_COST = 1;
 function GameBoard({ playerCharacter, onRestart }) {
   const game = useGameBoard(playerCharacter);
   const [showEndTurnConfirm, setShowEndTurnConfirm] = useState(false);
+  const lastCardDragEndAtRef = useRef(0);
 
   const hasHandCards = game.hand.length > 0;
   const canPlayHandCard = hasHandCards && game.resources >= PLAY_COST;
@@ -40,6 +40,19 @@ function GameBoard({ playerCharacter, onRestart }) {
     game.endTurn();
   };
 
+  const handleCardDragEnd = () => {
+    if (game.draggingCard) {
+      lastCardDragEndAtRef.current = Date.now();
+    }
+    game.handleCardDragEnd();
+  };
+
+  const openCharacterSheet = () => {
+    if (game.draggingCard) return;
+    if (Date.now() - lastCardDragEndAtRef.current < 400) return;
+    game.setShowPlayerStats(true);
+  };
+
   const showBattlefield = game.gameState === 'playerTurn' || game.gameState === 'ready' || game.gameState === 'assignDamage' || game.gameState === 'curseDiscard';
   const marketSlots = Array.from({ length: game.marketSlotCount }, (_, index) => game.market[index] || null);
 
@@ -47,9 +60,9 @@ function GameBoard({ playerCharacter, onRestart }) {
     <div
       className={`game-board${game.draggingCard ? ' is-dragging' : ''}`}
       onMouseMove={game.handleCardDragMove}
-      onMouseUp={game.handleCardDragEnd}
+      onMouseUp={handleCardDragEnd}
       onTouchMove={game.handleCardDragMove}
-      onTouchEnd={game.handleCardDragEnd}
+      onTouchEnd={handleCardDragEnd}
     >
       <div className={`center-area${game.gameState === 'abilityChoice' || game.gameState === 'levelUp' ? ' overlay-mode' : ''}`}>
         {game.gameState === 'abilityChoice' && (
@@ -124,6 +137,7 @@ function GameBoard({ playerCharacter, onRestart }) {
         cannotDiscardForResources={game.cannotDiscardForResources}
         playerHP={game.playerHP}
         playerMaxHP={game.playerMaxHP}
+        onOpenCharacterSheet={openCharacterSheet}
       />
 
       <PlayerHand
@@ -156,16 +170,11 @@ function GameBoard({ playerCharacter, onRestart }) {
         raceLevel={game.raceLevel}
         classLevel={game.classLevel}
         godLevel={game.godLevel}
-        onClose={() => game.setShowPlayerStats(false)}
-      />
-
-      <CurrentDeckOverlay
-        showCurrentDeck={game.showCurrentDeck}
         deck={game.deck}
         hand={game.hand}
         discard={game.discard}
         getCardLabels={game.getHandCardLabels}
-        onClose={() => game.setShowCurrentDeck(false)}
+        onClose={() => game.setShowPlayerStats(false)}
       />
 
       {(game.gameState === 'playerTurn' || game.gameState === 'curseDiscard') && (
@@ -195,14 +204,6 @@ function GameBoard({ playerCharacter, onRestart }) {
         debugBossStartingHealth={game.debugBossStartingHealth}
         onToggleMenu={() => game.setShowMenu(!game.showMenu)}
         onCloseMenu={() => game.setShowMenu(false)}
-        onViewStats={() => {
-          game.setShowPlayerStats(true);
-          game.setShowMenu(false);
-        }}
-        onViewCurrentDeck={() => {
-          game.setShowCurrentDeck(true);
-          game.setShowMenu(false);
-        }}
         onRestart={() => {
           game.setShowMenu(false);
           onRestart();
