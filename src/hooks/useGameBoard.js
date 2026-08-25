@@ -31,6 +31,21 @@ import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
+/** Fallback when the stats HUD is not mounted. Keep in sync with --hand-area-height + --bottom-hud-height. */
+const STATS_HUD_BOTTOM_FALLBACK_PX = 236;
+
+function syncDiscardZoneToStatsHud() {
+  const statsHud = document.querySelector('.bottom-hud');
+  const top = statsHud
+    ? statsHud.getBoundingClientRect().top
+    : window.innerHeight - STATS_HUD_BOTTOM_FALLBACK_PX;
+  document.documentElement.style.setProperty(
+    '--discard-zone-bottom',
+    `${window.innerHeight - top}px`
+  );
+  return top;
+}
+
 function describeSpawned(added) {
   const units = added.filter(isUnit).length;
   const energy = added.filter(isEnergy).length;
@@ -167,6 +182,13 @@ export function useGameBoard(playerCharacter) {
     if (gameState === 'ready') {
       startRound();
     }
+  }, [gameState]);
+
+  useEffect(() => {
+    const updateDiscardZone = () => syncDiscardZoneToStatsHud();
+    updateDiscardZone();
+    window.addEventListener('resize', updateDiscardZone);
+    return () => window.removeEventListener('resize', updateDiscardZone);
   }, [gameState]);
 
   const initializeGame = () => {
@@ -893,6 +915,7 @@ export function useGameBoard(playerCharacter) {
     setDraggingSource(source);
     const touch = e.touches ? e.touches[0] : e;
     setDragPosition({ x: touch.clientX, y: touch.clientY });
+    syncDiscardZoneToStatsHud();
   };
 
   const handleCardDragMove = (e) => {
@@ -914,10 +937,7 @@ export function useGameBoard(playerCharacter) {
     const canAffordPlay = resources >= 1; // Playing costs 1
     const canAffordTrash = resources >= getTrashCost(cardsTrashed);
 
-    const statsHud = document.querySelector('.bottom-hud');
-    const discardZoneBottomY = statsHud
-      ? statsHud.getBoundingClientRect().top
-      : viewportHeight - 236;
+    const discardZoneBottomY = syncDiscardZoneToStatsHud();
 
     // Top zone for trash (highest priority)
     if (y < viewportHeight * 0.25 && canAffordTrash) {
