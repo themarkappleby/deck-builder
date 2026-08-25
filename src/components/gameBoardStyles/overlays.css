@@ -43,6 +43,26 @@
   margin-bottom: 0;
 }
 
+.level-up-hint {
+  color: #aaa;
+  font-size: 0.95rem;
+  margin: -8px 0 16px;
+}
+
+.level-up-confirm {
+  display: block;
+  width: 100%;
+}
+
+.level-up-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.level-up-confirm:disabled:hover {
+  background: #2a2a4a;
+}
+
 .game-over-overlay p {
   font-size: 1rem;
   margin-bottom: 20px;
@@ -211,6 +231,31 @@
   padding: 10px;
   margin-top: 8px;
   opacity: 0.5;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  display: block;
+}
+
+button.ability-box.selectable {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: #777;
+  transition: all 0.2s ease;
+}
+
+button.ability-box.selectable:hover {
+  opacity: 0.75;
+  border-color: #999;
+  background: #222;
+}
+
+button.ability-box.selectable.active {
+  border-style: solid;
+  border-color: #7a6ab5;
+  box-shadow: 0 0 0 1px #7a6ab5;
 }
 
 .ability-box.active {

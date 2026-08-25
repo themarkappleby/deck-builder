@@ -724,48 +724,69 @@ export function useGameBoard(playerCharacter) {
     finishBossTurn();
   };
 
-  const levelUpCharacter = (cardType) => {
-    if (gameState !== 'levelUp' || levelUpPicksRemainingRef.current <= 0) {
-      return;
-    }
-
-    let applied = false;
+  const applyLevelUpPick = (cardType) => {
     if (cardType === 'race' && raceLevelRef.current < 2) {
       const newLevel = raceLevelRef.current + 1;
       raceLevelRef.current = newLevel;
       setRaceLevel(newLevel);
       addLog(`Race leveled up to ${newLevel}!`);
-      applied = true;
+      return true;
+    }
 
-    } else if (cardType === 'class' && classLevelRef.current < 2) {
+    if (cardType === 'class' && classLevelRef.current < 2) {
       const newLevel = classLevelRef.current + 1;
       classLevelRef.current = newLevel;
       setClassLevel(newLevel);
       addLog(`Class leveled up to ${newLevel}!`);
-      applied = true;
       if (playerCharacter.class.id === 'gardener' && newLevel === 2) {
         setPlayTokens(prev => upgradeGardenerTokens(prev, 2));
         addLog('Gardener units are now 1/2.');
       }
-    } else if (cardType === 'god' && godLevelRef.current < 2) {
+      return true;
+    }
+
+    if (cardType === 'god' && godLevelRef.current < 2) {
       const newLevel = godLevelRef.current + 1;
       godLevelRef.current = newLevel;
       setGodLevel(newLevel);
       addLog(`God leveled up to ${newLevel}!`);
-      applied = true;
+      return true;
     }
 
-    if (!applied) {
+    return false;
+  };
+
+  const confirmLevelUp = (picks) => {
+    if (gameState !== 'levelUp') {
       return;
     }
 
-    const remaining = levelUpPicksRemainingRef.current - 1;
-    levelUpPicksRemainingRef.current = remaining;
-    setLevelUpPicksRemaining(remaining);
-
-    if (remaining <= 0) {
-      startNextBoss();
+    const requiredPicks = levelUpPicksRemainingRef.current;
+    if (!Array.isArray(picks) || picks.length !== requiredPicks || requiredPicks <= 0) {
+      return;
     }
+
+    const simulated = {
+      race: raceLevelRef.current,
+      class: classLevelRef.current,
+      god: godLevelRef.current,
+    };
+    for (const cardType of picks) {
+      if (!Object.prototype.hasOwnProperty.call(simulated, cardType) || simulated[cardType] >= 2) {
+        return;
+      }
+      simulated[cardType] += 1;
+    }
+
+    for (const cardType of picks) {
+      if (!applyLevelUpPick(cardType)) {
+        return;
+      }
+    }
+
+    levelUpPicksRemainingRef.current = 0;
+    setLevelUpPicksRemaining(0);
+    startNextBoss();
   };
 
   const startNextBoss = () => {
@@ -1050,7 +1071,7 @@ export function useGameBoard(playerCharacter) {
     abilityUI,
     getHandCardLabels,
     selectStartingAbility,
-    levelUpCharacter,
+    confirmLevelUp,
     handleCardDragStart,
     handleCardDragMove,
     handleCardDragEnd,
