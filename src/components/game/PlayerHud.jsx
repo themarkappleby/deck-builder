@@ -7,8 +7,6 @@ function formatCap(count, max) {
 function PlayerHud({
   gameState,
   resources,
-  deckLength,
-  discardLength,
   playerBlock,
   playTokens,
   playerCharacter,
@@ -29,9 +27,9 @@ function PlayerHud({
     <div className="bottom-hud">
       <div className="player-stats-bar">
         <div className="stat-item">💎 {resources}</div>
-        <div className="stat-item">🎴 {deckLength}</div>
-        <div className="stat-item">🗑️ {discardLength}</div>
-        <div className="stat-item">🔹 {playerBlock}</div>
+        {playerBlock > 0 && (
+          <div className="stat-item">🔹 {playerBlock}</div>
+        )}
         {unitCount > 0 && (
           <div className="stat-item" title="Units">⚔️ {formatCap(unitCount, getMaxUnits(playerCharacter, levels))}</div>
         )}
