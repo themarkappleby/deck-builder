@@ -66,19 +66,17 @@ function BossStage({
                 {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
               </span>
             </div>
-            {bossAttack > 0 && (
-              <div className="attack-bar boss-attack-bar">
-                <div
-                  className="attack-fill"
-                  style={{
-                    width: `${(Math.max(0, bossAttack - playerBlock) / bossAttack) * 100}%`
-                  }}
-                ></div>
-                <span className="attack-text">
-                  {Math.max(0, bossAttack - playerBlock)} attack
-                </span>
-              </div>
-            )}
+            <div className="attack-bar boss-attack-bar">
+              <div
+                className="attack-fill"
+                style={{
+                  width: `${bossAttack > 0 ? (Math.max(0, bossAttack - playerBlock) / bossAttack) * 100 : 0}%`
+                }}
+              ></div>
+              <span className="attack-text">
+                {Math.max(0, bossAttack - playerBlock)} attack
+              </span>
+            </div>
           </div>
         </div>
         <div className="intent-card-row boss-cards-row" style={{ '--slot-count': bossCards.length || marketSlotCount }}>
