@@ -47,8 +47,11 @@ function BossStage({
             </div>
             {getBossAbility(currentBoss, SYMBOLS.GREEN)?.type === 'brew' && (
               <div className="boss-brew">
-                <span className="boss-brew-label">🧪 Brew {bossTokens}/{WITCH_BREW_THRESHOLD}</span>
-                <div className="boss-brew-pips" aria-hidden="true">
+                <div
+                  className="boss-brew-pips"
+                  role="img"
+                  aria-label={`Brew ${bossTokens} of ${WITCH_BREW_THRESHOLD}`}
+                >
                   {Array.from({ length: WITCH_BREW_THRESHOLD }, (_, index) => (
                     <span
                       key={index}
