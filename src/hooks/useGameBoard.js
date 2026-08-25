@@ -32,7 +32,7 @@ import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
 /** Fallback when the stats HUD is not mounted. Keep in sync with --hand-area-height + --bottom-hud-height. */
-const STATS_HUD_BOTTOM_FALLBACK_PX = 236;
+const STATS_HUD_BOTTOM_FALLBACK_PX = 250;
 /** Keep in sync with --trash-drop-zone-height / --discard-drop-zone-width in dragAndTokens.css. */
 const TRASH_ZONE_HEIGHT_RATIO = 0.25;
 const DISCARD_ZONE_WIDTH_RATIO = 0.25;
