@@ -33,6 +33,26 @@ function rgba([r, g, b], alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function rgb([r, g, b]) {
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function mixRgb(colors) {
+  const sum = colors.reduce(
+    (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
+    [0, 0, 0]
+  );
+  return sum.map((value) => Math.round(value / colors.length));
+}
+
+function lightenRgb([r, g, b], amount) {
+  return [
+    Math.round(r + (255 - r) * amount),
+    Math.round(g + (255 - g) * amount),
+    Math.round(b + (255 - b) * amount),
+  ];
+}
+
 function uniqueSymbolColors(symbols = []) {
   const colors = [];
   const seen = new Set();
@@ -60,8 +80,17 @@ export function getCardSymbolGradient(symbols = []) {
 
 export function getCardSymbolGradientStyle(symbols = []) {
   const gradient = getCardSymbolGradient(symbols);
-  return {
+  const colors = uniqueSymbolColors(symbols);
+  const style = {
     '--card-symbol-gradient': gradient,
     ...(gradient === 'none' ? {} : { backgroundImage: gradient }),
   };
+
+  if (colors.length > 0) {
+    const mixed = mixRgb(colors);
+    style['--card-symbol-border'] = rgb(mixed);
+    style['--card-symbol-border-hover'] = rgb(lightenRgb(mixed, 0.22));
+  }
+
+  return style;
 }
