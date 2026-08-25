@@ -45,7 +45,8 @@ export function applyBrewTokens(currentTokens, gained, threshold = WITCH_BREW_TH
 }
 
 /**
- * Boss round intent from revealed cards: universal 🔺/🔹 plus that boss's symbol abilities.
+ * Boss round intent from the current market draw: universal 🔺/🔹 plus that boss's symbol abilities.
+ * Attack and block are locked in from the cards as drawn, even if they are later purchased.
  */
 export function getBossRoundAction(boss, cards) {
   const counts = countCardSymbols(cards);

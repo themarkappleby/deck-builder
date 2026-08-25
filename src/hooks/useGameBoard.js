@@ -74,7 +74,6 @@ export function useGameBoard(playerCharacter) {
   const [bossHP, setBossHP] = useState(0);
   const [bossMaxHP, setBossMaxHP] = useState(0);
   const [bossAction, setBossAction] = useState(null);
-  const [bossCards, setBossCards] = useState([]);
   const [bossAttack, setBossAttack] = useState(0);
   const [bossBlock, setBossBlock] = useState(0);
   const [bossBlockMax, setBossBlockMax] = useState(0);
@@ -237,45 +236,43 @@ export function useGameBoard(playerCharacter) {
 
   const startRound = () => {
     setUndoStack([]);
-    // Draw cards for boss action. The market always has the same number
-    // of slots as the number of boss cards drawn this round. Unpurchased
-    // market cards go to a discard pile and are shuffled into a new draw
-    // pile only when the market deck runs out — same pattern as the
-    // player's discard reshuffle. Putting them on top of the draw pile
-    // would make the boss re-draw the same handful every other round.
+    // Draw a fresh market each round. Those revealed cards lock in the
+    // boss's attack and block for the round; purchasing them later does
+    // not change the intent. Unpurchased cards go to a discard pile and
+    // are shuffled into a new draw pile only when the market deck runs out.
     const encounter = resolveBossEncounter(bossNumber);
-    const bossCardsToDraw = getBossCardsToDraw(encounter.cards);
+    const marketCardsToDraw = getBossCardsToDraw(encounter.cards);
     let drawPile = marketDeckRef.current;
     let discardPile = marketDiscardRef.current;
-    // Last remaining unpurchased cards may still be sitting in the shop.
-    if (drawPile.length === 0 && discardPile.length === 0 && marketRef.current.length > 0) {
-      discardPile = [...marketRef.current];
+    if (marketRef.current.length > 0) {
+      discardPile = [...discardPile, ...marketRef.current];
       setMarket([]);
       marketRef.current = [];
     }
     const drawn = drawFromCardPiles(
-      bossCardsToDraw,
+      marketCardsToDraw,
       drawPile,
       discardPile,
       shuffleArray
     );
     if (drawn.reshuffled) {
-      addLog('Market reshuffled into boss draw pile!');
+      addLog('Market reshuffled!');
     }
 
-    const drawnBossCards = drawn.drawnCards.map((card, i) => ({
+    const drawnMarket = drawn.drawnCards.map((card, i) => ({
       ...card,
-      id: `${card.id}_boss_${Date.now()}_${i}`
+      id: `${card.id}_market_${Date.now()}_${i}`
     }));
 
     marketDeckRef.current = drawn.currentDeck;
     marketDiscardRef.current = drawn.currentDiscard;
+    marketRef.current = drawnMarket;
     setMarketDeck(drawn.currentDeck);
     setMarketDiscard(drawn.currentDiscard);
-    setBossCards(drawnBossCards);
-    setMarketSlotCount(drawnBossCards.length);
+    setMarket(drawnMarket);
+    setMarketSlotCount(drawnMarket.length);
 
-    const action = getBossRoundAction(currentBossRef.current, drawnBossCards);
+    const action = getBossRoundAction(currentBossRef.current, drawnMarket);
     setBossAction(action);
     setBossAttack(action.value);
     setBossBlock(action.block || 0);
@@ -596,9 +593,10 @@ export function useGameBoard(playerCharacter) {
   };
 
   const refreshMarket = (currentMarket) => {
-    // With the new boss card system, just update the market
-    // Don't refill from market deck - that happens at the end of the boss turn
+    // Purchased cards leave empty slots. The round's market is not refilled
+    // until the next round, and buying a card does not change boss intent.
     setMarket(currentMarket);
+    marketRef.current = currentMarket;
   };
 
   const dealDamageToBoss = (damage, options = {}) => {
@@ -665,11 +663,8 @@ export function useGameBoard(playerCharacter) {
       addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the discard pile`);
     }
 
-    setMarket(bossCards);
-    marketRef.current = bossCards;
-    setMarketSlotCount(bossCards.length);
-    setBossCards([]);
-    addLog('Boss cards moved to market!');
+    setMarket([]);
+    marketRef.current = [];
     setRoundNumber(prev => prev + 1);
     setGameState('ready');
   };
@@ -1022,7 +1017,6 @@ export function useGameBoard(playerCharacter) {
     currentBoss,
     bossHP,
     bossMaxHP,
-    bossCards,
     bossAttack,
     bossBlock,
     bossBlockMax,

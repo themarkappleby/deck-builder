@@ -8,7 +8,7 @@ function makeMarketCopies(id, name, symbols, count) {
   }));
 }
 
-// Shared market / boss draw pile
+// Shared market draw pile (also determines boss attack/block for the round)
 export const marketCards = [
   ...makeMarketCopies('m-atk', 'Strike', [SYMBOLS.ATTACK], 4),
   ...makeMarketCopies('m-blk', 'Block', [SYMBOLS.BLOCK], 4),

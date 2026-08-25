@@ -1,5 +1,4 @@
-import Card from '../Card';
-import { formatBossCardEffectLabels, WITCH_BREW_THRESHOLD } from '../../abilityActions';
+import { WITCH_BREW_THRESHOLD } from '../../abilityActions';
 
 function BrewPips({ tokens }) {
   return (
@@ -27,8 +26,6 @@ function BossStage({
   bossBlock,
   bossBlockMax,
   bossTokens,
-  bossCards,
-  marketSlotCount,
   bossAttack,
   playerBlock,
 }) {
@@ -78,16 +75,6 @@ function BossStage({
               </span>
             </div>
           </div>
-        </div>
-        <div className="intent-card-row boss-cards-row" style={{ '--slot-count': bossCards.length || marketSlotCount }}>
-          {bossCards.map(card => (
-            <Card
-              key={card.id}
-              card={card}
-              className="intent-card"
-              effectLabels={formatBossCardEffectLabels(currentBoss, card.symbols)}
-            />
-          ))}
         </div>
       </div>
     </div>

@@ -65,6 +65,7 @@ function GameBoard({ playerCharacter, onRestart }) {
               <MarketColumn
                 marketSlots={marketSlots}
                 marketSlotCount={game.marketSlotCount}
+                currentBoss={game.currentBoss}
                 resources={game.resources}
                 purchaseOrTrashCost={game.purchaseOrTrashCost}
                 draggingCard={game.draggingCard}
@@ -79,8 +80,6 @@ function GameBoard({ playerCharacter, onRestart }) {
                 bossBlock={game.bossBlock}
                 bossBlockMax={game.bossBlockMax}
                 bossTokens={game.bossTokens}
-                bossCards={game.bossCards}
-                marketSlotCount={game.marketSlotCount}
                 bossAttack={game.bossAttack}
                 playerBlock={game.playerBlock}
               />

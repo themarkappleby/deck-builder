@@ -1,6 +1,7 @@
 import Card from '../Card';
+import { formatBossCardEffectLabels } from '../../abilityActions';
 
-function MarketColumn({ marketSlots, marketSlotCount, resources, purchaseOrTrashCost, draggingCard, onCardDragStart }) {
+function MarketColumn({ marketSlots, marketSlotCount, currentBoss, resources, purchaseOrTrashCost, draggingCard, onCardDragStart }) {
   return (
     <div className="market-column">
       <div className="market-label">Market</div>
@@ -13,6 +14,7 @@ function MarketColumn({ marketSlots, marketSlotCount, resources, purchaseOrTrash
               isMarket={true}
               canAfford={resources >= purchaseOrTrashCost}
               className={draggingCard?.id === card.id ? 'dragging' : ''}
+              effectLabels={formatBossCardEffectLabels(currentBoss, card.symbols)}
               onMouseDown={(e) => onCardDragStart(card, e, 'market')}
               onTouchStart={(e) => onCardDragStart(card, e, 'market')}
             />
