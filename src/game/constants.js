@@ -19,8 +19,9 @@ export const BETWEEN_BOSS_HEAL = 3;
 export const MAX_PLAY_TOKENS = 10;
 export const MAX_BLOCK = 10;
 export const MAX_RESOURCES = 10;
+export const MAX_PURCHASE_OR_TRASH_COST = 10;
 
-/** Next purchase or trash costs 1 more 💎 than the number already done this game. */
+/** Next purchase or trash costs 1 more 💎 than the number already done this game (capped at 10). */
 export function getPurchaseOrTrashCost(purchaseOrTrashCount) {
-  return purchaseOrTrashCount + 1;
+  return Math.min(purchaseOrTrashCount + 1, MAX_PURCHASE_OR_TRASH_COST);
 }

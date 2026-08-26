@@ -311,23 +311,34 @@ export function useGameBoard(playerCharacter) {
     setMarketSlotCount(drawnMarket.length);
 
     const action = getBossRoundAction(currentBossRef.current, drawnMarket);
-    setBossAction(action);
-    setBossAttack(action.value);
-    setBossBlock(Math.min(MAX_BLOCK, action.block || 0));
+    let roundAction = { ...action };
+    let roundAttack = action.value;
+    const roundBlock = Math.min(MAX_BLOCK, action.block || 0);
 
     if (action.brew > 0) {
-      const brew = applyBrewTokens(bossTokensRef.current, action.brew);
+      const brew = applyBrewTokens(bossTokensRef.current, action.brew, bossHP, bossMaxHP);
       bossTokensRef.current = brew.tokens;
       setBossTokens(brew.tokens);
       addLog(`Witch Brew: +${action.brew} token${action.brew === 1 ? '' : 's'} (${brew.tokens}/${WITCH_BREW_THRESHOLD})`);
       if (brew.heal > 0) {
-        setBossHP(prev => {
-          const healed = Math.min(bossMaxHP, prev + brew.heal);
-          addLog(`Witch discarded ${WITCH_BREW_THRESHOLD} tokens and healed ${brew.heal} HP (${healed}/${bossMaxHP} HP)`);
-          return healed;
-        });
+        const newBossHP = Math.min(bossMaxHP, bossHP + brew.heal);
+        setBossHP(newBossHP);
+        addLog(`Witch spent ${WITCH_BREW_THRESHOLD} brew tokens and healed ${brew.heal} HP (${newBossHP}/${bossMaxHP} HP)`);
+      }
+      if (brew.bonusAttack > 0) {
+        roundAttack += brew.bonusAttack;
+        roundAction = {
+          ...roundAction,
+          value: roundAttack,
+          description: `${roundAction.description}, empowered attack (+${brew.bonusAttack})`,
+        };
+        addLog(`Witch spent ${WITCH_BREW_THRESHOLD} brew tokens and empowered her attack (+${brew.bonusAttack} damage this turn)`);
       }
     }
+
+    setBossAction(roundAction);
+    setBossAttack(roundAttack);
+    setBossBlock(roundBlock);
 
     if (action.curse > 0) {
       addLog(`Witch Curse: discard ${action.curse} card${action.curse === 1 ? '' : 's'}`);
@@ -374,7 +385,7 @@ export function useGameBoard(playerCharacter) {
       setPendingCurse(0);
       setGameState('playerTurn');
     }
-    addLog(`Round ${roundNumber} - Boss will: ${action.description}`);
+    addLog(`Round ${roundNumber} - Boss will: ${roundAction.description}`);
   };
 
   const getOpeningHandSize = () => debugPlayerCardsPerTurnRef.current;
@@ -643,7 +654,7 @@ export function useGameBoard(playerCharacter) {
     }
     refreshMarket(newMarket);
 
-    addLog(`Purchased ${card.name} (${cost} resources spent, next purchase/trash costs ${cost + 1})`);
+    addLog(`Purchased ${card.name} (${cost} resources spent, next purchase/trash costs ${getPurchaseOrTrashCost(purchaseOrTrashCount + 1)})`);
   };
 
   const trashCard = (card) => {
@@ -659,7 +670,7 @@ export function useGameBoard(playerCharacter) {
     setResources(prev => prev - cost);
     setPurchaseOrTrashCount(prev => prev + 1);
 
-    addLog(`Trashed ${card.name} permanently (${cost} resources spent, next purchase/trash costs ${cost + 1})`);
+    addLog(`Trashed ${card.name} permanently (${cost} resources spent, next purchase/trash costs ${getPurchaseOrTrashCost(purchaseOrTrashCount + 1)})`);
   };
 
   const refreshMarket = (currentMarket) => {

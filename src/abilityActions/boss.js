@@ -34,14 +34,32 @@ export function formatBossAbilityLines(boss) {
   ));
 }
 
-export function applyBrewTokens(currentTokens, gained, threshold = WITCH_BREW_THRESHOLD, healAmount = WITCH_BREW_HEAL) {
+export function applyBrewTokens(
+  currentTokens,
+  gained,
+  bossHP,
+  bossMaxHP,
+  threshold = WITCH_BREW_THRESHOLD,
+  brewAmount = WITCH_BREW_HEAL
+) {
   let tokens = (currentTokens || 0) + (gained || 0);
   let heal = 0;
+  let bonusAttack = 0;
+  let hp = bossHP ?? 0;
+  const maxHP = bossMaxHP ?? hp;
+
   while (tokens >= threshold) {
     tokens -= threshold;
-    heal += healAmount;
+    if (hp >= maxHP) {
+      bonusAttack += brewAmount;
+    } else {
+      const healed = Math.min(brewAmount, maxHP - hp);
+      heal += healed;
+      hp += healed;
+    }
   }
-  return { tokens, heal, gained: gained || 0 };
+
+  return { tokens, heal, bonusAttack, gained: gained || 0 };
 }
 
 /**
