@@ -100,7 +100,7 @@ function GameBoard({ playerCharacter, onRestart }) {
                 />
                 <div className="boss-attack-zone">
                   <div className="boss-attack-pips-wrap">
-                    <AttackPips remaining={Math.max(0, game.bossAttack - game.playerBlock)} />
+                    <AttackPips total={game.bossAttack} blocked={game.playerBlock} />
                   </div>
                   <PlayField
                     playTokens={game.playTokens}

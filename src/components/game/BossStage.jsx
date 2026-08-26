@@ -2,17 +2,29 @@ import { WITCH_BREW_THRESHOLD, tokenCanAttack } from '../../abilityActions';
 import { MAX_BLOCK } from '../../game/constants';
 import { SYMBOLS } from '../../gameData/symbols';
 
-export function AttackPips({ remaining }) {
-  if (remaining <= 0) return null;
+export function AttackPips({ total, blocked = 0 }) {
+  if (total <= 0) return null;
+
+  const negated = Math.min(blocked, total);
+  const remaining = total - negated;
 
   return (
     <div
       className="boss-attack-pips"
       role="img"
-      aria-label={`${remaining} incoming attack${remaining === 1 ? '' : 's'}`}
+      aria-label={
+        remaining > 0
+          ? `${remaining} incoming attack${remaining === 1 ? '' : 's'}`
+          : `${total} attack${total === 1 ? '' : 's'} fully blocked`
+      }
     >
-      {Array.from({ length: remaining }, (_, index) => (
-        <span key={index} className="boss-attack-pip">{SYMBOLS.ATTACK}</span>
+      {Array.from({ length: total }, (_, index) => (
+        <span
+          key={index}
+          className={`boss-attack-pip${index < negated ? ' boss-attack-pip--negated' : ''}`}
+        >
+          {SYMBOLS.ATTACK}
+        </span>
       ))}
     </div>
   );
