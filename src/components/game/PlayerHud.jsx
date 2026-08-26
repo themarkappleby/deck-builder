@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { countTokensOfType, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
+import { MAX_BLOCK } from '../../game/constants';
 
 function formatCap(count, max) {
   return Number.isFinite(max) ? `${count}/${max}` : `${count}`;
@@ -7,7 +9,6 @@ function formatCap(count, max) {
 function PlayerHud({
   gameState,
   resources,
-  purchaseOrTrashCost,
   playerBlock,
   playTokens,
   playerCharacter,
@@ -18,6 +19,16 @@ function PlayerHud({
   playerMaxHP,
   onOpenCharacterSheet,
 }) {
+  const [resourcePulseKey, setResourcePulseKey] = useState(0);
+  const prevResourcesRef = useRef(resources);
+
+  useEffect(() => {
+    if (resources > prevResourcesRef.current) {
+      setResourcePulseKey((key) => key + 1);
+    }
+    prevResourcesRef.current = resources;
+  }, [resources]);
+
   if (gameState === 'abilityChoice' || gameState === 'levelUp') {
     return null;
   }
@@ -40,12 +51,8 @@ function PlayerHud({
           <span className="character-identity-item">{playerCharacter.god.name}</span>
         </div>
       )}
+      {(energyCount > 0 || ignoreIncomingDamage || cannotDiscardForResources) && (
       <div className="player-stats-bar">
-        <div className="stat-item">💎 {resources}</div>
-        <div className="stat-item" title="Cost to purchase or trash a card">💰 {purchaseOrTrashCost}</div>
-        {playerBlock > 0 && (
-          <div className="stat-item">🔹 {playerBlock}</div>
-        )}
         {energyCount > 0 && (
           <div className="stat-item" title="Energy">🩸 {formatCap(energyCount, getMaxEnergy(playerCharacter, levels))}</div>
         )}
@@ -56,9 +63,34 @@ function PlayerHud({
           <div className="stat-item" title="Cannot discard cards for resources this turn">🚫 Discard</div>
         )}
       </div>
-      <div className="hp-bar player-hp-bar">
-        <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
-        <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
+      )}
+      <div className="player-hp-row">
+        <div
+          key={resourcePulseKey}
+          className={`resource-circle${resources === 0 ? ' is-empty' : ''}${resourcePulseKey > 0 ? ' is-pulsing' : ''}`}
+          title="Resources"
+          aria-label={`${resources} resource${resources === 1 ? '' : 's'}`}
+          onAnimationEnd={(event) => {
+            if (event.animationName === 'resource-pulse') {
+              event.currentTarget.classList.remove('is-pulsing');
+            }
+          }}
+        >
+          {resources}
+        </div>
+        <div className="vitals-row">
+          <div className="hp-bar player-hp-bar">
+            <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
+            <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
+          </div>
+          <div className="block-bar player-block-bar">
+            <div
+              className="block-fill"
+              style={{ width: `${(playerBlock / MAX_BLOCK) * 100}%` }}
+            ></div>
+            <span className="block-text">{playerBlock} / {MAX_BLOCK} Block</span>
+          </div>
+        </div>
       </div>
     </button>
   );

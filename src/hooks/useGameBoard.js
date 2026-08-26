@@ -26,13 +26,13 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getPurchaseOrTrashCost } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getPurchaseOrTrashCost, MAX_BLOCK } from '../game/constants';
 import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
 /** Fallback when the stats HUD is not mounted. Keep in sync with --hand-area-height + --bottom-hud-height. */
-const STATS_HUD_BOTTOM_FALLBACK_PX = 250;
+const STATS_HUD_BOTTOM_FALLBACK_PX = 264;
 /** Keep in sync with --trash-drop-zone-height / --discard-drop-zone-width in dragAndTokens.css. */
 const TRASH_ZONE_HEIGHT_RATIO = 0.25;
 const DISCARD_ZONE_WIDTH_RATIO = 0.25;
@@ -76,7 +76,6 @@ export function useGameBoard(playerCharacter) {
   const [bossAction, setBossAction] = useState(null);
   const [bossAttack, setBossAttack] = useState(0);
   const [bossBlock, setBossBlock] = useState(0);
-  const [bossBlockMax, setBossBlockMax] = useState(0);
   const [bossTokens, setBossTokens] = useState(0);
   const [pendingCurse, setPendingCurse] = useState(0);
 
@@ -274,8 +273,7 @@ export function useGameBoard(playerCharacter) {
     const action = getBossRoundAction(currentBossRef.current, drawnMarket);
     setBossAction(action);
     setBossAttack(action.value);
-    setBossBlock(action.block || 0);
-    setBossBlockMax(action.block || 0);
+    setBossBlock(Math.min(MAX_BLOCK, action.block || 0));
 
     if (action.brew > 0) {
       const brew = applyBrewTokens(bossTokensRef.current, action.brew);
@@ -527,8 +525,8 @@ export function useGameBoard(playerCharacter) {
     }
 
     if (block > 0) {
-      setPlayerBlock(prev => prev + block);
-      addLog(`Gained ${block} block (Total: ${playerBlock + block})`);
+      setPlayerBlock(prev => Math.min(MAX_BLOCK, prev + block));
+      addLog(`Gained ${block} block (Total: ${Math.min(MAX_BLOCK, playerBlock + block)})`);
     }
 
     if (symbolEffects.heal > 0) {
@@ -652,7 +650,6 @@ export function useGameBoard(playerCharacter) {
   const finishBossTurn = () => {
     setBossAttack(0);
     setBossBlock(0);
-    setBossBlockMax(0);
     setIncomingDamage(0);
 
     if (market.length > 0) {
@@ -796,7 +793,6 @@ export function useGameBoard(playerCharacter) {
     setBossMaxHP(startingHp);
     setBossAttack(0);
     setBossBlock(0);
-    setBossBlockMax(0);
     setBossTokens(0);
     bossTokensRef.current = 0;
     setPendingCurse(0);
@@ -1018,7 +1014,6 @@ export function useGameBoard(playerCharacter) {
     bossMaxHP,
     bossAttack,
     bossBlock,
-    bossBlockMax,
     bossTokens,
     pendingCurse,
     playerHP,

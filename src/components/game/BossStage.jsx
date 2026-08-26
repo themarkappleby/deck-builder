@@ -1,4 +1,5 @@
 import { WITCH_BREW_THRESHOLD } from '../../abilityActions';
+import { MAX_BLOCK } from '../../game/constants';
 
 function BrewPips({ tokens }) {
   return (
@@ -24,7 +25,6 @@ function BossStage({
   bossHP,
   bossMaxHP,
   bossBlock,
-  bossBlockMax,
   bossTokens,
   bossAttack,
   playerBlock,
@@ -48,20 +48,18 @@ function BossStage({
                 ))}
               </div>
             )}
-            <div className="hp-bar boss-hp-bar">
-              <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
-              <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
-            </div>
-            <div className="block-bar boss-block-bar">
-              <div
-                className="block-fill"
-                style={{
-                  width: `${bossBlockMax > 0 ? (bossBlock / bossBlockMax) * 100 : 0}%`
-                }}
-              ></div>
-              <span className="block-text">
-                {bossBlockMax > 0 ? `${bossBlock} / ${bossBlockMax} Block` : '0 Block'}
-              </span>
+            <div className="vitals-row">
+              <div className="hp-bar boss-hp-bar">
+                <div className="hp-fill" style={{ width: `${(bossHP / bossMaxHP) * 100}%` }}></div>
+                <span className="hp-text">{bossHP} / {bossMaxHP} HP</span>
+              </div>
+              <div className="block-bar boss-block-bar">
+                <div
+                  className="block-fill"
+                  style={{ width: `${(bossBlock / MAX_BLOCK) * 100}%` }}
+                ></div>
+                <span className="block-text">{bossBlock} / {MAX_BLOCK} Block</span>
+              </div>
             </div>
             <div className="attack-bar boss-attack-bar">
               <div
