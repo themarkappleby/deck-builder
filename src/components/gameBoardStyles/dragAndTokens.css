@@ -1,7 +1,9 @@
 /* Drop Zones for Card Dragging */
 :root {
-  --trash-drop-zone-height: 25%;
+  /* Synced from layout at runtime; fallbacks used until first measure. */
+  --trash-drop-zone-height: calc(8px + 1.2em + 4px + 110px + 16px);
   --discard-drop-zone-width: 25%;
+  --purchase-zone-height: calc(var(--hand-area-height) + var(--bottom-hud-height));
 }
 
 .drop-zone {
@@ -71,7 +73,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 32%;
+  height: var(--purchase-zone-height, calc(var(--hand-area-height) + var(--bottom-hud-height)));
   background: linear-gradient(to top, rgba(201, 162, 39, 0.5), transparent);
   border-top: 4px solid rgba(201, 162, 39, 0.8);
 }

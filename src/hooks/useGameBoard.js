@@ -33,20 +33,44 @@ import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
 
 /** Fallback when the stats HUD is not mounted. Keep in sync with --hand-area-height + --bottom-hud-height. */
 const STATS_HUD_BOTTOM_FALLBACK_PX = 264;
-/** Keep in sync with --trash-drop-zone-height / --discard-drop-zone-width in dragAndTokens.css. */
-const TRASH_ZONE_HEIGHT_RATIO = 0.25;
+/** Fallback when the market is not mounted. */
+const TRASH_ZONE_HEIGHT_FALLBACK_RATIO = 0.25;
+/** Extra height so the trash zone covers the full market area comfortably. */
+const TRASH_ZONE_EXTRA_PX = 16;
 const DISCARD_ZONE_WIDTH_RATIO = 0.25;
 
-function syncDiscardZoneToStatsHud() {
+function syncDropZoneBounds() {
+  const viewportHeight = window.innerHeight;
+
+  const marketColumn = document.querySelector('.market-column');
+  const trashZoneHeight = marketColumn
+    ? marketColumn.getBoundingClientRect().bottom + TRASH_ZONE_EXTRA_PX
+    : viewportHeight * TRASH_ZONE_HEIGHT_FALLBACK_RATIO;
+  document.documentElement.style.setProperty(
+    '--trash-drop-zone-height',
+    `${trashZoneHeight}px`
+  );
+
   const statsHud = document.querySelector('.bottom-hud');
-  const top = statsHud
+  const statsHudTop = statsHud
     ? statsHud.getBoundingClientRect().top
-    : window.innerHeight - STATS_HUD_BOTTOM_FALLBACK_PX;
+    : viewportHeight - STATS_HUD_BOTTOM_FALLBACK_PX;
+
+  const statsHudOffset = viewportHeight - statsHudTop;
   document.documentElement.style.setProperty(
     '--discard-zone-bottom',
-    `${window.innerHeight - top}px`
+    `${statsHudOffset}px`
   );
-  return top;
+  document.documentElement.style.setProperty(
+    '--purchase-zone-height',
+    `${statsHudOffset}px`
+  );
+
+  return {
+    trashZoneBottomY: trashZoneHeight,
+    purchaseZoneTopY: statsHudTop,
+    discardZoneBottomY: statsHudTop,
+  };
 }
 
 function describeSpawned(added) {
@@ -186,10 +210,25 @@ export function useGameBoard(playerCharacter) {
   }, [gameState]);
 
   useEffect(() => {
-    const updateDiscardZone = () => syncDiscardZoneToStatsHud();
-    updateDiscardZone();
-    window.addEventListener('resize', updateDiscardZone);
-    return () => window.removeEventListener('resize', updateDiscardZone);
+    const updateDropZoneBounds = () => syncDropZoneBounds();
+    updateDropZoneBounds();
+
+    window.addEventListener('resize', updateDropZoneBounds);
+
+    const observedElements = [
+      document.querySelector('.market-column'),
+      document.querySelector('.bottom-hud'),
+    ].filter(Boolean);
+
+    const resizeObserver = observedElements.length > 0
+      ? new ResizeObserver(updateDropZoneBounds)
+      : null;
+    observedElements.forEach((element) => resizeObserver?.observe(element));
+
+    return () => {
+      window.removeEventListener('resize', updateDropZoneBounds);
+      resizeObserver?.disconnect();
+    };
   }, [gameState]);
 
   const initializeGame = () => {
@@ -938,7 +977,7 @@ export function useGameBoard(playerCharacter) {
     setDraggingSource(source);
     const touch = e.touches ? e.touches[0] : e;
     setDragPosition({ x: touch.clientX, y: touch.clientY });
-    syncDiscardZoneToStatsHud();
+    syncDropZoneBounds();
   };
 
   const handleCardDragMove = (e) => {
@@ -950,18 +989,17 @@ export function useGameBoard(playerCharacter) {
     setDragPosition({ x, y });
 
     const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
 
     if (draggingSource === 'market') {
-      setDropZone(y > viewportHeight * 0.68 ? 'purchase' : null);
+      const { purchaseZoneTopY } = syncDropZoneBounds();
+      setDropZone(y > purchaseZoneTopY ? 'purchase' : null);
       return;
     }
 
     const canAffordPlay = resources >= 1; // Playing costs 1
     const canAffordTrash = resources >= getPurchaseOrTrashCost(purchaseOrTrashCount);
 
-    const discardZoneBottomY = syncDiscardZoneToStatsHud();
-    const trashZoneBottomY = viewportHeight * TRASH_ZONE_HEIGHT_RATIO;
+    const { trashZoneBottomY, discardZoneBottomY } = syncDropZoneBounds();
     const discardZoneLeftX = viewportWidth * (1 - DISCARD_ZONE_WIDTH_RATIO);
 
     // Top zone for trash (highest priority)
