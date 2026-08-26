@@ -16,6 +16,7 @@ export const BOSS_CARDS_TO_DRAW = BOSS_LEVEL_STATS[1].cards;
 export const PLAYER_CARDS_TO_DRAW = 6;
 export const BETWEEN_BOSS_HEAL = 3;
 export const MAX_PLAY_TOKENS = 10;
+export const MAX_BLOCK = 10;
 
 /** Next purchase or trash costs 1 more 💎 than the number already done this game. */
 export function getPurchaseOrTrashCost(purchaseOrTrashCount) {

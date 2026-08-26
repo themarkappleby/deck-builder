@@ -15,13 +15,35 @@
 }
 
 .boss-hp-bar {
-  height: 20px;
+  height: 18px;
   margin-bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid #3a3a3a;
   border-radius: 4px;
   overflow: hidden;
   position: relative;
+}
+
+.vitals-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.vitals-row .hp-bar {
+  flex: 2;
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
+.vitals-row .block-bar {
+  flex: 1;
+  width: auto;
+  max-width: none;
+  margin: 0;
 }
 
 .hp-fill {
@@ -52,7 +74,7 @@
 }
 
 .boss-hp-bar .hp-text {
-  line-height: 20px;
+  line-height: 18px;
 }
 
 .player-hp-bar .hp-text {
@@ -66,7 +88,6 @@
   overflow: hidden;
   position: relative;
   max-width: 100%;
-  margin: 4px auto 0;
 }
 
 .block-fill {
@@ -93,9 +114,9 @@
   font-size: 0.85rem;
 }
 
-.boss-block-bar {
+.boss-block-bar,
+.player-block-bar {
   height: 18px;
-  margin: 3px 0 0;
   background: rgba(20, 30, 45, 0.9);
   border: 1px solid #3a3a3a;
 }
@@ -202,6 +223,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.market-row-with-cost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .market-label {

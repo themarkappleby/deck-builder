@@ -91,7 +91,6 @@ function GameBoard({ playerCharacter, onRestart }) {
                 bossHP={game.bossHP}
                 bossMaxHP={game.bossMaxHP}
                 bossBlock={game.bossBlock}
-                bossBlockMax={game.bossBlockMax}
                 bossTokens={game.bossTokens}
                 bossAttack={game.bossAttack}
                 playerBlock={game.playerBlock}
@@ -128,7 +127,6 @@ function GameBoard({ playerCharacter, onRestart }) {
       <PlayerHud
         gameState={game.gameState}
         resources={game.resources}
-        purchaseOrTrashCost={game.purchaseOrTrashCost}
         playerBlock={game.playerBlock}
         playTokens={game.playTokens}
         playerCharacter={playerCharacter}

@@ -1,8 +1,8 @@
 /* Bottom HUD - Player Stats & HP */
 :root {
   --hand-area-height: 180px;
-  /* border-top 2 + padding 6/8 + identity ~14 + stats line ~16 + margin 6 + hp bar 18 */
-  --bottom-hud-height: 70px;
+  /* border-top 2 + padding 6/8 + identity ~14 + stats line ~16 + margin 6 + hp row 32 */
+  --bottom-hud-height: 84px;
 }
 
 .bottom-hud {
@@ -25,6 +25,7 @@
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  overflow: visible;
 }
 
 .bottom-hud:hover {
@@ -67,6 +68,18 @@
   color: #ddd;
 }
 
+.player-hp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: visible;
+}
+
+.player-hp-row .vitals-row {
+  flex: 1;
+  min-width: 0;
+}
+
 .player-hp-bar {
   height: 18px;
   background: rgba(0, 0, 0, 0.5);
@@ -74,7 +87,45 @@
   overflow: hidden;
   position: relative;
   max-width: 100%;
-  margin: 0 auto;
+  margin: 0;
+}
+
+.resource-circle {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2e86de;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.resource-circle.is-empty {
+  background: #6b6b6b;
+}
+
+.cost-circle {
+  background: #c0392b;
+}
+
+.resource-circle.is-pulsing {
+  animation: resource-pulse 0.2s ease-out;
+}
+
+@keyframes resource-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.22);
+  }
 }
 
 /* Hand Container - Fixed at bottom with cards partially hidden */
