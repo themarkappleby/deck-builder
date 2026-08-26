@@ -111,23 +111,7 @@
 }
 
 .cost-circle {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  font-size: 0.85rem;
-}
-
-.cost-circle-sign {
-  grid-column: 1;
-  justify-self: end;
-  line-height: 1;
-}
-
-.cost-circle-number {
-  grid-column: 2;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  text-align: center;
+  background: #c0392b;
 }
 
 .resource-circle.is-pulsing {
