@@ -281,8 +281,9 @@ export function useGameBoard(playerCharacter) {
     const marketCardsToDraw = getBossCardsToDraw(encounter.cards);
     let drawPile = marketDeckRef.current;
     let discardPile = marketDiscardRef.current;
-    if (marketRef.current.length > 0) {
-      discardPile = [...discardPile, ...marketRef.current];
+    const unpurchasedMarketCards = marketRef.current.filter(Boolean);
+    if (unpurchasedMarketCards.length > 0) {
+      discardPile = [...discardPile, ...unpurchasedMarketCards];
       setMarket([]);
       marketRef.current = [];
     }
@@ -635,7 +636,11 @@ export function useGameBoard(playerCharacter) {
     const newDiscard = [...discard, { ...card, id: `${card.id}_purchased_${Date.now()}` }];
     setDiscard(newDiscard);
 
-    const newMarket = market.filter(c => c.id !== card.id);
+    const cardIndex = market.findIndex((c) => c?.id === card.id);
+    const newMarket = [...market];
+    if (cardIndex >= 0) {
+      newMarket[cardIndex] = null;
+    }
     refreshMarket(newMarket);
 
     addLog(`Purchased ${card.name} (${cost} resources spent, next purchase/trash costs ${cost + 1})`);
@@ -720,11 +725,12 @@ export function useGameBoard(playerCharacter) {
     setBossBlock(0);
     setIncomingDamage(0);
 
-    if (market.length > 0) {
-      const nextDiscard = [...marketDiscardRef.current, ...market];
+    const unpurchasedMarketCards = market.filter(Boolean);
+    if (unpurchasedMarketCards.length > 0) {
+      const nextDiscard = [...marketDiscardRef.current, ...unpurchasedMarketCards];
       marketDiscardRef.current = nextDiscard;
       setMarketDiscard(nextDiscard);
-      addLog(`${market.length} unpurchased market card${market.length === 1 ? '' : 's'} returned to the discard pile`);
+      addLog(`${unpurchasedMarketCards.length} unpurchased market card${unpurchasedMarketCards.length === 1 ? '' : 's'} returned to the discard pile`);
     }
 
     setMarket([]);
