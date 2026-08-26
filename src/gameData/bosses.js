@@ -4,7 +4,7 @@ import { SYMBOLS } from './symbols';
 const WITCH_BREW_ABILITY = {
   type: 'brew',
   name: 'Brew',
-  symbolEffect: '+1 token. At 5 tokens: if at full health, discard tokens for +5 attack this turn; otherwise discard tokens to heal 5 HP.'
+  symbolEffect: '+1 token. At 5 tokens: if down by 5+ HP, discard tokens to heal 5 HP; otherwise discard tokens for +5 🔺 damage this turn.'
 };
 
 const WITCH_CURSE_ABILITY = {

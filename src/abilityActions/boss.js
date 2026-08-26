@@ -50,12 +50,13 @@ export function applyBrewTokens(
 
   while (tokens >= threshold) {
     tokens -= threshold;
-    if (hp >= maxHP) {
-      bonusAttack += brewAmount;
-    } else {
-      const healed = Math.min(brewAmount, maxHP - hp);
+    const missingHP = maxHP - hp;
+    if (missingHP >= brewAmount) {
+      const healed = Math.min(brewAmount, missingHP);
       heal += healed;
       hp += healed;
+    } else {
+      bonusAttack += brewAmount;
     }
   }
 
