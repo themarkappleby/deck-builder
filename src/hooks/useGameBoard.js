@@ -26,7 +26,7 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getPurchaseOrTrashCost, MAX_BLOCK } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getPurchaseOrTrashCost, MAX_BLOCK, MAX_RESOURCES } from '../game/constants';
 import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
@@ -422,6 +422,9 @@ export function useGameBoard(playerCharacter) {
       addLog('Forest elf: cards cannot be discarded for resources this turn');
       return;
     }
+    if (resources >= MAX_RESOURCES) {
+      return;
+    }
 
     pushUndoSnapshot();
     const newHand = hand.filter(c => c.id !== card.id);
@@ -429,8 +432,8 @@ export function useGameBoard(playerCharacter) {
 
     setHand(newHand);
     setDiscard(newDiscard);
-    setResources(prev => prev + 1);
-    addLog(`Discarded ${card.name} (+1 resource, total: ${resources + 1})`);
+    setResources(prev => Math.min(MAX_RESOURCES, prev + 1));
+    addLog(`Discarded ${card.name} (+1 resource, total: ${Math.min(MAX_RESOURCES, resources + 1)})`);
   };
 
   const discardCursedCard = (card) => {
@@ -857,8 +860,9 @@ export function useGameBoard(playerCharacter) {
     pushUndoSnapshot();
     setPlayTokens(result.tokens);
     playTokensRef.current = result.tokens;
-    setResources(prev => prev + gained);
-    addLog(`Harvested ${result.harvested.length} plant unit${result.harvested.length === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'})`);
+    setResources(prev => Math.min(MAX_RESOURCES, prev + gained));
+    const newTotal = Math.min(MAX_RESOURCES, resources + gained);
+    addLog(`Harvested ${result.harvested.length} plant unit${result.harvested.length === 1 ? '' : 's'} (+${newTotal - resources} resource${newTotal - resources === 1 ? '' : 's'})`);
   };
 
   const handleAbilityButton = (button) => {
@@ -965,7 +969,8 @@ export function useGameBoard(playerCharacter) {
       x > discardZoneLeftX &&
       y >= trashZoneBottomY &&
       y <= discardZoneBottomY &&
-      !cannotDiscardForResources
+      !cannotDiscardForResources &&
+      resources < MAX_RESOURCES
     ) {
       setDropZone('discard');
     // Play zone — left of discard, below trash, down to the player stats HUD

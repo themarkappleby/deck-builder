@@ -1,4 +1,5 @@
 import { CardSymbols, CardEffectLabels } from '../Card';
+import { MAX_RESOURCES } from '../../game/constants';
 import { getCardSymbolGradientStyle } from '../../gameData/symbols';
 
 function DropZones({
@@ -23,7 +24,7 @@ function DropZones({
           )}
 
           {/* Discard zone - right side - unavailable after Forest elf 🟣 */}
-          {!cannotDiscardForResources && (
+          {!cannotDiscardForResources && resources < MAX_RESOURCES && (
             <div className={`drop-zone drop-zone-right ${dropZone === 'discard' ? 'active' : ''}`}>
               <div className="drop-zone-label">DISCARD<br/>+1 💎</div>
             </div>

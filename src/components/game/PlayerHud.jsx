@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { countTokensOfType, getMaxEnergy, PLAY_TOKEN_TYPE } from '../../abilityActions';
-import { MAX_BLOCK } from '../../game/constants';
+import { MAX_BLOCK, MAX_RESOURCES } from '../../game/constants';
 
 function formatCap(count, max) {
   return Number.isFinite(max) ? `${count}/${max}` : `${count}`;
@@ -68,15 +68,18 @@ function PlayerHud({
         <div
           key={resourcePulseKey}
           className={`resource-circle${resources === 0 ? ' is-empty' : ''}${resourcePulseKey > 0 ? ' is-pulsing' : ''}`}
-          title="Resources"
-          aria-label={`${resources} resource${resources === 1 ? '' : 's'}`}
+          title={`Resources (${resources}/${MAX_RESOURCES})`}
+          aria-label={`${resources} of ${MAX_RESOURCES} resources`}
           onAnimationEnd={(event) => {
             if (event.animationName === 'resource-pulse') {
               event.currentTarget.classList.remove('is-pulsing');
             }
           }}
         >
-          {resources}
+          <span className="resource-circle-content">
+            <span className="resource-count">{resources}</span>
+            <span className="resource-cap" aria-hidden="true">/{MAX_RESOURCES}</span>
+          </span>
         </div>
         <div className="vitals-row">
           <div className="hp-bar player-hp-bar">

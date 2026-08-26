@@ -92,18 +92,33 @@
 
 .resource-circle {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: #2e86de;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
   font-weight: 700;
   line-height: 1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.resource-circle-content {
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 1;
+}
+
+.resource-circle .resource-count {
+  font-size: 0.95rem;
+}
+
+.resource-circle .resource-cap {
+  font-size: 0.55rem;
+  font-weight: 600;
+  opacity: 0.85;
 }
 
 .resource-circle.is-empty {

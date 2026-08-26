@@ -16,6 +16,8 @@ import './GameBoard.css';
 import './GameBoardNew.css';
 import './CardActionMenu.css';
 
+import { MAX_RESOURCES } from '../game/constants';
+
 const PLAY_COST = 1;
 
 function GameBoard({ playerCharacter, onRestart }) {
@@ -25,7 +27,7 @@ function GameBoard({ playerCharacter, onRestart }) {
 
   const hasHandCards = game.hand.length > 0;
   const canPlayHandCard = hasHandCards && game.resources >= PLAY_COST;
-  const canDiscardHandCard = hasHandCards && !game.cannotDiscardForResources;
+  const canDiscardHandCard = hasHandCards && !game.cannotDiscardForResources && game.resources < MAX_RESOURCES;
 
   const requestEndTurn = () => {
     if (canPlayHandCard || canDiscardHandCard) {
