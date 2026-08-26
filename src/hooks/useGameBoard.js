@@ -26,7 +26,7 @@ import {
   applyBrewTokens,
   WITCH_BREW_THRESHOLD,
 } from '../abilityActions';
-import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, getPurchaseOrTrashCost, MAX_BLOCK, MAX_RESOURCES } from '../game/constants';
+import { LEVEL_UP_PICK_LIMIT, BOSS_CARDS_TO_DRAW, PLAYER_CARDS_TO_DRAW, STARTING_RESOURCES_PER_BOSS, getPurchaseOrTrashCost, MAX_BLOCK, MAX_RESOURCES } from '../game/constants';
 import { nextBossPlayerState } from '../game/betweenBosses';
 import { shuffleArray } from '../utils/shuffle';
 import { drawFromPiles as drawFromCardPiles } from '../utils/drawPiles';
@@ -297,6 +297,9 @@ export function useGameBoard(playerCharacter) {
     setCannotDiscardForResources(false);
     setStarsThisRound(0);
     setIncomingDamage(0);
+    if (roundNumber === 1) {
+      setResources(STARTING_RESOURCES_PER_BOSS);
+    }
     let remainingTokens = tickPlantTokenCounters(playTokensRef.current).map(token => ({
       ...token,
       spawnedThisTurn: false,
@@ -816,7 +819,7 @@ export function useGameBoard(playerCharacter) {
     } else {
       addLog(`Health is already at max (${reset.playerHP}/${playerMaxHP} HP)`);
     }
-    addLog('Resources, block, units, and energy do not carry over to the next boss');
+    addLog(`Starting with ${STARTING_RESOURCES_PER_BOSS} resources; block, units, and energy do not carry over to the next boss`);
 
     setGameState('ready');
     addLog(`Next boss: ${boss.name} (Level ${nextBossNumber})`);

@@ -13,7 +13,8 @@ export function getBossLevelStats(encounterNumber) {
 }
 
 export const BOSS_CARDS_TO_DRAW = BOSS_LEVEL_STATS[1].cards;
-export const PLAYER_CARDS_TO_DRAW = 6;
+export const PLAYER_CARDS_TO_DRAW = 5;
+export const STARTING_RESOURCES_PER_BOSS = 4;
 export const BETWEEN_BOSS_HEAL = 3;
 export const MAX_PLAY_TOKENS = 10;
 export const MAX_BLOCK = 10;

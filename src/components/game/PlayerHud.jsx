@@ -17,6 +17,8 @@ function PlayerHud({
   cannotDiscardForResources,
   playerHP,
   playerMaxHP,
+  bossAttack,
+  incomingDamage,
   onOpenCharacterSheet,
 }) {
   const [resourcePulseKey, setResourcePulseKey] = useState(0);
@@ -34,6 +36,19 @@ function PlayerHud({
   }
 
   const energyCount = countTokensOfType(playTokens, PLAY_TOKEN_TYPE.ENERGY);
+
+  const pendingIncomingDamage = (() => {
+    if (ignoreIncomingDamage) return 0;
+    if (gameState === 'assignDamage') return incomingDamage;
+    if (gameState === 'playerTurn' || gameState === 'curseDiscard') {
+      return Math.max(0, bossAttack - playerBlock);
+    }
+    return 0;
+  })();
+
+  const incomingHpLoss = Math.min(pendingIncomingDamage, playerHP);
+  const incomingSegmentLeft = ((playerHP - incomingHpLoss) / playerMaxHP) * 100;
+  const incomingSegmentWidth = (incomingHpLoss / playerMaxHP) * 100;
 
   return (
     <button
@@ -82,8 +97,25 @@ function PlayerHud({
           </span>
         </div>
         <div className="vitals-row">
-          <div className="hp-bar player-hp-bar">
+          <div
+            className="hp-bar player-hp-bar"
+            title={
+              incomingHpLoss > 0
+                ? `${incomingHpLoss} HP at risk from incoming damage`
+                : undefined
+            }
+          >
             <div className="hp-fill" style={{ width: `${(playerHP / playerMaxHP) * 100}%` }}></div>
+            {incomingHpLoss > 0 && (
+              <div
+                className="hp-pending-damage"
+                style={{
+                  left: `${incomingSegmentLeft}%`,
+                  width: `${incomingSegmentWidth}%`,
+                }}
+                aria-hidden="true"
+              />
+            )}
             <span className="hp-text">{playerHP} / {playerMaxHP} HP</span>
           </div>
           <div className="block-bar player-block-bar">

@@ -1,4 +1,4 @@
-import { BETWEEN_BOSS_HEAL } from './constants';
+import { BETWEEN_BOSS_HEAL, STARTING_RESOURCES_PER_BOSS } from './constants';
 
 /**
  * Player combat state that resets after a boss is defeated and before
@@ -6,7 +6,7 @@ import { BETWEEN_BOSS_HEAL } from './constants';
  */
 export function nextBossPlayerState({ playerHP, playerMaxHP }) {
   return {
-    resources: 0,
+    resources: STARTING_RESOURCES_PER_BOSS,
     playerBlock: 0,
     playerHP: Math.min(playerMaxHP, playerHP + BETWEEN_BOSS_HEAL),
     playTokens: [],

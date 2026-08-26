@@ -5,7 +5,7 @@ import EndTurnConfirmOverlay from './game/EndTurnConfirmOverlay';
 import LevelUpOverlay from './game/LevelUpOverlay';
 import GameOverOverlay from './game/GameOverOverlay';
 import MarketColumn from './game/MarketColumn';
-import BossStage from './game/BossStage';
+import BossStage, { AttackPips } from './game/BossStage';
 import PlayField from './game/PlayField';
 import PlayerHud from './game/PlayerHud';
 import PlayerHand from './game/PlayerHand';
@@ -86,24 +86,31 @@ function GameBoard({ playerCharacter, onRestart }) {
                 draggingCard={game.draggingCard}
                 onCardDragStart={game.handleCardDragStart}
               />
-              <BossStage
-                currentBoss={game.currentBoss}
-                bossNumber={game.bossNumber}
-                roundNumber={game.roundNumber}
-                bossHP={game.bossHP}
-                bossMaxHP={game.bossMaxHP}
-                bossBlock={game.bossBlock}
-                bossTokens={game.bossTokens}
-                bossAttack={game.bossAttack}
-                playerBlock={game.playerBlock}
-              />
-              <PlayField
-                playTokens={game.playTokens}
-                gameState={game.gameState}
-                incomingDamage={game.incomingDamage}
-                onTokenClick={game.handleTokenClick}
-                onTakeRemainingDamage={game.takeRemainingDamage}
-              />
+              <div className="combat-middle">
+                <BossStage
+                  currentBoss={game.currentBoss}
+                  bossNumber={game.bossNumber}
+                  roundNumber={game.roundNumber}
+                  bossHP={game.bossHP}
+                  bossMaxHP={game.bossMaxHP}
+                  bossBlock={game.bossBlock}
+                  bossTokens={game.bossTokens}
+                  gameState={game.gameState}
+                  playTokens={game.playTokens}
+                />
+                <div className="boss-attack-zone">
+                  <div className="boss-attack-pips-wrap">
+                    <AttackPips remaining={Math.max(0, game.bossAttack - game.playerBlock)} />
+                  </div>
+                  <PlayField
+                    playTokens={game.playTokens}
+                    gameState={game.gameState}
+                    incomingDamage={game.incomingDamage}
+                    onTokenClick={game.handleTokenClick}
+                    onTakeRemainingDamage={game.takeRemainingDamage}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -137,6 +144,8 @@ function GameBoard({ playerCharacter, onRestart }) {
         cannotDiscardForResources={game.cannotDiscardForResources}
         playerHP={game.playerHP}
         playerMaxHP={game.playerMaxHP}
+        bossAttack={game.bossAttack}
+        incomingDamage={game.incomingDamage}
         onOpenCharacterSheet={openCharacterSheet}
       />
 

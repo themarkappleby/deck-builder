@@ -57,6 +57,17 @@
 .boss-hp-bar .hp-fill,
 .player-hp-bar .hp-fill {
   background: #c0392b;
+  z-index: 0;
+}
+
+.boss-hp-bar .hp-pending-damage,
+.player-hp-bar .hp-pending-damage {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: #6b1515;
+  transition: left 0.35s ease, width 0.35s ease;
+  z-index: 1;
 }
 
 .hp-text {
@@ -69,7 +80,7 @@
   font-weight: bold;
   color: white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  z-index: 1;
+  z-index: 2;
   font-size: 0.85rem;
 }
 
@@ -125,11 +136,40 @@
   line-height: 18px;
 }
 
-.boss-attack-bar {
-  height: 18px;
-  margin: 3px 0 0;
-  background: rgba(20, 30, 45, 0.9);
-  border: 1px solid #3a3a3a;
+.boss-attack-zone {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.boss-attack-pips-wrap {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.boss-attack-pips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: min(100%, 360px);
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.boss-attack-pip {
+  font-size: 2.25rem;
+  line-height: 1;
 }
 
 /* Center Area - Boss Display */
@@ -166,13 +206,19 @@
 }
 
 .battlefield {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  align-items: stretch;
-  justify-items: center;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   height: 100%;
+  min-height: 0;
+}
+
+.combat-middle {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  width: 100%;
   min-height: 0;
 }
 
@@ -183,8 +229,8 @@
   justify-content: flex-start;
   gap: 4px;
   flex: 0 0 auto;
-  align-self: start;
-  justify-self: center;
+  align-self: center;
+  width: 100%;
   min-height: 0;
   padding-top: 8px;
 }
@@ -194,7 +240,9 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  flex: 1 1 0;
   min-height: 0;
+  overflow: auto;
 }
 
 .boss-cluster {
@@ -227,8 +275,21 @@
 
 .market-row-with-cost {
   display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.market-cards-wrap {
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 8px;
+}
+
+.market-cards-wrap .market-cost {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .market-label {
@@ -338,39 +399,4 @@
   line-height: 1.2;
 }
 
-.attack-bar {
-  position: relative;
-  height: 18px;
-  width: 100%;
-  max-width: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.attack-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  transition: width 0.35s ease;
-}
-
-.boss-attack-bar .attack-fill {
-  background: #e67e22;
-}
-
-.attack-text {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  text-align: center;
-  line-height: 18px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  z-index: 1;
-  font-size: 0.85rem;
-}
 

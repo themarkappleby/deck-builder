@@ -26,20 +26,21 @@ function MarketColumn({
     <div className="market-column">
       <div className="market-label">Market</div>
       <div className="market-row-with-cost">
-        <div
-          key={costPulseKey}
-          className={`resource-circle cost-circle${costPulseKey > 0 ? ' is-pulsing' : ''}`}
-          title="Cost to purchase or trash a card"
-          aria-label={`Purchase or trash cost: ${purchaseOrTrashCost}`}
-          onAnimationEnd={(event) => {
-            if (event.animationName === 'resource-pulse') {
-              event.currentTarget.classList.remove('is-pulsing');
-            }
-          }}
-        >
-          {purchaseOrTrashCost}
-        </div>
-        <div className="intent-card-row market-row" style={{ '--slot-count': marketSlotCount }}>
+        <div className="market-cards-wrap">
+          <div
+            key={costPulseKey}
+            className={`resource-circle cost-circle market-cost${costPulseKey > 0 ? ' is-pulsing' : ''}`}
+            title="Cost to purchase or trash a card"
+            aria-label={`Purchase or trash cost: ${purchaseOrTrashCost}`}
+            onAnimationEnd={(event) => {
+              if (event.animationName === 'resource-pulse') {
+                event.currentTarget.classList.remove('is-pulsing');
+              }
+            }}
+          >
+            {purchaseOrTrashCost}
+          </div>
+          <div className="intent-card-row market-row" style={{ '--slot-count': marketSlotCount }}>
           {marketSlots.map((card, index) => (
             card ? (
               <Card
@@ -56,6 +57,7 @@ function MarketColumn({
               <div key={`market-slot-${index}`} className="market-slot-empty" />
             )
           ))}
+          </div>
         </div>
       </div>
     </div>
