@@ -478,6 +478,29 @@ export function useGameBoard(playerCharacter) {
     addLog(`Discarded ${card.name} (+1 resource, total: ${Math.min(MAX_RESOURCES, resources + 1)})`);
   };
 
+  const discardAllForResources = () => {
+    if (hand.length === 0) {
+      return;
+    }
+    if (cannotDiscardForResources) {
+      addLog('Forest elf: cards cannot be discarded for resources this turn');
+      return;
+    }
+    if (resources + hand.length > MAX_RESOURCES) {
+      return;
+    }
+
+    pushUndoSnapshot();
+    const cardsToDiscard = [...hand];
+    const gained = cardsToDiscard.length;
+    const newTotal = Math.min(MAX_RESOURCES, resources + gained);
+
+    setDiscard(prev => [...prev, ...cardsToDiscard]);
+    setHand([]);
+    setResources(newTotal);
+    addLog(`Discarded all ${gained} card${gained === 1 ? '' : 's'} (+${gained} resource${gained === 1 ? '' : 's'}, total: ${newTotal})`);
+  };
+
   const discardCursedCard = (card) => {
     if (gameState !== 'curseDiscard' || pendingCurse <= 0) {
       return;
@@ -1110,6 +1133,7 @@ export function useGameBoard(playerCharacter) {
     handleTokenClick,
     takeRemainingDamage,
     discardCursedCard,
+    discardAllForResources,
     handleAbilityButton,
     endTurn,
     undoLastAction,

@@ -28,6 +28,9 @@ function GameBoard({ playerCharacter, onRestart }) {
   const hasHandCards = game.hand.length > 0;
   const canPlayHandCard = hasHandCards && game.resources >= PLAY_COST;
   const canDiscardHandCard = hasHandCards && !game.cannotDiscardForResources && game.resources < MAX_RESOURCES;
+  const canDiscardAll = hasHandCards
+    && !game.cannotDiscardForResources
+    && game.resources + game.hand.length <= MAX_RESOURCES;
 
   const requestEndTurn = () => {
     if (canPlayHandCard || canDiscardHandCard) {
@@ -160,6 +163,8 @@ function GameBoard({ playerCharacter, onRestart }) {
         onCardDragStart={game.handleCardDragStart}
         onAbilityButton={game.handleAbilityButton}
         onEndTurn={requestEndTurn}
+        onDiscardAll={game.discardAllForResources}
+        canDiscardAll={canDiscardAll}
       />
 
       <DropZones

@@ -18,6 +18,8 @@ function PlayerHand({
   onCardDragStart,
   onAbilityButton,
   onEndTurn,
+  onDiscardAll,
+  canDiscardAll,
 }) {
   const rowRef = useRef(null);
   const [rowWidth, setRowWidth] = useState(
@@ -102,7 +104,18 @@ function PlayerHand({
                 {button.usesRemaining != null ? ` (${button.usesRemaining})` : ''}
               </button>
             ))}
-            <button className="action-btn end-turn" onClick={onEndTurn}>End Turn</button>
+            {hand.length > 0 ? (
+              <button
+                className="action-btn end-turn"
+                onClick={onDiscardAll}
+                disabled={!canDiscardAll}
+                title={canDiscardAll ? 'Discard all cards in hand for resources' : 'Resources plus hand size must be 10 or less'}
+              >
+                Discard all
+              </button>
+            ) : (
+              <button className="action-btn end-turn" onClick={onEndTurn}>End Turn</button>
+            )}
           </>
         )}
       </div>

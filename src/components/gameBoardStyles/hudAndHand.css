@@ -218,8 +218,13 @@
   min-width: 150px;
 }
 
-.action-btn.end-turn:hover {
+.action-btn.end-turn:hover:not(:disabled) {
   background: #334455;
+}
+
+.action-btn.end-turn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .action-btn.blood-btn {
